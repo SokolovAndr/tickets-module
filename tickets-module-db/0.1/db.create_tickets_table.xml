@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="create-tickets_table" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+            <not>
+                <tableExists tableName="tickets"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="tickets">
+            <column name="id" type="UUID" remarks="Идентификатор"
+                    defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="route_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_ticket_route" references="routes(id)"/>
+            </column>
+            <column name="departure_datetime" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="seat_number" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_purchased" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="purchased_by" type="UUID"/>
+            <column name="purchased_at" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="add-ticket-user-fk" author="andrei.sokolov">
+        <addForeignKeyConstraint
+                constraintName="fk_ticket_user"
+                baseTableName="tickets"
+                baseColumnNames="purchased_by"
+                referencedTableName="users"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="add-unique-constraint-ticket" author="andrei.sokolov">
+        <addUniqueConstraint
+                tableName="tickets"
+                constraintName="uq_ticket_route_seat_datetime"
+                columnNames="route_id, departure_datetime, seat_number"/>
+    </changeSet>
+
+</databaseChangeLog>
+

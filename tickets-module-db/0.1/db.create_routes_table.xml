@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="create-routes-table" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+            <not>
+                <tableExists tableName="routes"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="routes">
+            <column name="id" type="UUID" remarks="Идентификатор маршрута"
+                    defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="departure_point" type="VARCHAR(255)" remarks="Пункт отправления">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="destination_point" type="VARCHAR(255)" remarks="Пункт назначения">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="carrier_id" type="UUID" remarks="Идентификатор перевозчика">
+                <constraints nullable="false"
+                             foreignKeyName="fk_route_carrier"
+                             references="carriers(id)"/>
+            </column>
+
+            <column name="duration_minutes" type="INTEGER" remarks="Длительность в минутах">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP" remarks="Дата создания"
+                    defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" remarks="Дата обновления"
+                    defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="add-routes-indexes" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+            <and>
+                <tableExists tableName="routes"/>
+                <not>
+                    <indexExists indexName="idx_routes_departure_point"/>
+                </not>
+            </and>
+        </preConditions>
+
+        <createIndex tableName="routes" indexName="idx_routes_departure_point">
+            <column name="departure_point"/>
+        </createIndex>
+
+        <createIndex tableName="routes" indexName="idx_routes_destination_point">
+            <column name="destination_point"/>
+        </createIndex>
+
+        <createIndex tableName="routes" indexName="idx_routes_carrier_id">
+            <column name="carrier_id"/>
+        </createIndex>
+
+        <createIndex tableName="routes" indexName="idx_routes_departure_destination">
+            <column name="departure_point"/>
+            <column name="destination_point"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

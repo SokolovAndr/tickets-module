@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="create-users-table" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+            <not>
+                <tableExists tableName="users"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="users">
+            <column name="id" type="UUID" remarks="Идентификатор пользователя"
+                    defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="login" type="VARCHAR(100)" remarks="Логин">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="password" type="VARCHAR(255)" remarks="Пароль (хеш)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="full_name" type="VARCHAR(255)" remarks="ФИО">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="role" type="VARCHAR(50)" remarks="Роль (USER/ADMIN)"
+                    defaultValue="USER">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP" remarks="Дата создания"
+                    defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" remarks="Дата обновления"
+                    defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="add-users-indexes" author="andrei.sokolov">
+        <createIndex tableName="users" indexName="idx_users_login">
+            <column name="login"/>
+        </createIndex>
+
+        <createIndex tableName="users" indexName="idx_users_role">
+            <column name="role"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

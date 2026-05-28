@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="create-carriers-table" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+            <not>
+                <tableExists tableName="carriers"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="carriers">
+            <column name="id" type="UUID" remarks="Идентификатор перевозчика"
+                    defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="name" type="VARCHAR(255)" remarks="Название компании">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="phone" type="VARCHAR(20)" remarks="Телефон">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP" remarks="Дата создания"
+                    defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" remarks="Дата обновления"
+                    defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="add-carriers-indexes" author="andrei.sokolov">
+        <createIndex tableName="carriers" indexName="idx_carriers_name">
+            <column name="name"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
