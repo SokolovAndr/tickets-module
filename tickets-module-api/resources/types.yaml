@@ -1,0 +1,78 @@
+openapi: 3.0.1
+info:
+  title: Common types
+  version: 1.0.0
+servers: [ ]
+paths: { }
+components:
+  schemas:
+    CommonResponse:
+      type: object
+      x-generic-parent: true
+      additionalProperties: true
+      description: Общий предок всех ответов
+      properties:
+        requestId:
+          type: string
+          format: uuid
+          description: Идентификатор входящего запроса(UUID)
+
+    ErrorResponse:
+      type: object
+      x-generic-parent: true
+      additionalProperties: true
+      description: Ответ сервера содержащий ошибку
+      allOf:
+        - $ref: "#/components/schemas/CommonResponse"
+        - properties:
+            message:
+              type: string
+              description: Системное сообщение.
+            userMessage:
+              type: string
+              description: Сообщение для отображения пользователю.
+
+    CreateCarrierRequest:
+      type: object
+      required:
+        - name
+        - phone
+      properties:
+        name:
+          title: Название компании
+          description: Название компании
+          type: string
+        phone:
+          title: Телефон
+          description: Телефон
+          type: string
+
+    CreateCarrierResponse:
+      type: object
+      required:
+        - id
+        - name
+        - phone
+      properties:
+        id:
+          title: Идентификатор компании перевозчика
+          description: Идентификатор компании перевозчика
+          type: string
+          format: uuid
+        name:
+          title: Название компании
+          description: Название компании
+          type: string
+        phone:
+          title: Телефон
+          description: Телефон
+          type: string
+        createdAt:
+          title: Дата создания
+          description: Дата создания
+          type: string
+          format: date-time
+        updatedAt:
+          title: Дата обновления
+          type: string
+          format: date-time
