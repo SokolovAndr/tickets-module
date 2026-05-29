@@ -1,0 +1,35 @@
+openapi: 3.0.1
+info:
+  title: Сервис продажи билетов
+  version: 1.0.0
+servers: [ ]
+tags:
+  - name: TicketsResource
+    description: "API для работы с билетами"
+paths:
+  /carriers:
+    post:
+      description: Метод создания компании перевозчика
+      operationId: createCarrier
+      tags:
+        - CarriersController
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "types.yaml#/components/schemas/CreateCarrierRequest"
+      responses:
+        201:
+          description: Компания перевозчик успешно сохранена
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/CreateCarrierResponse"
+        400:
+          description: Ошибка в параметрах запроса
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        500:
+          description: Внутренняя ошибка сервера
