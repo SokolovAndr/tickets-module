@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Comment;
 import org.jspecify.annotations.NonNull;
 
 import java.time.LocalDateTime;
@@ -28,54 +29,62 @@ import java.util.UUID;
 @Setter
 @ToString
 @Entity
-@Table(name = "users", comment = "Сущность пользователя – субъект, осуществляющий покупку билетов")
+@Table(name = "users")
+@Comment("Сущность пользователя – субъект, осуществляющий покупку билетов")
 public class UserEntity {
 
     /**
      * Идентификатор
      */
     @Id
+    @Comment("Идентификатор")
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", comment = "Идентификатор")
+    @Column(name = "id")
     private UUID id;
 
     /**
      * Логин
      */
     @NonNull
-    @Column(name = "login", nullable = false, unique = true, comment = "Логин")
+    @Comment("Логин")
+    @Column(name = "login", nullable = false, unique = true)
     private String login;
 
     /**
      * Пароль
      */
     @NonNull
-    @Column(name = "password", nullable = false, comment = "Пароль")
+    @Comment("Пароль")
+    @Column(name = "password", nullable = false)
     private String password;
 
     /**
      * ФИО
      */
     @NonNull
-    @Column(name = "full_name", nullable = false, comment = "ФИО")
+    @Comment("ФИО")
+    @Column(name = "full_name", nullable = false)
     private String fullName;
 
     /**
      * Роль
      */
     @NonNull
-    @Column(name = "role", nullable = false, comment = "Роль")
+    @Comment("Роль")
+    @Column(name = "role", nullable = false)
     private UserRoleEnum role;
 
     /**
      * Дата создания
      */
-    @Column(name = "created_at", comment = "Дата создания")
+    @Comment("Дата создания")
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     /**
      * Дата обновления
      */
-    @Column(name = "updated_at", comment = "Дата обновления")
+    @Comment("Дата обновления")
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }

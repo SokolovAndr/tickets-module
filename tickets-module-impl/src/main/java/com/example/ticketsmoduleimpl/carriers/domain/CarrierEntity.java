@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Comment;
 import org.jspecify.annotations.NonNull;
 
 import java.time.LocalDateTime;
@@ -28,40 +29,46 @@ import java.util.UUID;
 @Setter
 @ToString
 @Entity
-@Table(name = "carriers", comment = "Сущность перевозчика – компания, осуществляющая перевозки.")
+@Table(name = "carriers")
+@Comment("Сущность перевозчика – компания, осуществляющая перевозки.")
 public class CarrierEntity {
 
     /**
      * Идентификатор
      */
     @Id
+    @Comment("Идентификатор")
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", comment = "Идентификатор")
+    @Column(name = "id")
     private UUID id;
 
     /**
      * Название компании
      */
     @NonNull
-    @Column(name = "name", nullable = false, unique = true, comment = "Название компании")
+    @Comment("Название компании")
+    @Column(name = "name", nullable = false, unique = true)
     private String name;
 
     /**
      * Телефон
      */
     @NonNull
-    @Column(name = "phone", nullable = false, comment = "Телефон", length = 20)
+    @Comment("Телефон")
+    @Column(name = "phone", nullable = false, length = 20)
     private String phone;
 
     /**
      * Дата создания
      */
-    @Column(name = "created_at", comment = "Дата создания")
+    @Comment("Дата создания")
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     /**
      * Дата обновления
      */
-    @Column(name = "updated_at", comment = "Дата обновления")
+    @Comment("Дата обновления")
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }

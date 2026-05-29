@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-import tickets_module.model.CreateCarrierRequest;
+import tickets.model.CreateCarrierRequest;
 
 import java.time.LocalDateTime;
 
@@ -16,9 +16,6 @@ public class CarrierToEntityConverter implements Converter<CreateCarrierRequest,
 
     @Override
     public CarrierEntity convert(CreateCarrierRequest source) {
-        if (source == null) {
-            return null;
-        }
         return CarrierEntity.builder().
                 name(source.getName())
                 .phone(source.getPhone())

@@ -7,9 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import tickets_module.api.CarriersControllerApi;
-import tickets_module.model.CreateCarrierRequest;
-import tickets_module.model.CreateCarrierResponse;
+import tickets.api.CarriersControllerApi;
+import tickets.model.CreateCarrierRequest;
+import tickets.model.CreateCarrierResponse;
 
 @Slf4j
 @RestController

@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-import tickets_module.model.CreateCarrierResponse;
+import tickets.model.CreateCarrierResponse;
 
 @Slf4j
 @Component
@@ -14,9 +14,6 @@ public class CarrierFromEntityConverter implements Converter<CarrierEntity, Crea
 
     @Override
     public CreateCarrierResponse convert(CarrierEntity source) {
-        if (source == null) {
-            return null;
-        }
         var response = new CreateCarrierResponse();
         response.setId(source.getId());
         response.setName(source.getName());

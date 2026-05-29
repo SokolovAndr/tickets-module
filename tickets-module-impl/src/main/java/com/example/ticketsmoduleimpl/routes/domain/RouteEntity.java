@@ -17,6 +17,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.jspecify.annotations.NonNull;
@@ -35,7 +36,8 @@ import java.util.UUID;
 @Setter
 @ToString
 @Entity
-@Table(name = "routes", comment = "Сущность маршрута – определенный путь движения")
+@Table(name = "routes")
+@Comment("Сущность маршрута – определенный путь движения")
 public class RouteEntity {
 
     /**
@@ -43,21 +45,24 @@ public class RouteEntity {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", comment = "Идентификатор")
+    @Column(name = "id")
+    @Comment("Идентификатор")
     private UUID id;
 
     /**
      * Пункт отправления
      */
     @NonNull
-    @Column(name = "departure_point", nullable = false, comment = "Пункт отправления", length = 255)
+    @Comment("Пункт отправления")
+    @Column(name = "departure_point", nullable = false, length = 255)
     private String departurePoint;
 
     /**
      * Пункт назначения
      */
     @NonNull
-    @Column(name = "destination_point", nullable = false, comment = "Пункт назначения", length = 255)
+    @Comment("Пункт назначения")
+    @Column(name = "destination_point", nullable = false, length = 255)
     private String destinationPoint;
 
     /**
@@ -65,25 +70,29 @@ public class RouteEntity {
      */
     @Fetch(FetchMode.JOIN)
     @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.REFRESH})
-    @JoinColumn(name = "carrier_id", nullable = false, comment = "Идентификатор перевозчика")
+    @JoinColumn(name = "carrier_id", nullable = false)
+    @Comment("Идентификатор перевозчика")
     @ToString.Exclude
     private CarrierEntity carrier;
 
     /**
      * Длительность в минутах
      */
-    @Column(name = "duration_minutes", nullable = false, comment = "Длительность в минутах")
+    @Comment("Длительность в минутах")
+    @Column(name = "duration_minutes", nullable = false)
     private int durationMinutes;
 
     /**
      * Дата создания
      */
-    @Column(name = "created_at", comment = "Дата создания")
+    @Comment("Дата создания")
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     /**
      * Дата обновления
      */
-    @Column(name = "updated_at", comment = "Дата обновления")
+    @Comment("Дата обновления")
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }

@@ -97,8 +97,8 @@
                         </goals>
                         <configuration>
                             <inputSpec>${project.basedir}/resources/api.yaml</inputSpec>
-                            <apiPackage>tickets_module.api</apiPackage>
-                            <modelPackage>tickets_module.model</modelPackage>
+                            <apiPackage>tickets.api</apiPackage>
+                            <modelPackage>tickets.model</modelPackage>
                             <generatorName>spring</generatorName>
                             <library>spring-boot</library>
                             <generateApis>true</generateApis>

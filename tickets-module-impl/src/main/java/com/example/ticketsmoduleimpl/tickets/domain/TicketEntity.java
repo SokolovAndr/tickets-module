@@ -18,6 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.jspecify.annotations.NonNull;
@@ -37,7 +38,8 @@ import java.util.UUID;
 @Setter
 @ToString
 @Entity
-@Table(name = "tickets", comment = "Сущность билета – право проезда по определенному маршруту в определенную дату и место в транспортном средстве.")
+@Table(name = "tickets")
+@Comment("Сущность билета – право проезда по определенному маршруту в определенную дату и место в транспортном средстве.")
 public class TicketEntity {
 
     /**
@@ -45,7 +47,8 @@ public class TicketEntity {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", comment = "Идентификатор")
+    @Column(name = "id")
+    @Comment("Идентификатор")
     private UUID id;
 
     /**
@@ -53,7 +56,8 @@ public class TicketEntity {
      */
     @Fetch(FetchMode.JOIN)
     @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.REFRESH})
-    @JoinColumn(name = "route_id", nullable = false, comment = "Идентификатор маршрута")
+    @JoinColumn(name = "route_id", nullable = false)
+    @Comment("Идентификатор маршрута")
     @ToString.Exclude
     private RouteEntity route;
 
@@ -61,25 +65,29 @@ public class TicketEntity {
      * Время отправления
      */
     @NonNull
-    @Column(name = "departure_datetime", nullable = false, comment = "Время отправления")
+    @Comment("Время отправления")
+    @Column(name = "departure_datetime", nullable = false)
     private LocalDateTime departureDatetime;
 
     /**
      * Номер места
      */
-    @Column(name = "seat_number", nullable = false, comment = "Номер места")
+    @Comment("Номер места")
+    @Column(name = "seat_number", nullable = false)
     private int seatNumber;
 
     /**
      * Цена
      */
-    @Column(name = "price", nullable = false, comment = "Цена", precision = 10, scale = 2)
+    @Comment("Цена")
+    @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
     /**
      * Признак занятости
      */
-    @Column(name = "is_purchased", nullable = false, comment = "Признак занятости")
+    @Comment("Признак занятости")
+    @Column(name = "is_purchased", nullable = false)
     private boolean isPurchased;
 
     /**
@@ -87,25 +95,29 @@ public class TicketEntity {
      */
     @Fetch(FetchMode.JOIN)
     @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.REFRESH})
-    @JoinColumn(name = "purchased_by", comment = "Идентификатор пользователя")
+    @JoinColumn(name = "purchased_by")
     @ToString.Exclude
+    @Comment("Идентификатор пользователя")
     private UserEntity user;
 
     /**
      * Дата покупки
      */
-    @Column(name = "purchased_at", comment = "Дата покупки")
+    @Comment("Дата покупки")
+    @Column(name = "purchased_at")
     private LocalDateTime purchasedAt;
 
     /**
      * Дата создания
      */
-    @Column(name = "created_at", comment = "Дата создания")
+    @Comment("Дата создания")
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     /**
      * Дата обновления
      */
-    @Column(name = "updated_at", comment = "Дата обновления")
+    @Comment("Дата обновления")
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }

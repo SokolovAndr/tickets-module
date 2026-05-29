@@ -8,8 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tickets_module.model.CreateCarrierRequest;
-import tickets_module.model.CreateCarrierResponse;
+import tickets.model.CreateCarrierRequest;
+import tickets.model.CreateCarrierResponse;
 
 /**
  * Сервис для работы с компаниями перевозчиками
