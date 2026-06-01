@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 /**
- * Репозиторий комапний перевозчиков
+ * Репозиторий компаний перевозчиков
  */
 @Repository
 public interface CarriersRepository extends JpaRepository<CarrierEntity, UUID>, JpaSpecificationExecutor<CarrierEntity> {
