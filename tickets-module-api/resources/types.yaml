@@ -1,6 +1,6 @@
 openapi: 3.0.1
 info:
-  title: Common types
+  title: Types
   version: 1.0.0
 servers: [ ]
 paths: { }
@@ -76,3 +76,83 @@ components:
           title: Дата обновления
           type: string
           format: date-time
+
+    Pageable:
+      description: Типовой объект постраничного запроса
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+          default: 0
+          description: Номер страницы для постраничного вывода
+        size:
+          type: integer
+          format: int32
+          default: 20
+          description: Размер страницы для постраничного вывода
+        sort:
+          type: array
+          items:
+            type: string
+          description: Признак сортировки в формате "property,asc" или "property,desc". Может быть передано несколько признаков.
+
+    CarriersSearchRequest:
+      type: object
+      properties:
+        query:
+          title: Быстрый поиск
+          description: Поиск по ilike по полям name, phone
+          type: string
+        name:
+          description: Название
+          type: string
+        phone:
+          description: Телефон
+          type: string
+        createDateFrom:
+          description: Дата создания с
+          type: string
+          format: date
+        createDateTo:
+          description: Дата создания по
+          type: string
+          format: date
+
+    Page:
+      description: Объект постраничного ответа org.springframework.data.domain.Page
+      type: object
+      properties:
+        content:
+          type: array
+          items: { }
+          description: Массив элементов текущей страницы
+        last:
+          type: boolean
+          description: Признак последней страницы
+        totalElements:
+          type: integer
+          format: int64
+          description: Общее количество элементов
+        totalPages:
+          type: integer
+          format: int32
+          description: Общее количество страниц
+        first:
+          type: boolean
+          description: Признак первой страницы
+        numberOfElements:
+          type: integer
+          format: int32
+          description: Количество элементов на текущей странице
+        size:
+          type: integer
+          format: int32
+          description: Размер страницы
+        number:
+          type: integer
+          format: int32
+          description: Номер текущей страницы
+        empty:
+          type: boolean
+          description: Признак пустой страницы

@@ -121,6 +121,10 @@
                                 <typeMapping>Instant=java.time.Instant</typeMapping>
                                 <typeMapping>OffsetDateTime=java.time.OffsetDateTime</typeMapping>
                             </typeMappings>
+                            <importMappings>
+                                <importMapping>Pageable=org.springframework.data.domain.Pageable</importMapping>
+                                <importMapping>Page=org.springframework.data.domain.Page</importMapping>
+                            </importMappings>
                         </configuration>
                     </execution>
                 </executions>

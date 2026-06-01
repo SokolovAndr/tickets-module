@@ -1,0 +1,23 @@
+openapi: 3.0.1
+info:
+  title: Patch types
+  version: 1.0.0
+servers: [ ]
+paths: { }
+components:
+  schemas:
+
+    CarrierPatchRequest:
+      type: object
+      description: Частичное обновление компании перевозчика.
+      properties:
+        name:
+          title: Название компании
+          description: Название компании
+          type: string
+          nullable: true
+        phone:
+          title: Телефон
+          description: Телефон
+          type: string
+          nullable: true

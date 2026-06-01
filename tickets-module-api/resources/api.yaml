@@ -33,3 +33,120 @@ paths:
                 $ref: "types.yaml#/components/schemas/ErrorResponse"
         500:
           description: Внутренняя ошибка сервера
+    get:
+      description: Метод предоставления списка компаний перевозчиков
+      operationId: getAllCarriers
+      tags:
+        - CarriersController
+      parameters:
+        - in: query
+          name: pageable
+          required: false
+          schema:
+            $ref: "types.yaml#/components/schemas/Pageable"
+        - in: query
+          name: searchParam
+          required: false
+          schema:
+            $ref: "types.yaml#/components/schemas/CarriersSearchRequest"
+      responses:
+        200:
+          description: Поиск выполнен успешно
+          headers:
+            X-Total-Count:
+              description: Общее количество элементов при постраничном отображении
+              schema:
+                type: integer
+                format: int32
+                example: 100
+            Link:
+              description: Ссылки на страницы
+              schema:
+                type: string
+                format: uri
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/Page"
+        400:
+          description: Ошибка в параметрах запроса
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        404:
+          description: Объекты не найдены
+        500:
+          description: Внутренняя ошибка сервера
+
+  /carriers/{id}:
+    get:
+      description: Метод получения компании перевозчика по id
+      operationId: getCarrier
+      tags:
+        - CarriersController
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор компании перевозчика
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Операция обработана успешно, результат предоставлен
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/CreateCarrierResponse"
+        400:
+          description: Переданы не корректные параметры запроса
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        401:
+          description: Отсутствует или невалиден JWT-токен
+        403:
+          description: Пользователь не имеет ни одной из необходимых ролей
+        404:
+          description: Объект не найден
+        500:
+          description: Ошибка сервера/сервиса/БД
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+
+    patch:
+      description: Частичное обновление данных компании перевозчика по id
+      operationId: patch
+      tags:
+        - CarriersController
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор компании перевозчика
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "patch-types.yaml#/components/schemas/CarrierPatchRequest"
+      responses:
+        201:
+          description: Заявление успешно обновлено
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/CreateCarrierResponse"
+        400:
+          description: Ошибка в параметрах запроса
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
