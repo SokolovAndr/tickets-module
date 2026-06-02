@@ -55,10 +55,7 @@ public class CarriersService {
 
     @Transactional(readOnly = true)
     public Page<CreateCarrierResponse> findAll(CarriersSearchRequest searchParam, Pageable pageable) {
-        log.debug("findAll searchParam: {}, pageable: {}", searchParam, pageable);
-
         Specification<CarrierEntity> spec = buildSpecification(searchParam);
-
         return carriersRepository.findAll(spec, pageable).map(fromEntityConverter::convert);
     }
 
@@ -94,7 +91,6 @@ public class CarriersService {
     }
 
     public CreateCarrierResponse patch(@NotNull UUID id, @Valid CarrierPatchRequest carrierPatchRequest) {
-        log.debug("patch id: {}, request: {}", id, carrierPatchRequest);
 
         var result = carriersRepository.findById(id).map(entity -> {
             if (carrierPatchRequest.getName() != null) {
