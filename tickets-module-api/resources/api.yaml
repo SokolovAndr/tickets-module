@@ -31,6 +31,8 @@ paths:
             application/json:
               schema:
                 $ref: "types.yaml#/components/schemas/ErrorResponse"
+        401:
+          description: Отсутствует или невалиден JWT-токен
         500:
           description: Внутренняя ошибка сервера
     get:
@@ -74,6 +76,8 @@ paths:
             application/json:
               schema:
                 $ref: "types.yaml#/components/schemas/ErrorResponse"
+        401:
+          description: Отсутствует или невалиден JWT-токен
         404:
           description: Объекты не найдены
         500:
@@ -150,3 +154,58 @@ paths:
             application/json:
               schema:
                 $ref: "types.yaml#/components/schemas/ErrorResponse"
+        401:
+          description: Отсутствует или невалиден JWT-токен
+
+  /login:
+    post:
+      description: Аутентификация пользователя
+      operationId: login
+      tags:
+        - OauthController
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "types.yaml#/components/schemas/LoginRequest"
+      responses:
+        200:
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/LoginResponse"
+        400:
+          description: Ошибка в параметрах запроса
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        404:
+          description: Объект не найден
+        500:
+          description: Ошибка сервера/сервиса/БД
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+  /token:
+    post:
+      description: Обновление access токена по refresh токену
+      operationId: refreshToken
+      tags:
+        - OauthController
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "types.yaml#/components/schemas/RefreshTokenRequest"
+      responses:
+        200:
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/LoginResponse"
+        401:
+          description: Невалидный refresh token

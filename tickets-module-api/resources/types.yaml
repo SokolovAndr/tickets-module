@@ -6,6 +6,55 @@ servers: [ ]
 paths: { }
 components:
   schemas:
+
+    LoginRequest:
+      type: object
+      required:
+        - login
+        - password
+      properties:
+        login:
+          title: Логин
+          description: Логин
+          type: string
+        password:
+          title: Пароль
+          description: Пароль
+          type: string
+
+    LoginResponse:
+      type: object
+      required:
+        - access_token
+        - expires_in
+        - refresh_token
+        - token_type
+      properties:
+        access_token:
+          title: Токен доступа
+          description: Токен доступа
+          type: string
+        expires_in:
+          title: Токен истекает через
+          description: Token истекает через
+          type: integer
+        refresh_token:
+          title: RefreshToken
+          description: RefreshToken
+          type: string
+        token_type:
+          title: Тип токена
+          description: Тип токена
+          type: string
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+
     CommonResponse:
       type: object
       x-generic-parent: true

@@ -36,3 +36,10 @@ logging:
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
     # Log the parameter binding (for Hibernate 6+ in Spring Boot 3+)
     org.hibernate.orm.jdbc.bind: TRACE
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:aX9mQ2wR4nT6yU8iL0pK3zC7vB5hJ1dG}
+    access-token-ttl: 10h
+    refresh-token-ttl: 7d
+    issuer: tickets-module
