@@ -209,3 +209,23 @@ paths:
                 $ref: "types.yaml#/components/schemas/LoginResponse"
         401:
           description: Невалидный refresh token
+
+  /register:
+    post:
+      description: Регистрация пользователя
+      operationId: register
+      tags:
+        - OauthController
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "types.yaml#/components/schemas/RegisterRequest"
+      responses:
+        201:
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/LoginResponse"
+
