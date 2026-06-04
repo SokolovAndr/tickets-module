@@ -22,6 +22,31 @@ components:
           description: Пароль
           type: string
 
+    RegisterRequest:
+      type: object
+      required:
+        - login
+        - password
+        - fullName
+      properties:
+        login:
+          title: Логин
+          description: Логин
+          type: string
+          minLength: 5
+          maxLength: 20
+        password:
+          title: Пароль
+          description: Пароль
+          type: string
+          minLength: 5
+          maxLength: 20
+        fullName:
+          title: Пароль
+          description: Пароль
+          type: string
+          maxLength: 255
+
     LoginResponse:
       type: object
       required:
