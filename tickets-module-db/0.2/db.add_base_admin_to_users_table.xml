@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="add-base-admin-to-users-table" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+            <and>
+                <tableExists tableName="users"/>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM users WHERE login = 'admin'
+                </sqlCheck>
+            </and>
+        </preConditions>
+
+        <sql dbms="postgresql">
+            INSERT INTO users (login, password, full_name, role, created_at, updated_at)
+            VALUES ('admin',
+                    '$2a$12$m4MsZ3IWAUqvEp9nLa3oPOJ2Q1c4xeQEJ7IehQFHPuv83bpuyuT/O',
+                    'Admin Adminov',
+                    'ADMIN',
+                    CURRENT_TIMESTAMP,
+                    CURRENT_TIMESTAMP);        </sql>
+
+    </changeSet>
+
+</databaseChangeLog>
