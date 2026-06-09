@@ -33,6 +33,8 @@ paths:
                 $ref: "types.yaml#/components/schemas/ErrorResponse"
         401:
           description: Отсутствует или невалиден JWT-токен
+        403:
+          description: Пользователь не имеет ни одной из необходимых ролей
         500:
           description: Внутренняя ошибка сервера
     get:
@@ -156,6 +158,8 @@ paths:
                 $ref: "types.yaml#/components/schemas/ErrorResponse"
         401:
           description: Отсутствует или невалиден JWT-токен
+        403:
+          description: Пользователь не имеет ни одной из необходимых ролей
 
   /login:
     post:
