@@ -12,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import tickets.api.RoutesControllerApi;
-import tickets.model.CreateCarrierResponse;
 import tickets.model.CreateRouteRequest;
 import tickets.model.CreateRouteResponse;
 import tickets.model.RoutePatchRequest;

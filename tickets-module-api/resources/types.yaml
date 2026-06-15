@@ -304,6 +304,26 @@ components:
           title: Пункт назначения
           description: Пункт назначения
           type: string
+        departureFrom:
+          title: Время отправления с
+          description: Время отправления с
+          type: string
+          format: date
+        departureTo:
+          title: Время отправления по
+          description: Время отправления по
+          type: string
+          format: date
+        destinationFrom:
+          title: Время прибытия c
+          description: Время прибытия c
+          type: string
+          format: date
+        destinationTo:
+          title: Время прибытия по
+          description: Время прибытия по
+          type: string
+          format: date
         createDateFrom:
           description: Дата создания с
           type: string
@@ -312,6 +332,10 @@ components:
           description: Дата создания по
           type: string
           format: date
+        emptySits:
+          title: Признак наличия свободных мест
+          description: Признак наличия свободных мест
+          type: boolean
 
     Page:
       description: Объект постраничного ответа org.springframework.data.domain.Page
