@@ -62,14 +62,6 @@ public class TicketEntity {
     private RouteEntity route;
 
     /**
-     * Время отправления
-     */
-    @NonNull
-    @Comment("Время отправления")
-    @Column(name = "departure_datetime", nullable = false)
-    private LocalDateTime departureDatetime;
-
-    /**
      * Номер места
      */
     @Comment("Номер места")

@@ -54,6 +54,11 @@ public class CarriersService {
     }
 
     @Transactional(readOnly = true)
+    public CarrierEntity findOneById(UUID id) {
+        return carriersRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Carrier with id " + id + " not found"));
+    }
+
+    @Transactional(readOnly = true)
     public Page<CreateCarrierResponse> findAll(CarriersSearchRequest searchParam, Pageable pageable) {
         Specification<CarrierEntity> spec = buildSpecification(searchParam);
         return carriersRepository.findAll(spec, pageable).map(fromEntityConverter::convert);

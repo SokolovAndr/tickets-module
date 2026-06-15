@@ -42,8 +42,8 @@ components:
           minLength: 5
           maxLength: 20
         fullName:
-          title: Пароль
-          description: Пароль
+          title: Полное имя
+          description: Полное имя
           type: string
           maxLength: 255
 
@@ -148,6 +148,102 @@ components:
           format: date-time
         updatedAt:
           title: Дата обновления
+          description: Дата обновления
+          type: string
+          format: date-time
+
+    CreateRouteRequest:
+      type: object
+      required:
+        - departurePoint
+        - destinationPoint
+        - departureAt
+        - destinationAt
+        - carrierId
+        - durationMinutes
+      properties:
+        departurePoint:
+          title: Пункт отправления
+          description: Пункт отправления
+          type: string
+        destinationPoint:
+          title: Пункт назначения
+          description: Пункт назначения
+          type: string
+        departureAt:
+          title: Дата отправления
+          description: Дата отправления
+          type: string
+          format: date-time
+        destinationAt:
+          title: Дата прибытия
+          description: Дата прибытия
+          type: string
+          format: date-time
+        carrierId:
+          title: Идентификатор компании перевозчика
+          description: Идентификатор компании перевозчика
+          type: string
+          format: uuid
+        durationMinutes:
+          title: Длительность в минутах
+          description: Длительность в минутах
+          type: integer
+          format: int32
+          example: 100
+
+    CreateRouteResponse:
+      type: object
+      required:
+        - id
+        - departurePoint
+        - destinationPoint
+        - departureAt
+        - destinationAt
+        - carrierId
+        - durationMinutes
+      properties:
+        id:
+          title: Идентификатор маршрута
+          description: Идентификатор маршрута
+          type: string
+          format: uuid
+        departurePoint:
+          title: Пункт отправления
+          description: Пункт отправления
+          type: string
+        destinationPoint:
+          title: Пункт назначения
+          description: Пункт назначения
+          type: string
+        departureAt:
+          title: Дата отправления
+          description: Дата отправления
+          type: string
+          format: date-time
+        destinationAt:
+          title: Дата прибытия
+          description: Дата прибытия
+          type: string
+          format: date-time
+        carrierId:
+          title: Идентификатор компании перевозчика
+          description: Идентификатор компании перевозчика
+          type: string
+          format: uuid
+        durationMinutes:
+          title: Длительность в минутах
+          description: Длительность в минутах
+          type: integer
+          format: int32
+        createdAt:
+          title: Дата создания
+          description: Дата создания
+          type: string
+          format: date-time
+        updatedAt:
+          title: Дата обновления
+          description: Дата обновления
           type: string
           format: date-time
 
@@ -192,6 +288,54 @@ components:
           description: Дата создания по
           type: string
           format: date
+
+    RoutesSearchRequest:
+      type: object
+      properties:
+        query:
+          title: Быстрый поиск
+          description: Поиск по ilike по полям departurePoint, destinationPoint
+          type: string
+        departurePoint:
+          title: Пункт отправления
+          description: Пункт отправления
+          type: string
+        destinationPoint:
+          title: Пункт назначения
+          description: Пункт назначения
+          type: string
+        departureFrom:
+          title: Время отправления с
+          description: Время отправления с
+          type: string
+          format: date
+        departureTo:
+          title: Время отправления по
+          description: Время отправления по
+          type: string
+          format: date
+        destinationFrom:
+          title: Время прибытия c
+          description: Время прибытия c
+          type: string
+          format: date
+        destinationTo:
+          title: Время прибытия по
+          description: Время прибытия по
+          type: string
+          format: date
+        createDateFrom:
+          description: Дата создания с
+          type: string
+          format: date
+        createDateTo:
+          description: Дата создания по
+          type: string
+          format: date
+        emptySits:
+          title: Признак наличия свободных мест
+          description: Признак наличия свободных мест
+          type: boolean
 
     Page:
       description: Объект постраничного ответа org.springframework.data.domain.Page

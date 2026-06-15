@@ -7,5 +7,7 @@
 
     <include file="db.alter_tickets_table.xml" relativeToChangelogFile="true"/>
     <include file="db.add_base_admin_to_users_table.xml" relativeToChangelogFile="true"/>
+    <include file="db.add_departure_at_and_destination_at_columns_to_routes_table.xml" relativeToChangelogFile="true"/>
+    <include file="db.drop_departure_datetime_column_from_tickets_table.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

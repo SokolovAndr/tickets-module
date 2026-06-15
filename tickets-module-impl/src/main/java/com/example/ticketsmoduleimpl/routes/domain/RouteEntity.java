@@ -69,7 +69,7 @@ public class RouteEntity {
      * Идентификатор перевозчика
      */
     @Fetch(FetchMode.JOIN)
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.REFRESH})
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "carrier_id", nullable = false)
     @Comment("Идентификатор перевозчика")
     @ToString.Exclude
@@ -81,6 +81,21 @@ public class RouteEntity {
     @Comment("Длительность в минутах")
     @Column(name = "duration_minutes", nullable = false)
     private int durationMinutes;
+
+
+    /**
+     * Дата отправление
+     */
+    @Comment("Дата отправление")
+    @Column(name = "departure_at", nullable = false)
+    private LocalDateTime departureAt;
+
+    /**
+     * Дата прибытия
+     */
+    @Comment("Дата прибытия")
+    @Column(name = "destination_at", nullable = false)
+    private LocalDateTime destinationAt;
 
     /**
      * Дата создания

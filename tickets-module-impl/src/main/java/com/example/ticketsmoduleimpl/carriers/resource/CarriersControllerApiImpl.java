@@ -44,7 +44,7 @@ public class CarriersControllerApiImpl implements CarriersControllerApi {
     }
 
     @Override
-    public ResponseEntity<CreateCarrierResponse> patch(@NotNull UUID id, @Valid CarrierPatchRequest carrierPatchRequest) {
+    public ResponseEntity<CreateCarrierResponse> patchCarrier(@NotNull UUID id, @Valid CarrierPatchRequest carrierPatchRequest) {
         CreateCarrierResponse result = carriersService.patch(id, carrierPatchRequest);
         return ResponseEntity.ok(result);
     }

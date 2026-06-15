@@ -21,3 +21,43 @@ components:
           description: Телефон
           type: string
           nullable: true
+
+    RoutePatchRequest:
+      type: object
+      description: Частичное обновление маршрута
+      properties:
+        departurePoint:
+          title: Пункт отправления
+          description: Пункт отправления
+          type: string
+          nullable: true
+        destinationPoint:
+          title: Пункт назначения
+          description: Пункт назначения
+          type: string
+          nullable: true
+        departureAt:
+          title: Дата отправления
+          description: Дата отправления
+          type: string
+          format: date-time
+          nullable: true
+        destinationAt:
+          title: Дата прибытия
+          description: Дата прибытия
+          type: string
+          format: date-time
+          nullable: true
+        carrierId:
+          title: Идентификатор компании перевозчика
+          description: Идентификатор компании перевозчика
+          type: string
+          format: uuid
+          nullable: true
+        durationMinutes:
+          title: Длительность в минутах
+          description: Длительность в минутах
+          type: integer
+          format: int32
+          example: 100
+          nullable: true
