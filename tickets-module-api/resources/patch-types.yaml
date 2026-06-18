@@ -61,3 +61,45 @@ components:
           format: int32
           example: 100
           nullable: true
+
+    TicketPatchRequest:
+      type: object
+      description: Частичное обновление билета.
+      properties:
+        routeId:
+          title: Идентификатор маршрута
+          description: Идентификатор маршрута, к которому относится билет
+          type: string
+          format: uuid
+          nullable: true
+        seatNumber:
+          title: Номер места
+          description: Номер места в транспортном средстве
+          type: integer
+          format: int32
+          minimum: 1
+          nullable: true
+        price:
+          title: Цена
+          description: Цена билета
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+        isPurchased:
+          title: Признак занятости
+          description: Признак, куплен ли билет (оплачен)
+          type: boolean
+          nullable: true
+        purchasedById:
+          title: Идентификатор пользователя
+          description: Идентификатор пользователя, купившего билет
+          type: string
+          format: uuid
+          nullable: true
+        purchasedAt:
+          title: Дата покупки
+          description: Дата и время покупки билета
+          type: string
+          format: date-time
+          nullable: true
