@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Component
 @RequiredArgsConstructor
 public class TicketToEntityConverter {
-    public TicketEntity convert(CreateTicketRequest source, RouteEntity route, UserEntity user) {
+    public TicketEntity convert(CreateTicketRequest source, RouteEntity route) {
         return TicketEntity.builder()
                 .route(route)
                 .seatNumber(source.getSeatNumber())

@@ -1,6 +1,5 @@
 package com.example.ticketsmoduleimpl.tickets.service;
 
-import com.example.ticketsmoduleimpl.carriers.domain.CarrierEntity;
 import com.example.ticketsmoduleimpl.oauth.service.CurrentUserService;
 import com.example.ticketsmoduleimpl.routes.domain.RouteEntity;
 import com.example.ticketsmoduleimpl.routes.service.RoutesService;
@@ -21,10 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import tickets.model.CreateTicketRequest;
 import tickets.model.CreateTicketResponse;
-import tickets.model.RoutesSearchRequest;
 import tickets.model.TicketPatchRequest;
 import tickets.model.TicketsSearchRequest;
 
@@ -51,17 +48,16 @@ public class TicketsService {
 
     @Transactional
     public CreateTicketResponse create(CreateTicketRequest createTicketRequest) {
-
-        //TODO(): здесь не нужен currentUser
-        final UserEntity currentUser = currentUserService.getCurrentUser();
         final RouteEntity route = routesService.findOneById(createTicketRequest.getRouteId());
-
-        final TicketEntity ticketEntity = toEntityConverter.convert(createTicketRequest, route, currentUser);
-        assert ticketEntity != null;
+        final TicketEntity ticketEntity = toEntityConverter.convert(createTicketRequest, route);
+        if (ticketEntity == null) {
+            throw new IllegalStateException("Failed to convert ticket entity");
+        }
         TicketEntity response = ticketRepository.save(ticketEntity);
         return fromEntityConverter.convert(response);
     }
 
+    @Transactional(readOnly = true)
     public Page<CreateTicketResponse> findAll(@Valid TicketsSearchRequest searchParam, @Valid Pageable pageable) {
         Specification<TicketEntity> spec = buildSpecification(searchParam);
         return ticketRepository.findAll(spec, pageable).map(fromEntityConverter::convert);
@@ -75,7 +71,17 @@ public class TicketsService {
 
             if (searchParam != null) {
 
-                //TODO(): добавить фильтрацию по цене
+                if (searchParam.getRouteId() != null) {
+                    predicates.add(cb.equal(root.get("route").get("id"), searchParam.getRouteId()));
+                }
+
+                if (searchParam.getPriceFrom() != null) {
+                    predicates.add(cb.greaterThanOrEqualTo(root.get("price"), searchParam.getPriceFrom()));
+                }
+
+                if (searchParam.getPriceTo() != null) {
+                    predicates.add(cb.lessThanOrEqualTo(root.get("price"), searchParam.getPriceTo()));
+                }
 
                 if (searchParam.getIsPurchased() != null) {
                     predicates.add(cb.equal(root.get("isPurchased"), searchParam.getIsPurchased()));
@@ -94,11 +100,13 @@ public class TicketsService {
         };
     }
 
+    @Transactional(readOnly = true)
     public CreateTicketResponse findOne(@NotNull UUID id) {
-        TicketEntity response = ticketRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Ticket with id " + id + " not found"));
+        TicketEntity response = ticketRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(String.format("Ticket with id %s not found", id)));
         return fromEntityConverter.convert(response);
     }
 
+    @Transactional
     public CreateTicketResponse patch(@NotNull UUID id, @Valid TicketPatchRequest ticketPatchRequest) {
 
         var result = ticketRepository.findById(id).map(entity -> {
@@ -119,28 +127,67 @@ public class TicketsService {
             if (ticketPatchRequest.getPurchasedById() != null) {
                 final UserEntity user = usersService.findOneById(ticketPatchRequest.getPurchasedById());
                 entity.setUser(user);
-            }
-            if (ticketPatchRequest.getPurchasedAt() != null) {
+                entity.setPurchased(true);
+                entity.setPurchasedAt(ticketPatchRequest.getPurchasedAt() != null
+                        ? ticketPatchRequest.getPurchasedAt()
+                        : LocalDateTime.now());
+            } else if (ticketPatchRequest.getPurchasedAt() != null) {
                 entity.setPurchasedAt(ticketPatchRequest.getPurchasedAt());
             }
 
             entity.setUpdatedAt(LocalDateTime.now());
 
             return ticketRepository.save(entity);
-        }).orElseThrow(() -> new EntityNotFoundException(String.format("ticket with id %s not found", ticketPatchRequest)));
+        }).orElseThrow(() -> new EntityNotFoundException(String.format("Ticket with id %s not found", id)));
 
         return fromEntityConverter.convert(result);
     }
 
+    @Transactional
     public CreateTicketResponse buyTicket(@NotNull UUID id) {
-        //TODO(): здесь нужен currentUser
+        final UserEntity currentUser = currentUserService.getCurrentUser();
+        final TicketEntity ticket = ticketRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(String.format("ticket with id %s not found", id)));
 
-        return null;
+        if (ticket.isPurchased()) {
+            throw new IllegalStateException("Ticket already purchased");
+        }
+
+        if (ticket.getRoute().getDepartureAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException("Cannot buy ticket for past departure");
+        }
+
+        ticket.setUser(currentUser);
+        ticket.setPurchasedAt(LocalDateTime.now());
+        ticket.setUpdatedAt(LocalDateTime.now());
+        ticket.setPurchased(true);
+
+        final TicketEntity savedTicket = ticketRepository.save(ticket);
+        return fromEntityConverter.convert(savedTicket);
     }
 
+    @Transactional
     public CreateTicketResponse returnTicket(@NotNull UUID id) {
-        //TODO(): здесь нужен currentUser
+        final UserEntity currentUser = currentUserService.getCurrentUser();
+        final TicketEntity ticket = ticketRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(String.format("ticket with id %s not found", id)));
 
-        return null;
+        if (!ticket.isPurchased()) {
+            throw new IllegalStateException("Ticket is not purchased");
+        }
+
+        if (ticket.getRoute().getDepartureAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException("Cannot return ticket after departure");
+        }
+
+        if (!currentUser.getId().equals(ticket.getUser().getId())) {
+            throw new IllegalStateException("Users are different");
+        }
+
+        ticket.setUser(null);
+        ticket.setPurchasedAt(null);
+        ticket.setPurchased(false);
+        ticket.setUpdatedAt(LocalDateTime.now());
+
+        final TicketEntity savedTicket = ticketRepository.save(ticket);
+        return fromEntityConverter.convert(savedTicket);
     }
 }
