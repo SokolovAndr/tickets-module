@@ -267,6 +267,147 @@ components:
             type: string
           description: Признак сортировки в формате "property,asc" или "property,desc". Может быть передано несколько признаков.
 
+    CreateTicketRequest:
+      type: object
+      required:
+        - routeId
+        - seatNumber
+        - price
+      properties:
+        routeId:
+          title: Идентификатор маршрута
+          description: Идентификатор маршрута, к которому относится билет
+          type: string
+          format: uuid
+        seatNumber:
+          title: Номер места
+          description: Номер места в транспортном средстве
+          type: integer
+          format: int32
+          minimum: 1
+        price:
+          title: Цена
+          description: Цена билета
+          type: number
+          format: double
+          minimum: 0
+          example: 1250.50
+
+    CreateTicketResponse:
+      type: object
+      required:
+        - id
+        - routeId
+        - seatNumber
+        - price
+        - isPurchased
+      properties:
+        id:
+          title: Идентификатор билета
+          description: Уникальный идентификатор билета
+          type: string
+          format: uuid
+        routeId:
+          title: Идентификатор маршрута
+          description: Идентификатор маршрута, к которому относится билет
+          type: string
+          format: uuid
+        seatNumber:
+          title: Номер места
+          description: Номер места в транспортном средстве
+          type: integer
+          format: int32
+        price:
+          title: Цена
+          description: Цена билета
+          type: number
+          format: double
+        isPurchased:
+          title: Признак занятости
+          description: Признак, куплен ли билет (оплачен)
+          type: boolean
+        purchasedById:
+          title: Идентификатор пользователя
+          description: Идентификатор пользователя, купившего билет (если куплен)
+          type: string
+          format: uuid
+          nullable: true
+        purchasedAt:
+          title: Дата покупки
+          description: Дата и время покупки билета
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          title: Дата создания
+          description: Дата и время создания записи билета
+          type: string
+          format: date-time
+        updatedAt:
+          title: Дата обновления
+          description: Дата и время последнего обновления записи билета
+          type: string
+          format: date-time
+
+    TicketsSearchRequest:
+      type: object
+      properties:
+        query:
+          title: Быстрый поиск
+          description: Поиск по ilike по полям seatNumber (как строка), price (как строка)
+          type: string
+        routeId:
+          title: Идентификатор маршрута
+          description: Идентификатор маршрута
+          type: string
+          format: uuid
+        seatNumber:
+          title: Номер места
+          description: Номер места
+          type: integer
+          format: int32
+        priceFrom:
+          title: Цена от
+          description: Цена от
+          type: number
+          format: double
+          minimum: 0
+        priceTo:
+          title: Цена до
+          description: Цена до
+          type: number
+          format: double
+          minimum: 0
+        isPurchased:
+          title: Признак занятости
+          description: Признак, куплен ли билет
+          type: boolean
+        purchasedById:
+          title: Идентификатор пользователя
+          description: Идентификатор пользователя, купившего билет
+          type: string
+          format: uuid
+        purchasedDateFrom:
+          title: Дата покупки с
+          description: Дата покупки с
+          type: string
+          format: date
+        purchasedDateTo:
+          title: Дата покупки по
+          description: Дата покупки по
+          type: string
+          format: date
+        createdDateFrom:
+          title: Дата создания с
+          description: Дата создания с
+          type: string
+          format: date
+        createdDateTo:
+          title: Дата создания по
+          description: Дата создания по
+          type: string
+          format: date
+
     CarriersSearchRequest:
       type: object
       properties:

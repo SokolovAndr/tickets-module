@@ -46,6 +46,7 @@ public class SecurityConfiguration {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/login", "/token", "/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/tickets/{id}/buy", "/tickets/{id}/return").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.GET).hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.POST).hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT).hasRole("ADMIN")
