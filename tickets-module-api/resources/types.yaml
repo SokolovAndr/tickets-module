@@ -515,3 +515,62 @@ components:
         empty:
           type: boolean
           description: Признак пустой страницы
+
+    ReleaseTicketsBatchRequest:
+      type: object
+      required:
+        - routeId
+        - seatCount
+        - price
+      properties:
+        routeId:
+          title: Идентификатор маршрута
+          description: Идентификатор маршрута, к которому относится билет
+          type: string
+          format: uuid
+        seatCount:
+          title: Кол-во мест
+          description: Кол-во мест
+          type: integer
+          format: int32
+          minimum: 1
+        price:
+          title: Цена
+          description: Цена билета
+          type: number
+          format: double
+          minimum: 0
+          example: 1250.50
+
+    ReleaseTicketsBatchResponse:
+      type: object
+      required:
+        - routeId
+        - createdCount
+        - price
+        - ticketsIds
+      properties:
+        routeId:
+          title: Идентификатор маршрута, для которого выпущены билеты
+          description: Идентификатор маршрута, для которого выпущены билеты
+          type: string
+          format: uuid
+        createdCount:
+          title: Кол-во созданных мест
+          description: Кол-во созданных мест
+          type: integer
+          format: int32
+        price:
+          title: Цена
+          description: Цена билета
+          type: number
+          format: double
+          minimum: 0
+          example: 1250.50
+        ticketsIds:
+          title: Идентификаторы выпущенных билетов
+          description: Идентификаторы выпущенных билетов (только новые, созданные в этом запросе)
+          type: array
+          items:
+            type: string
+            format: uuid
