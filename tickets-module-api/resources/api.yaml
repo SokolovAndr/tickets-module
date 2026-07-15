@@ -621,3 +621,35 @@ paths:
             application/json:
               schema:
                 $ref: "types.yaml#/components/schemas/ErrorResponse"
+
+  /tickets/release-batch:
+    post:
+      description: Метод создания билета
+      operationId: releaseTicketsBatch
+      tags:
+        - TicketsController
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "types.yaml#/components/schemas/ReleaseTicketsBatchRequest"
+      responses:
+        201:
+          description: Билет успешно сохранен
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ReleaseTicketsBatchResponse"
+        400:
+          description: Ошибка в параметрах запроса
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        401:
+          description: Отсутствует или невалиден JWT-токен
+        403:
+          description: Пользователь не имеет ни одной из необходимых ролей
+        500:
+          description: Внутренняя ошибка сервера
+

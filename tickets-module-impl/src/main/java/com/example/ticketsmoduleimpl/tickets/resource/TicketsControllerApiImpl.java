@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import tickets.api.TicketsControllerApi;
 import tickets.model.CreateTicketRequest;
 import tickets.model.CreateTicketResponse;
+import tickets.model.ReleaseTicketsBatchRequest;
+import tickets.model.ReleaseTicketsBatchResponse;
 import tickets.model.TicketPatchRequest;
 import tickets.model.TicketsSearchRequest;
 
@@ -59,6 +62,12 @@ public class TicketsControllerApiImpl implements TicketsControllerApi {
     @Override
     public ResponseEntity<CreateTicketResponse> returnTicket(@NotNull UUID id) {
         CreateTicketResponse result = tickersService.returnTicket(id);
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @Override
+    public ResponseEntity<ReleaseTicketsBatchResponse> releaseTicketsBatch(@RequestBody ReleaseTicketsBatchRequest request) {
+        ReleaseTicketsBatchResponse result = tickersService.releaseTicketsBatch(request);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }

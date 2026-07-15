@@ -22,13 +22,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tickets.model.CreateTicketRequest;
 import tickets.model.CreateTicketResponse;
+import tickets.model.ReleaseTicketsBatchRequest;
+import tickets.model.ReleaseTicketsBatchResponse;
 import tickets.model.TicketPatchRequest;
 import tickets.model.TicketsSearchRequest;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Сервис для работы с билетами
@@ -190,4 +195,54 @@ public class TicketsService {
         final TicketEntity savedTicket = ticketRepository.save(ticket);
         return fromEntityConverter.convert(savedTicket);
     }
+
+    @Transactional
+    public ReleaseTicketsBatchResponse releaseTicketsBatch(@Valid ReleaseTicketsBatchRequest request) {
+
+        log.info("Запрос на выпуск билетов: маршрут={}, кол-во мест={}, цена={}",
+                request.getRouteId(), request.getSeatCount(), request.getPrice());
+
+        final RouteEntity route = routesService.findOneById(request.getRouteId());
+
+        if (route.getDepartureAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException(
+                    String.format("Невозможно выпустить билеты для маршрута id %s с датой отправки в прошлом", route.getId()));
+        }
+
+        Set<Integer> occupiedSeats = ticketRepository.findSeatNumbersByRouteId(route.getId());
+
+        List<TicketEntity> ticketsToSave = IntStream.rangeClosed(1, request.getSeatCount())
+                .filter(seat -> !occupiedSeats.contains(seat))
+                .mapToObj(seat -> TicketEntity.builder()
+                        .route(route)
+                        .seatNumber(seat)
+                        .price(request.getPrice())
+                        .isPurchased(false)
+                        .user(null)
+                        .purchasedAt(null)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build())
+                .toList();
+
+        if (ticketsToSave.isEmpty()) {
+            throw new IllegalStateException(
+                    String.format("Нет свободных мест для маршрута %s. Все %d мест/а заняты",
+                            route.getId(), request.getSeatCount()));
+        }
+
+        List<TicketEntity> savedTickets = ticketRepository.saveAll(ticketsToSave);
+
+        log.info("Released {} of {} requested tickets for route {}",
+                savedTickets.size(), request.getSeatCount(), route.getId());
+
+        return new ReleaseTicketsBatchResponse()
+                .ticketsIds(savedTickets.stream()
+                        .map(TicketEntity::getId)
+                        .toList())
+                .price(request.getPrice())
+                .createdCount(savedTickets.size())
+                .routeId(request.getRouteId());
+    }
+
 }
