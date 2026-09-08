@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="tickets_data_seeding" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+            <tableExists tableName="tickets"/>
+            <tableExists tableName="routes"/>
+        </preConditions>
+
+        <sql dbms="postgresql">
+            INSERT INTO tickets (route_id, seat_number, price, created_at, updated_at)
+            VALUES ((SELECT id FROM routes WHERE departure_point = 'Москва' AND destination_point = 'Санкт-Петербург'),
+                    1, 1250.50, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+
+                   ((SELECT id FROM routes WHERE departure_point = 'Москва' AND destination_point = 'Санкт-Петербург'),
+                    2, 1250.50, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+
+                   ((SELECT id FROM routes WHERE departure_point = 'Москва' AND destination_point = 'Санкт-Петербург'),
+                    3, 1250.50, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+
+                   ((SELECT id FROM routes WHERE departure_point = 'Москва' AND destination_point = 'Санкт-Петербург'),
+                    4, 1250.50, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+
+                   ((SELECT id FROM routes WHERE departure_point = 'Москва' AND destination_point = 'Санкт-Петербург'),
+                    5, 1250.50, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+
+                   ((SELECT id FROM routes WHERE departure_point = 'Нижний Новгород' AND destination_point = 'Сочи'),
+                    1, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+
+                   ((SELECT id FROM routes WHERE departure_point = 'Нижний Новгород' AND destination_point = 'Сочи'),
+                    2, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+
+                   ((SELECT id FROM routes WHERE departure_point = 'Нижний Новгород' AND destination_point = 'Сочи'),
+                    3, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+
+                   ((SELECT id FROM routes WHERE departure_point = 'Нижний Новгород' AND destination_point = 'Сочи'),
+                    4, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+
+                   ((SELECT id FROM routes WHERE departure_point = 'Нижний Новгород' AND destination_point = 'Сочи'),
+                    5, 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+
+            ON CONFLICT (route_id, seat_number) DO NOTHING;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

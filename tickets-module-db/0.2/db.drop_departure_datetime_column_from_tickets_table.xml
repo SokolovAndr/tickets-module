@@ -10,7 +10,16 @@
             <columnExists tableName="tickets" columnName="departure_datetime"/>
         </preConditions>
 
+        <dropUniqueConstraint
+                tableName="tickets"
+                constraintName="uq_ticket_route_seat_datetime"/>
+
         <dropColumn tableName="tickets" columnName="departure_datetime"/>
+
+        <addUniqueConstraint
+                tableName="tickets"
+                constraintName="uq_ticket_route_seat"
+                columnNames="route_id, seat_number"/>
     </changeSet>
 </databaseChangeLog>
 

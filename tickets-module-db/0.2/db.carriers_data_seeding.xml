@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="carriers_data_seeding" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+            <tableExists tableName="carriers"/>
+        </preConditions>
+
+        <sql dbms="postgresql">
+            INSERT INTO carriers (name, phone, created_at, updated_at)
+            VALUES
+                ('Pony Express', '+79051153672', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+                ('ITECO', '+79058881319', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+                ('Nord Trade', '+71234567890', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ON CONFLICT (name) DO NOTHING;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
