@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="routes_data_seeding" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+            <tableExists tableName="routes"/>
+            <tableExists tableName="carriers"/>
+        </preConditions>
+
+        <sql dbms="postgresql">
+            INSERT INTO routes (
+                                departure_point, destination_point, carrier_id, duration_minutes,
+                                created_at, updated_at, departure_at, destination_at)
+            VALUES
+                ('Москва', 'Санкт-Петербург',
+                 (SELECT id FROM carriers WHERE name = 'Pony Express'),
+                 480, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '2027-06-15 10:00:00.000', '2027-06-15 18:00:00.000'),
+
+                ('Санкт-Петербург', 'Москва',
+                 (SELECT id FROM carriers WHERE name = 'ITECO'),
+                 480, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '2027-06-16 10:00:00.000', '2027-06-16 18:00:00.000'),
+
+                ('Москва', 'Казань',
+                 (SELECT id FROM carriers WHERE name = 'Nord Trade'),
+                 720, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '2027-06-17 03:00:00.000', '2027-06-17 15:00:00.000'),
+
+                ('Екатеринбург', 'Новосибирск',
+                 (SELECT id FROM carriers WHERE name = 'Pony Express'),
+                 1440, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '2027-06-18 10:00:00.000', '2027-06-19 10:00:00.000'),
+
+                ('Нижний Новгород', 'Сочи',
+                 (SELECT id FROM carriers WHERE name = 'ITECO'),
+                 1080, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '2027-06-19 03:00:00.000', '2027-06-19 21:00:00.000')
+                ON CONFLICT (departure_point, destination_point, carrier_id) DO NOTHING;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
