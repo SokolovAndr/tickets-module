@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: tickets-module-impl
+
+  datasource:
+    url: ${DATABASE_URL}
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db.changelog-master.xml
+
+server:
+  port: ${PORT:8080}
+  servlet:
+    session:
+      cookie:
+        http-only: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-ttl: 10h
+    refresh-token-ttl: 7d
+    issuer: tickets-module
