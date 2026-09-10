@@ -3,9 +3,6 @@ spring:
     name: tickets-module-impl
 
   datasource:
-    url: jdbc:postgresql://localhost:5454/tickets-module_db
-    username: postgres
-    password: postgres
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -15,17 +12,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
-  liquibase:
-    enabled: true
-    change-log: classpath:db.changelog-master.xml
-
-server:
-  port: 8099
-  servlet:
-    session:
-      cookie:
-        http-only: true
 
 logging:
   level:
@@ -39,7 +25,6 @@ logging:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:aX9mQ2wR4nT6yU8iL0pK3zC7vB5hJ1dG}
     access-token-ttl: 10h
     refresh-token-ttl: 7d
     issuer: tickets-module

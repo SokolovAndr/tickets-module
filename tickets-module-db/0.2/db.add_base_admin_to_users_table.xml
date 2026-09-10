@@ -17,7 +17,7 @@
         <sql dbms="postgresql">
             INSERT INTO users (login, password, full_name, role, created_at, updated_at)
             VALUES ('admin',
-                    '$2a$12$m4MsZ3IWAUqvEp9nLa3oPOJ2Q1c4xeQEJ7IehQFHPuv83bpuyuT/O',
+                    '$2a$10$FH1BJ5Ui3z776lbIfBmavO0Wihi9XZKrZQ8Zi2EXCjvp4s6fnc3Xm',
                     'Admin Adminov',
                     'ADMIN',
                     CURRENT_TIMESTAMP,
