@@ -4,10 +4,10 @@ Tickets-module
 📋 Описание
 Проект представляет собой модульное приложение на Java, построенное на Maven и Spring Boot. Состоит из трёх модулей:
 
-Модуль	Назначение
-tickets-module-api	REST API, контроллеры, DTO
-tickets-module-db	Слой доступа к данным, миграции, сущности
-tickets-module-impl	Реализация бизнес-логики
+📦 Модуль	- Назначение
+tickets-module-api	- REST API, контроллеры, DTO
+tickets-module-db	- Слой доступа к данным, миграции, сущности
+tickets-module-impl -	Реализация бизнес-логики
 
 🛠 Технологии
 Java (Spring Boot)
