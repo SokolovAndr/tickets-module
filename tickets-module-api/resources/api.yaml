@@ -7,7 +7,7 @@ tags:
   - name: TicketsResource
     description: "API для работы с билетами"
 paths:
-  /login:
+  /api/login:
     post:
       description: Аутентификация пользователя
       operationId: login
@@ -40,7 +40,7 @@ paths:
               schema:
                 $ref: "types.yaml#/components/schemas/ErrorResponse"
 
-  /token:
+  /api/token:
     post:
       description: Обновление access токена по refresh токену
       operationId: refreshToken
@@ -61,7 +61,7 @@ paths:
         401:
           description: Невалидный refresh token
 
-  /register:
+  /api/register:
     post:
       description: Регистрация пользователя
       operationId: register
@@ -80,7 +80,7 @@ paths:
               schema:
                 $ref: "types.yaml#/components/schemas/LoginResponse"
 
-  /carriers:
+  /api/carriers:
     post:
       description: Метод создания компании перевозчика
       operationId: createCarrier
@@ -158,7 +158,7 @@ paths:
         500:
           description: Внутренняя ошибка сервера
 
-  /carriers/{id}:
+  /api/carriers/{id}:
     get:
       description: Метод получения компании перевозчика по id
       operationId: getCarrier
@@ -234,7 +234,7 @@ paths:
         403:
           description: Пользователь не имеет ни одной из необходимых ролей
 
-  /routes:
+  /api/routes:
     post:
       description: Метод создания маршрута
       operationId: createRoute
@@ -312,7 +312,7 @@ paths:
         500:
           description: Внутренняя ошибка сервера
 
-  /routes/{id}:
+  /api/routes/{id}:
     get:
       description: Метод получения маршрута по id
       operationId: getRoute
@@ -388,7 +388,7 @@ paths:
         403:
           description: Пользователь не имеет ни одной из необходимых ролей
 
-  /tickets:
+  /api/tickets:
     post:
       description: Метод создания билета
       operationId: createTicket
@@ -466,7 +466,7 @@ paths:
         500:
           description: Внутренняя ошибка сервера
 
-  /tickets/{id}:
+  /api/tickets/{id}:
     get:
       description: Метод получения билета по id
       operationId: getTicket
@@ -542,7 +542,7 @@ paths:
         403:
           description: Пользователь не имеет ни одной из необходимых ролей
 
-  /tickets/{id}/buy:
+  /api/tickets/{id}/buy:
     post:
       description: Метод покупки билета по id
       operationId: buyTicket
@@ -582,7 +582,7 @@ paths:
               schema:
                 $ref: "types.yaml#/components/schemas/ErrorResponse"
 
-  /tickets/{id}/return:
+  /api/tickets/{id}/return:
     post:
       description: Метод возврата билета по id
       operationId: returnTicket
@@ -622,7 +622,7 @@ paths:
               schema:
                 $ref: "types.yaml#/components/schemas/ErrorResponse"
 
-  /tickets/release-batch:
+  /api/tickets/release-batch:
     post:
       description: Метод создания билета
       operationId: releaseTicketsBatch

@@ -37,6 +37,8 @@ public class SecurityConfiguration {
     private final JwtProperties jwtProperties;
     private final ObjectMapper objectMapper;
 
+    private static final String API = "/api";
+
     private static final String[] SWAGGER_UI_ENDPOINTS = {
             "/swagger-ui/**",
             "/v3/api-docs/**",
@@ -51,9 +53,9 @@ public class SecurityConfiguration {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/login", "/token", "/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, API+"/login", API+"/token", API+"/register").permitAll()
                         .requestMatchers(SWAGGER_UI_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/tickets/{id}/buy", "/tickets/{id}/return").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, API+"/tickets/{id}/buy", API+"/tickets/{id}/return").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.GET).hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.POST).hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT).hasRole("ADMIN")
