@@ -11,5 +11,9 @@ spring:
       ddl-auto: create-drop # Hibernate сам создаст таблицы для теста
     database-platform: org.hibernate.dialect.H2Dialect
 
-jwt:
-  secret: "test-secret-key-for-ci-that-is-long-enough-12345"
+app:
+  jwt:
+    secret: "test-secret-key-for-ci-that-is-long-enough-12345"
+    access-token-ttl: 10h
+    refresh-token-ttl: 7d
+    issuer: tickets-module-test
