@@ -21,5 +21,32 @@ jobs:
           distribution: 'temurin'
           cache: maven # Кэширует зависимости Maven, ускоряя сборку
 
+      # 1. Сначала собираем проект и прогоняем тесты
       - name: Build and test with Maven
         run: ./mvnw -B verify
+
+      # 2. ПОСЛЕ сборки загружаем сгенерированный отчёт (для отладки)
+      - name: Upload JaCoCo Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: tickets-module-impl/target/site/jacoco/jacoco.xml
+
+      - name: Set up JDK 21 (only for Sonar)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          set-default: false   # не меняем глобальную Java
+
+      # 3. Запускаем анализ SonarCloud, явно указывая путь к отчёту
+      - name: SonarCloud Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
+        run: >
+          mvn -B sonar:sonar
+          -Dsonar.projectKey=SokolovAndr_tickets-module
+          -Dsonar.organization=sokolovandr
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.coverage.jacoco.xmlReportPaths=tickets-module-impl/target/site/jacoco/jacoco.xml
