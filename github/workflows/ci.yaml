@@ -2,9 +2,10 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ "master", "feature/add_ci_cd" ]
+    branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+  workflow_dispatch: # Позволяет запускать вручную из вкладки Actions
 
 jobs:
   build:
