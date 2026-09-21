@@ -2,7 +2,7 @@ name: Tickets Module CI
 
 on:
   push:
-    branches: [ "master" ]
+#    branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
   workflow_dispatch: # Позволяет запускать вручную из вкладки Actions
