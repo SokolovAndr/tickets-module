@@ -36,6 +36,7 @@ public class SecurityConfiguration {
 
     private final JwtProperties jwtProperties;
     private final ObjectMapper objectMapper;
+    private static final String ALGORITHM = "HmacSHA256";
 
     private static final String API = "/api";
 
@@ -97,24 +98,17 @@ public class SecurityConfiguration {
     @Bean
     JwtEncoder jwtEncoder() {
         byte[] key = jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8);
-        var secretKey = new SecretKeySpec(key, "HMAC");
+        var secretKey = new SecretKeySpec(key, ALGORITHM);
         return new NimbusJwtEncoder(new ImmutableSecret<>(secretKey));
     }
 
     @Bean
-    @Qualifier("refreshTokenJwtDecoder")
     JwtDecoder refreshTokenJwtDecoder() {
-        byte[] key = jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8);
-        var secretKey = new SecretKeySpec(key, "HmacSHA256");
-        return NimbusJwtDecoder.withSecretKey(secretKey).build();
+        return createJwtDecoder();
     }
 
     @Bean
-    JwtDecoder jwtDecoder() {
-        byte[] key = jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8);
-        var secretKey = new SecretKeySpec(key, "HMAC");
-        return NimbusJwtDecoder.withSecretKey(secretKey).build();
-    }
+    JwtDecoder jwtDecoder() { return createJwtDecoder(); }
 
     @Bean
     JwtAuthenticationConverter jwtAuthenticationConverter() {
@@ -127,6 +121,17 @@ public class SecurityConfiguration {
             return List.of(new SimpleGrantedAuthority("ROLE_" + role));
         });
         return converter;
+    }
+
+    /**
+     * Создаёт JwtDecoder с использованием симметричного ключа.
+     * Используется и для access-токенов, и для refresh-токенов,
+     * так как оба подписываются одним и тем же секретом.
+     */
+    private JwtDecoder createJwtDecoder() {
+        byte[] key = jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8);
+        var secretKey = new SecretKeySpec(key, ALGORITHM);
+        return NimbusJwtDecoder.withSecretKey(secretKey).build();
     }
 
 }
