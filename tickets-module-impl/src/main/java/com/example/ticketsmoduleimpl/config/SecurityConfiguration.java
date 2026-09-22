@@ -103,19 +103,12 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    @Qualifier("refreshTokenJwtDecoder")
     JwtDecoder refreshTokenJwtDecoder() {
-        byte[] key = jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8);
-        var secretKey = new SecretKeySpec(key, ALGORITHM);
-        return NimbusJwtDecoder.withSecretKey(secretKey).build();
+        return createJwtDecoder();
     }
 
     @Bean
-    JwtDecoder jwtDecoder() {
-        byte[] key = jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8);
-        var secretKey = new SecretKeySpec(key, ALGORITHM);
-        return NimbusJwtDecoder.withSecretKey(secretKey).build();
-    }
+    JwtDecoder jwtDecoder() { return createJwtDecoder(); }
 
     @Bean
     JwtAuthenticationConverter jwtAuthenticationConverter() {
@@ -128,6 +121,17 @@ public class SecurityConfiguration {
             return List.of(new SimpleGrantedAuthority("ROLE_" + role));
         });
         return converter;
+    }
+
+    /**
+     * Создаёт JwtDecoder с использованием симметричного ключа.
+     * Используется и для access-токенов, и для refresh-токенов,
+     * так как оба подписываются одним и тем же секретом.
+     */
+    private JwtDecoder createJwtDecoder() {
+        byte[] key = jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8);
+        var secretKey = new SecretKeySpec(key, ALGORITHM);
+        return NimbusJwtDecoder.withSecretKey(secretKey).build();
     }
 
 }
