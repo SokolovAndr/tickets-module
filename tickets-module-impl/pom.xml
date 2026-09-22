@@ -27,6 +27,7 @@
             <groupId>com.example</groupId>
             <artifactId>tickets-module-db</artifactId>
             <version>0.0.1-SNAPSHOT</version>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>com.example</groupId>
