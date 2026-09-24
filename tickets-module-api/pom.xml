@@ -93,8 +93,9 @@
                         </goals>
                         <configuration>
                             <inputSpec>${project.basedir}/resources/api.yaml</inputSpec>
-                            <apiPackage>tickets.api</apiPackage>
-                            <modelPackage>tickets.model</modelPackage>
+                            <apiPackage>com.example.ticketsmodule.api.controller</apiPackage>
+                            <modelPackage>com.example.ticketsmodule.api.model</modelPackage>
+                            <invokerPackage>com.example.ticketsmodule.api</invokerPackage>
                             <generatorName>spring</generatorName>
                             <library>spring-boot</library>
                             <generateApis>true</generateApis>

@@ -19,6 +19,7 @@
         <module>tickets-module-db</module>
         <module>tickets-module-api</module>
         <module>tickets-module-impl</module>
+        <module>tickets-module-app</module>
     </modules>
 
     <properties>
