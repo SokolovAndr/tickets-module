@@ -1,6 +1,6 @@
 spring:
   application:
-    name: tickets-module-impl
+    name: tickets-module-app
 
   datasource:
     url: ${DATABASE_URL}
