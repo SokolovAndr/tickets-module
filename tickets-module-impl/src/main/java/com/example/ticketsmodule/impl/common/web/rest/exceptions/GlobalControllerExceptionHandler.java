@@ -1,10 +1,12 @@
 package com.example.ticketsmodule.impl.common.web.rest.exceptions;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -30,14 +32,6 @@ import com.example.ticketsmodule.api.model.ErrorResponse;
 @Slf4j
 @RestControllerAdvice
 public class GlobalControllerExceptionHandler {
-    @ExceptionHandler(RuntimeException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<ErrorResponse> handleConversion(RuntimeException ex) {
-        ErrorResponse response = new ErrorResponse();
-        response.setMessage(ex.getMessage());
-        log.error(ex.getMessage(), ex);
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
 
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
@@ -63,6 +57,28 @@ public class GlobalControllerExceptionHandler {
             responseDto.setUserMessage(((ApiException) exception).getUserMessage());
         }
         return responseDto;
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseBody
+    public ErrorResponse handleEntityNotFound(EntityNotFoundException ex) {
+        log.error(ex.getMessage(), ex);
+        ErrorResponse response = new ErrorResponse();
+        response.setMessage(ex.getMessage());
+        response.setUserMessage("Ресурс не найден");
+        return response;
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ErrorResponse handleDataIntegrity(DataIntegrityViolationException ex) {
+        log.error(ex.getMessage(), ex);
+        ErrorResponse response = new ErrorResponse();
+        response.setMessage(ex.getMessage());
+        response.setUserMessage("Нарушение уникальности данных");
+        return response;
     }
 
     private HttpStatus getStatus(Exception exception) {

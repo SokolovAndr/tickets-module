@@ -16,4 +16,4 @@ app:
     secret: "test-secret-key-for-ci-that-is-long-enough-12345"
     access-token-ttl: 10h
     refresh-token-ttl: 7d
-    issuer: tickets-module-test
+    issuer: tickets-module
