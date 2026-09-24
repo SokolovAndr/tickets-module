@@ -30,7 +30,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
-          path: tickets-module-impl/target/site/jacoco/jacoco.xml
+          path: |
+            tickets-module-impl/target/site/jacoco/jacoco.xml
+            tickets-module-app/target/site/jacoco/jacoco.xml
 
       - name: Set up JDK 21 (only for Sonar)
         uses: actions/setup-java@v4
@@ -49,4 +51,4 @@ jobs:
           -Dsonar.projectKey=SokolovAndr_tickets-module
           -Dsonar.organization=sokolovandr
           -Dsonar.host.url=https://sonarcloud.io
-          -Dsonar.coverage.jacoco.xmlReportPaths=tickets-module-impl/target/site/jacoco/jacoco.xml
+          -Dsonar.coverage.jacoco.xmlReportPaths=tickets-module-impl/target/site/jacoco/jacoco.xml,tickets-module-app/target/site/jacoco/jacoco.xml
