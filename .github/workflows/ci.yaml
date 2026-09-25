@@ -23,20 +23,22 @@ jobs:
           distribution: 'temurin'
           cache: maven # Кэширует зависимости Maven, ускоряя сборку
 
+      - name: Build and test
+        run: ./mvnw -B verify
+
       - name: Set up JDK 21 (only for Sonar)
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-          set-default: false   # не меняем глобальную Java
+          set-default: false
 
-      # Один шаг: сборка + тесты + JaCoCo + Sonar анализ
-      - name: Build, test, and analyze
+      - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
         run: >
-          ./mvnw -B verify sonar:sonar
+          mvn -B sonar:sonar
           -Dsonar.projectKey=SokolovAndr_tickets-module
           -Dsonar.organization=sokolovandr
           -Dsonar.host.url=https://sonarcloud.io
