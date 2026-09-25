@@ -40,7 +40,7 @@ graph TD
 | 🔍 SonarCloud | Анализ качества и Quality Gate |
 | 🐳 Docker Compose | Локальный запуск БД |
 | 📄 OpenAPI Generator | Генерация DTO и интерфейсов контроллеров |
-| 🐳 Docker (multi-stage) | Сборка образа для деплоя на Railway |
+| 🐳 Docker File | Сборка образа для деплоя на Railway |
 
 ## 🚀 Быстрый старт
 
@@ -65,7 +65,7 @@ cd tickets-module
 docker compose up -d
 ```
 
- Сборка проекта
+### Сборка проекта
 
 ```bash
 ./mvnw clean install
@@ -86,7 +86,7 @@ coverage-report/target/site/jacoco/index.html
 ./mvnw spring-boot:run -pl tickets-module-app
 ```
 
-или через собранный JAR:
+### или через собранный JAR:
 
 ```bash
 java -jar tickets-module-app/target/tickets-module-app-0.0.1-SNAPSHOT.jar
@@ -111,12 +111,12 @@ java -jar tickets-module-app/target/tickets-module-app-0.0.1-SNAPSHOT.jar
 | Юнит-тесты	| Surefire	| src/test/java в каждом модуле |
 | Интеграционные тесты |	Failsafe |	tickets-module-app/src/test/java, классы с суффиксом *IT |
 
-Запуск только юнит-тестов:
+### Запуск только юнит-тестов:
 
 ```bash
 ./mvnw test
 ```
-Запуск всех тестов (юнит + интеграционные):
+### Запуск всех тестов (юнит + интеграционные):
 
 ```bash
 ./mvnw verify
