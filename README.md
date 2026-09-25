@@ -20,11 +20,13 @@
 | `tickets-module-db` | Слой доступа к данным, миграции |
 
 ### Зависимости между модулями
-tickets-module-app
-├── tickets-module-impl
-│ ├── tickets-module-db
-│ └── tickets-module-api
-└── coverage-report (используется только на этапе сборки)
+```mermaid
+graph TD
+    APP[tickets-module-app] --> IMPL[tickets-module-impl]
+    APP --> COV[coverage-report<br/><i>только на этапе сборки</i>]
+    IMPL --> DB[tickets-module-db]
+    IMPL --> API[tickets-module-api]
+```
 
 ## 🛠 Технологии
 
@@ -102,7 +104,7 @@ java -jar tickets-module-app/target/tickets-module-app-0.0.1-SNAPSHOT.jar
 | `application-railway.yml` | Конфигурация для деплоя на [Railway](https://railway.app/) |
 | `application-test.yml` | Конфигурация для тестов (H2 in-memory) |
 
-##🧪 Тестирование
+## 🧪 Тестирование
 
 | Тип тестов	| Плагин| Расположение |
 |-------------|-------|------------- |
