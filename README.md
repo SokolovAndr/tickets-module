@@ -108,7 +108,7 @@ java -jar tickets-module-app/target/tickets-module-app-0.0.1-SNAPSHOT.jar
 
 | Тип тестов	| Плагин| Расположение |
 |-------------|-------|------------- |
-| Юнит-тесты	| Surefire	| src/test/java в каждом модуле |
+| Юнит-тесты	| Surefire	| tickets-module-impl/src/test/java |
 | Интеграционные тесты |	Failsafe |	tickets-module-app/src/test/java, классы с суффиксом *IT |
 
 ### Запуск только юнит-тестов:
