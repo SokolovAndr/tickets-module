@@ -13,6 +13,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -21,25 +23,16 @@ jobs:
           distribution: 'temurin'
           cache: maven # Кэширует зависимости Maven, ускоряя сборку
 
-      # 1. Сначала собираем проект и прогоняем тесты
-      - name: Build and test with Maven
+      - name: Build and test
         run: ./mvnw -B verify
-
-      # 2. ПОСЛЕ сборки загружаем сгенерированный отчёт (для отладки)
-      - name: Upload JaCoCo Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: jacoco-report
-          path: tickets-module-impl/target/site/jacoco/jacoco.xml
 
       - name: Set up JDK 21 (only for Sonar)
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-          set-default: false   # не меняем глобальную Java
+          set-default: false
 
-      # 3. Запускаем анализ SonarCloud, явно указывая путь к отчёту
       - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -49,4 +42,15 @@ jobs:
           -Dsonar.projectKey=SokolovAndr_tickets-module
           -Dsonar.organization=sokolovandr
           -Dsonar.host.url=https://sonarcloud.io
-          -Dsonar.coverage.jacoco.xmlReportPaths=tickets-module-impl/target/site/jacoco/jacoco.xml
+          -Dsonar.coverage.jacoco.aggregateXmlReportPaths=coverage-report/target/site/jacoco/jacoco.xml
+          -Dsonar.coverage.exclusions=**/Application.java,**/config/**,**/common/aop/**,**/common/web/rest/exceptions/**,**/common/domain/enumeration/**,**/domain/*Entity.java,**/domain/*Builder.java,**/repository/**,**/common/domain/exception/**,**/oauth/service/CurrentUserService.java
+
+      - name: Upload JaCoCo Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jacoco-report
+          path: |
+            coverage-report/target/site/jacoco/jacoco.xml
+            tickets-module-impl/target/*.exec
+            tickets-module-app/target/*.exec

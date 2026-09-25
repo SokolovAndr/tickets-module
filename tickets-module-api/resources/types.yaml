@@ -116,10 +116,14 @@ components:
           title: Название компании
           description: Название компании
           type: string
+          minLength: 1
+          maxLength: 255
         phone:
           title: Телефон
           description: Телефон
           type: string
+          minLength: 1
+          maxLength: 20
 
     CreateCarrierResponse:
       type: object
@@ -166,10 +170,14 @@ components:
           title: Пункт отправления
           description: Пункт отправления
           type: string
+          minLength: 1
+          maxLength: 255
         destinationPoint:
           title: Пункт назначения
           description: Пункт назначения
           type: string
+          minLength: 1
+          maxLength: 255
         departureAt:
           title: Дата отправления
           description: Дата отправления
