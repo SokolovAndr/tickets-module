@@ -31,8 +31,7 @@
         <commons-lang3.version>3.13.0</commons-lang3.version>
         <openapi-generator-maven-plugin.version>7.17.0</openapi-generator-maven-plugin.version>
         <lombok.version>1.18.30</lombok.version>
-        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/coverage-report/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-        <sonar.coverage.exclusions>**/Application.java,**/config/**,**/common/aop/**,**/common/web/rest/exceptions/**,**/common/domain/enumeration/**,**/domain/*Entity.java,**/domain/*Builder.java,**/repository/**,**/common/domain/exception/**,**/oauth/service/CurrentUserService.java</sonar.coverage.exclusions>    </properties>
+    </properties>
 
     <dependencyManagement>
         <dependencies>
