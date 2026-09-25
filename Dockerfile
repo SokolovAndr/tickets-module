@@ -8,6 +8,7 @@ COPY tickets-module-db/pom.xml ./tickets-module-db/
 COPY tickets-module-api/pom.xml ./tickets-module-api/
 COPY tickets-module-impl/pom.xml ./tickets-module-impl/
 COPY tickets-module-app/pom.xml ./tickets-module-app/
+COPY coverage-report/pom.xml ./coverage-report/
 
 # Скачиваем зависимости (этот слой кэшируется, если pom.xml не менялись)
 RUN mvn dependency:go-offline -B
