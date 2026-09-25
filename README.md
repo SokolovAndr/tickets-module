@@ -1,26 +1,44 @@
 # Tickets-module
-Многомодульный Maven-проект для работы с тикетами и перевозчиками.
+Многомодульный Maven-проект для работы с билетами и перевозчиками на Spring Boot.
+
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=SokolovAndr_tickets-module&metric=alert_status)](https://sonarcloud.io/dashboard?id=SokolovAndr_tickets-module)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=SokolovAndr_tickets-module&metric=coverage)](https://sonarcloud.io/dashboard?id=SokolovAndr_tickets-module)
 
 ## 📋 Описание
 
-Проект представляет собой модульное приложение на Java, построенное на Maven и Spring Boot. Состоит из трёх модулей:
+Проект представляет собой модульное приложение на Java 17, построенное на Maven и Spring Boot 3.2.5.  
+Основная бизнес-логика — управление билетами, маршрутами и перевозчиками.
 
 ## 📦 Модули проекта
 
 | Модуль | Назначение |
 |--------|-----------|
-| `tickets-module-api` | REST API, контроллеры, DTO |
-| `tickets-module-db` | Слой доступа к данным, миграции, сущности |
-| `tickets-module-impl` | Реализация бизнес-логики |
+| `coverage-report` | Агрегация отчётов JaCoCo из всех модулей для SonarCloud |
+| `tickets-module-app` | Точка входа, конфигурация, интеграционные тесты |
+| `tickets-module-impl` | Реализация бизнес-логики, UNIT тесты |
+| `tickets-module-api` | Контракты REST API: DTO и интерфейсы контроллеров (генерируются из OpenAPI) |
+| `tickets-module-db` | Слой доступа к данным, миграции |
+
+### Зависимости между модулями
+tickets-module-app
+├── tickets-module-impl
+│ ├── tickets-module-db
+│ └── tickets-module-api
+└── coverage-report (используется только на этапе сборки)
 
 ## 🛠 Технологии
 
 | Технология | Назначение |
 |------------|-----------|
-| ☕ Java (Spring Boot) | Основной язык и фреймворк |
-| 📦 Maven | Многомодульная сборка проекта |
-| 🐘 PostgreSQL | База данных (через `compose.yaml`) |
+| ☕ Java 17 + Spring Boot 3.2.5 | Основной язык и фреймворк |
+| 📦 Maven (wrapper) | Многомодульная сборка |
+| 🐘 PostgreSQL 13 | Основная база данных (через `compose.yaml`) |
+| 🧪 JUnit 5 + MockMvc | Юнит- и интеграционные тесты |
+| 📊 JaCoCo 0.8.11 | Покрытие кода |
+| 🔍 SonarCloud | Анализ качества и Quality Gate |
 | 🐳 Docker Compose | Локальный запуск БД |
+| 📄 OpenAPI Generator | Генерация DTO и интерфейсов контроллеров |
+| 🐳 Docker (multi-stage) | Сборка образа для деплоя на Railway |
 
 ## 🚀 Быстрый старт
 
@@ -45,17 +63,34 @@ cd tickets-module
 docker compose up -d
 ```
 
-### 🔨 Сборка проекта
+ Сборка проекта
 
 ```bash
 ./mvnw clean install
 ```
 
+### 🔨 Для полной сборки с интеграционными тестами и агрегированным отчётом JaCoCo:
+
+```bash
+./mvnw clean verify
+```
+Агрегированный отчёт будет доступен по пути:
+coverage-report/target/site/jacoco/index.html 
+
+
 ### ▶️ Запуск приложения
 
 ```bash
-./mvnw spring-boot:run -pl tickets-module-api
+./mvnw spring-boot:run -pl tickets-module-app
 ```
+
+или через собранный JAR:
+
+```bash
+java -jar tickets-module-app/target/tickets-module-app-0.0.1-SNAPSHOT.jar
+```
+Приложение по умолчанию будет доступно на http://localhost:8080.
+
 
 ## ⚙️ Конфигурация
 
@@ -65,7 +100,34 @@ docker compose up -d
 |---------|-----------|
 | `application-local.yml` | Локальная конфигурация |
 | `application-railway.yml` | Конфигурация для деплоя на [Railway](https://railway.app/) |
+| `application-test.yml` | Конфигурация для тестов (H2 in-memory) |
 
+##🧪 Тестирование
+
+| Тип тестов	| Плагин| Расположение |
+|-------------|-------|------------- |
+| Юнит-тесты	| Surefire	| src/test/java в каждом модуле |
+| Интеграционные тесты |	Failsafe |	tickets-module-app/src/test/java, классы с суффиксом *IT |
+
+Запуск только юнит-тестов:
+
+```bash
+./mvnw test
+```
+Запуск всех тестов (юнит + интеграционные):
+
+```bash
+./mvnw verify
+```
+
+## 📊 Покрытие кода
+
+Проект использует агрегированный отчёт JaCoCo — отчёты со всех модулей собираются в coverage-report:
+```bash
+./mvnw verify
+```
+SonarCloud использует агрегированный отчёт через параметр:
+sonar.coverage.jacoco.aggregateXmlReportPaths=coverage-report/target/site/jacoco/jacoco.xml
 
 ## 👤 Автор
 
