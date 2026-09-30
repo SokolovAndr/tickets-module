@@ -56,3 +56,4 @@ jobs:
             coverage-report/target/site/jacoco/jacoco.xml
             tickets-module-impl/target/*.exec
             tickets-module-app/target/*.exec
+            tickets-module-web/target/*.exec
