@@ -11,10 +11,15 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+/**
+ * Резолвер текущего пользователя для REST API (JWT).
+ * Используется только в JWT-цепочке Spring Security.
+ */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class CurrentUserService {
+public class JwtCurrentUserService {
     private final UserRepository userRepository;
 
     public UserEntity getCurrentUser() {

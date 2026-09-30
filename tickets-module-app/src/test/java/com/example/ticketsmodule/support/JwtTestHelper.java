@@ -36,4 +36,19 @@ public final class JwtTestHelper {
                 new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("ROLE_" + role)))
         );
     }
+
+    /**
+     * JWT с конкретным subject (userId). Нужен для тестов, где контроллер
+     * достаёт текущего пользователя через JwtCurrentUserService —
+     * например, POST /api/tickets/{id}/buy и /return.
+     *
+     * @param userId UUID пользователя, который станет subject'ом JWT
+     * @param role   роль (USER/ADMIN)
+     */
+    public static RequestPostProcessor withUser(UUID userId, String role) {
+        Jwt jwt = jwtWithRoleAndSubject(role, userId);
+        return SecurityMockMvcRequestPostProcessors.authentication(
+                new JwtAuthenticationToken(jwt, List.of(new SimpleGrantedAuthority("ROLE_" + role)))
+        );
+    }
 }

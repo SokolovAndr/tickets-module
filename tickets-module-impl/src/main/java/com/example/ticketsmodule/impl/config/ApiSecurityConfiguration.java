@@ -1,41 +1,32 @@
 package com.example.ticketsmodule.impl.config;
 
+import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import com.example.ticketsmodule.api.model.ErrorResponse;
 
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-@EnableConfigurationProperties(JwtProperties.class)  // важно
-public class SecurityConfiguration {
+public class ApiSecurityConfiguration {
 
-    private final JwtProperties jwtProperties;
     private final ObjectMapper objectMapper;
-    private static final String ALGORITHM = "HmacSHA256";
+    private final JwtAuthenticationConverter jwtAuthenticationConverter;
+
+    private static final String ROLE_ADMIN = UserRoleEnum.ADMIN.name();
+    private static final String ROLE_USER = UserRoleEnum.USER.name();
 
     private static final String API = "/api";
 
@@ -46,8 +37,10 @@ public class SecurityConfiguration {
             "/webjars/**"};
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, JwtDecoder jwtDecoder) throws Exception {
+    @Order(1)
+    SecurityFilterChain apiSecurityFilterChain(HttpSecurity http, JwtDecoder jwtDecoder) throws Exception {
         http
+                .securityMatcher(API + "/**")
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -55,15 +48,15 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, API+"/login", API+"/token", API+"/register").permitAll()
                         .requestMatchers(SWAGGER_UI_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.POST, API+"/tickets/{id}/buy", API+"/tickets/{id}/return").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers(HttpMethod.GET).hasAnyRole("USER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST).hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT).hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH).hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE).hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, API+"/tickets/{id}/buy", API+"/tickets/{id}/return").hasAnyRole(ROLE_USER, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.GET).hasAnyRole(ROLE_USER, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.POST).hasRole(ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.PUT).hasRole(ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.PATCH).hasRole(ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.DELETE).hasRole(ROLE_ADMIN)
                         .anyRequest().authenticated()
                 ).oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder)
-                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        .jwtAuthenticationConverter(jwtAuthenticationConverter))
                         .authenticationEntryPoint((request, response, authException)
                                 -> {
                             response.setStatus(HttpStatus.UNAUTHORIZED.value());
@@ -87,50 +80,6 @@ public class SecurityConfiguration {
                             response.getWriter().write(objectMapper.writeValueAsString(accessErrorResponse));
                 }));
         return http.build();
-    }
-
-    @Bean
-    PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    JwtEncoder jwtEncoder() {
-        byte[] key = jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8);
-        var secretKey = new SecretKeySpec(key, ALGORITHM);
-        return new NimbusJwtEncoder(new ImmutableSecret<>(secretKey));
-    }
-
-    @Bean
-    JwtDecoder refreshTokenJwtDecoder() {
-        return createJwtDecoder();
-    }
-
-    @Bean
-    JwtDecoder jwtDecoder() { return createJwtDecoder(); }
-
-    @Bean
-    JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
-            String role = jwt.getClaimAsString("role"); // как в JwtService.CLAIM_ROLE
-            if (role == null || role.isBlank()) {
-                return List.of();
-            }
-            return List.of(new SimpleGrantedAuthority("ROLE_" + role));
-        });
-        return converter;
-    }
-
-    /**
-     * Создаёт JwtDecoder с использованием симметричного ключа.
-     * Используется и для access-токенов, и для refresh-токенов,
-     * так как оба подписываются одним и тем же секретом.
-     */
-    private JwtDecoder createJwtDecoder() {
-        byte[] key = jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8);
-        var secretKey = new SecretKeySpec(key, ALGORITHM);
-        return NimbusJwtDecoder.withSecretKey(secretKey).build();
     }
 
 }

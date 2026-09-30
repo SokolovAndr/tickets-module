@@ -6,7 +6,7 @@ import com.example.ticketsmodule.api.model.ReleaseTicketsBatchRequest;
 import com.example.ticketsmodule.api.model.ReleaseTicketsBatchResponse;
 import com.example.ticketsmodule.api.model.TicketPatchRequest;
 import com.example.ticketsmodule.api.model.TicketsSearchRequest;
-import com.example.ticketsmodule.impl.oauth.service.CurrentUserService;
+import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.conversion.TicketFromEntityConverter;
@@ -52,7 +52,7 @@ class TicketsServiceTest {
     @Mock private TicketFromEntityConverter fromEntityConverter;
     @Mock private TicketToEntityConverter toEntityConverter;
     @Mock private RoutesService routesService;
-    @Mock private CurrentUserService currentUserService;
+    @Mock private JwtCurrentUserService jwtCurrentUserService;
     @Mock private UsersService usersService;
 
     @InjectMocks
@@ -314,7 +314,7 @@ class TicketsServiceTest {
         @Test
         @DisplayName("should mark ticket as purchased for current user")
         void shouldBuyTicketSuccessfully() {
-            when(currentUserService.getCurrentUser()).thenReturn(user);
+            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
             when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
             when(fromEntityConverter.convert(any(TicketEntity.class))).thenReturn(expectedResponse);
@@ -332,7 +332,7 @@ class TicketsServiceTest {
         void shouldThrowWhenAlreadyPurchased() {
             ticket.setPurchased(true);
 
-            when(currentUserService.getCurrentUser()).thenReturn(user);
+            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
             assertThatThrownBy(() -> ticketsService.buyTicket(ticketId))
@@ -347,7 +347,7 @@ class TicketsServiceTest {
         void shouldThrowWhenDepartureInPast() {
             route.setDepartureAt(LocalDateTime.now().minusDays(1));
 
-            when(currentUserService.getCurrentUser()).thenReturn(user);
+            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
             assertThatThrownBy(() -> ticketsService.buyTicket(ticketId))
@@ -360,7 +360,7 @@ class TicketsServiceTest {
         @Test
         @DisplayName("should throw when ticket not found")
         void shouldThrowWhenNotFound() {
-            when(currentUserService.getCurrentUser()).thenReturn(user);
+            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> ticketsService.buyTicket(ticketId))
@@ -384,7 +384,7 @@ class TicketsServiceTest {
         @Test
         @DisplayName("should return ticket successfully")
         void shouldReturnTicketSuccessfully() {
-            when(currentUserService.getCurrentUser()).thenReturn(user);
+            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
             when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
             when(fromEntityConverter.convert(any(TicketEntity.class))).thenReturn(expectedResponse);
@@ -402,7 +402,7 @@ class TicketsServiceTest {
         void shouldThrowWhenNotPurchased() {
             ticket.setPurchased(false);
 
-            when(currentUserService.getCurrentUser()).thenReturn(user);
+            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
             assertThatThrownBy(() -> ticketsService.returnTicket(ticketId))
@@ -415,7 +415,7 @@ class TicketsServiceTest {
         void shouldThrowWhenDepartureInPast() {
             route.setDepartureAt(LocalDateTime.now().minusDays(1));
 
-            when(currentUserService.getCurrentUser()).thenReturn(user);
+            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
             assertThatThrownBy(() -> ticketsService.returnTicket(ticketId))
@@ -430,7 +430,7 @@ class TicketsServiceTest {
             otherUser.setId(UUID.randomUUID());
             ticket.setUser(otherUser);
 
-            when(currentUserService.getCurrentUser()).thenReturn(user);
+            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
             assertThatThrownBy(() -> ticketsService.returnTicket(ticketId))
