@@ -30,12 +30,6 @@ public class ApiSecurityConfiguration {
 
     private static final String API = "/api";
 
-    private static final String[] SWAGGER_UI_ENDPOINTS = {
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
-            "/swagger-resources/**",
-            "/webjars/**"};
-
     @Bean
     @Order(1)
     SecurityFilterChain apiSecurityFilterChain(HttpSecurity http, JwtDecoder jwtDecoder) throws Exception {
@@ -47,7 +41,6 @@ public class ApiSecurityConfiguration {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, API+"/login", API+"/token", API+"/register").permitAll()
-                        .requestMatchers(SWAGGER_UI_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.POST, API+"/tickets/{id}/buy", API+"/tickets/{id}/return").hasAnyRole(ROLE_USER, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.GET).hasAnyRole(ROLE_USER, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.POST).hasRole(ROLE_ADMIN)

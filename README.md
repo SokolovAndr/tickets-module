@@ -8,6 +8,10 @@
 
 Проект представляет собой модульное приложение на Java 17, построенное на Maven и Spring Boot 3.2.5.  
 Основная бизнес-логика — управление билетами, маршрутами и перевозчиками.
+Дополнительно реализован web-модуль с HTML-формами на Spring MVC + Spring Security.
+
+> 🌐 **Живая версия:** https://tickets-module-production.up.railway.app  
+> 📄 **Swagger UI (REST API):** https://tickets-module-production.up.railway.app/swagger-ui/index.html
 
 ## 📦 Модули проекта
 
@@ -15,6 +19,7 @@
 |--------|-----------|
 | `coverage-report` | Агрегация отчётов JaCoCo из всех модулей для SonarCloud |
 | `tickets-module-app` | Точка входа, конфигурация, интеграционные тесты |
+| `tickets-module-web` | Web-слой: HTML-формы, Spring MVC-контроллеры |
 | `tickets-module-impl` | Реализация бизнес-логики, UNIT тесты |
 | `tickets-module-api` | Контракты REST API: DTO и интерфейсы контроллеров (генерируются из OpenAPI) |
 | `tickets-module-db` | Слой доступа к данным, миграции |
@@ -23,24 +28,28 @@
 ```mermaid
 graph TD
     APP[tickets-module-app] --> IMPL[tickets-module-impl]
+    APP --> WEB[tickets-module-web]
     APP --> COV[coverage-report<br/><i>только на этапе сборки</i>]
     IMPL --> DB[tickets-module-db]
     IMPL --> API[tickets-module-api]
+    WEB --> IMPL
 ```
 
 ## 🛠 Технологии
 
-| Технология | Назначение |
-|------------|-----------|
-| ☕ Java 17 + Spring Boot 3.2.5 | Основной язык и фреймворк |
-| 📦 Maven (wrapper) | Многомодульная сборка |
-| 🐘 PostgreSQL 13 | Основная база данных (через `compose.yaml`) |
-| 🧪 JUnit 5 + MockMvc | Юнит- и интеграционные тесты |
-| 📊 JaCoCo 0.8.11 | Покрытие кода |
-| 🔍 SonarCloud | Анализ качества и Quality Gate |
-| 🐳 Docker Compose | Локальный запуск БД |
-| 📄 OpenAPI Generator | Генерация DTO и интерфейсов контроллеров |
-| 🐳 Docker File | Сборка образа для деплоя на Railway |
+| Технология                     | Назначение |
+|--------------------------------|-----------|
+| ☕ Java 17 + Spring Boot 3.2.5  | Основной язык и фреймворк |
+| 🔐 Spring Security 6           | Сессии, JWT |
+| 🖼 Thymeleaf                   | Шаблонизатор для web-форм |
+| 📦 Maven (wrapper)             | Многомодульная сборка |
+| 🐘 PostgreSQL 13               | Основная база данных (через `compose.yaml`) |
+| 🧪 JUnit 5 + Mockito + MockMvc | Юнит- и интеграционные тесты |
+| 📊 JaCoCo 0.8.11               | Покрытие кода |
+| 🔍 SonarCloud                  | Анализ качества и Quality Gate |
+| 🐳 Docker Compose              | Локальный запуск БД |
+| 📄 OpenAPI Generator           | Генерация DTO и интерфейсов контроллеров |
+| 🐳 Dockerfile                  | Сборка образа для деплоя на Railway |
 
 ## 🚀 Быстрый старт
 
@@ -77,7 +86,7 @@ docker compose up -d
 ./mvnw clean verify
 ```
 Агрегированный отчёт будет доступен по пути:
-coverage-report/target/site/jacoco/index.html 
+coverage-report/target/site/jacoco/index.html
 
 
 ### ▶️ Запуск приложения
@@ -104,12 +113,37 @@ java -jar tickets-module-app/target/tickets-module-app-0.0.1-SNAPSHOT.jar
 | `application-railway.yml` | Конфигурация для деплоя на [Railway](https://railway.app/) |
 | `application-test.yml` | Конфигурация для тестов (H2 in-memory) |
 
+## 🐳 Docker / Railway
+
+Сборка образа:
+
+```bash
+docker build -t tickets-module .
+```
+
+Dockerfile использует multi-stage build:
+1. **build** — `maven:3.9.6-eclipse-temurin-17`, кэширует зависимости (`dependency:go-offline`), собирает JAR.
+2. **runtime** — `eclipse-temurin:17-jre-jammy`, запускает `tickets-module-app`.
+
+> ⚠️ При добавлении нового Maven-модуля обязательно продублируйте его `pom.xml` и исходники в `Dockerfile` (шаги `COPY`), иначе сборка упадёт с ошибкой `Child module ... does not exist`.
+
+## 🔐 Безопасность
+
+В проекте используются две независимые цепочки Spring Security:
+
+| Цепочка | Область                               | Механизм                            |
+|---------|---------------------------------------|-------------------------------------|
+| UI | /login, /register, статические ресурсы | Form login + HTTP-сессия            |
+| REST API | /api/**                               | JWT Bearer (OAuth2 Resource Server) |
+
+Для UI-цепочки текущий пользователь резолвится через SessionCurrentUserService, для REST — через JwtCurrentUserService.
+
 ## 🧪 Тестирование
 
-| Тип тестов	| Плагин| Расположение |
-|-------------|-------|------------- |
-| Юнит-тесты	| Surefire	| tickets-module-impl/src/test/java |
-| Интеграционные тесты |	Failsafe |	tickets-module-app/src/test/java, классы с суффиксом *IT |
+| Тип тестов           | Плагин   | Расположение                                             |
+|----------------------|----------|----------------------------------------------------------|
+| Юнит-тесты           | Surefire | */src/test/java (классы *Test)                           |
+| Интеграционные тесты | Failsafe | tickets-module-app/src/test/java, классы с суффиксом *IT |
 
 ### Запуск только юнит-тестов:
 
@@ -137,4 +171,4 @@ sonar.coverage.jacoco.aggregateXmlReportPaths=coverage-report/target/site/jacoco
 
 ---
 
-> ⚠️ Проект находится в активной разработке. API и структура могут меняться.
+> ⚠️ Проект находится в активной разработке. UI, API и структура могут меняться.
