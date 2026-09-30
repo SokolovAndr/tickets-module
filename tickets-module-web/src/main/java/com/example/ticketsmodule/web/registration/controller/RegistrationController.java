@@ -21,11 +21,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class RegistrationController {
 
     private final AuthService authService;
+    private static final String REGISTER_PATH = "register";
 
     @GetMapping("/register")
     public String showForm(Model model) {
         model.addAttribute("form", new RegistrationForm());
-        return "register";
+        return REGISTER_PATH;
     }
 
     @PostMapping("/register")
@@ -38,7 +39,7 @@ public class RegistrationController {
         }
 
         if (bindingResult.hasErrors()) {
-            return "register";
+            return REGISTER_PATH;
         }
 
         RegisterRequest request = new RegisterRequest();
@@ -50,7 +51,7 @@ public class RegistrationController {
             authService.register(request);
         } catch (BadCredentialsException e) {
             bindingResult.rejectValue("login", "login.taken", e.getMessage());
-            return "register";
+            return REGISTER_PATH;
         }
 
         redirectAttributes.addFlashAttribute("successMessage", "Регистрация прошла успешно! Теперь войдите в систему.");

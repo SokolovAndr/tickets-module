@@ -9,14 +9,17 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class WebSecurityConfiguration {
 
+    private static final String LOGIN_PATH = "/login";
+    private static final String REGISTER_PATH = "/register";
+
     @Bean
     @Order(2)
     SecurityFilterChain uiSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/register",
-                                "/login",
+                                REGISTER_PATH,
+                                LOGIN_PATH,
                                 "/error",
                                 "/css/**",
                                 "/js/**",
@@ -27,11 +30,11 @@ public class WebSecurityConfiguration {
                         .anyRequest().authenticated()
                 )
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/login", "/register")
+                        .ignoringRequestMatchers(LOGIN_PATH, REGISTER_PATH)
                 )
                 .formLogin(form -> form
-                        .loginPage("/login")
-                        .loginProcessingUrl("/login")
+                        .loginPage(LOGIN_PATH)
+                        .loginProcessingUrl(LOGIN_PATH)
                         .defaultSuccessUrl("/", true)
                         .failureUrl("/login?error")
                         .permitAll()

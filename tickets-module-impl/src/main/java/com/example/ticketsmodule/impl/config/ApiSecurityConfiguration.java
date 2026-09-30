@@ -1,5 +1,6 @@
 package com.example.ticketsmodule.impl.config;
 
+import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -24,6 +25,9 @@ public class ApiSecurityConfiguration {
     private final ObjectMapper objectMapper;
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
 
+    private static final String ROLE_ADMIN = UserRoleEnum.ADMIN.name();
+    private static final String ROLE_USER = UserRoleEnum.USER.name();
+
     private static final String API = "/api";
 
     private static final String[] SWAGGER_UI_ENDPOINTS = {
@@ -44,12 +48,12 @@ public class ApiSecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, API+"/login", API+"/token", API+"/register").permitAll()
                         .requestMatchers(SWAGGER_UI_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.POST, API+"/tickets/{id}/buy", API+"/tickets/{id}/return").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers(HttpMethod.GET).hasAnyRole("USER", "ADMIN")
-                        .requestMatchers(HttpMethod.POST).hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT).hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH).hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE).hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, API+"/tickets/{id}/buy", API+"/tickets/{id}/return").hasAnyRole(ROLE_USER, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.GET).hasAnyRole(ROLE_USER, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.POST).hasRole(ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.PUT).hasRole(ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.PATCH).hasRole(ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.DELETE).hasRole(ROLE_ADMIN)
                         .anyRequest().authenticated()
                 ).oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder)
                         .jwtAuthenticationConverter(jwtAuthenticationConverter))
