@@ -17,6 +17,7 @@ server:
     session:
       cookie:
         http-only: true
+        secure: false
 
 app:
   jwt:
@@ -24,3 +25,7 @@ app:
     access-token-ttl: 10h
     refresh-token-ttl: 7d
     issuer: tickets-module
+
+logging:
+  level:
+    org.springframework.security: DEBUG

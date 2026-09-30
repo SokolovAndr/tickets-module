@@ -19,7 +19,7 @@
     <dependencies>
         <dependency>
             <groupId>com.example</groupId>
-            <artifactId>tickets-module-impl</artifactId>
+            <artifactId>tickets-module-web</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>

@@ -6,45 +6,36 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
-@Slf4j
+/**
+ * Резолвер текущего пользователя для UI (form login + сессии).
+ * Используется только в UI-цепочке Spring Security.
+ */
+
 @Service
 @RequiredArgsConstructor
-public class CurrentUserService {
+public class SessionCurrentUserService {
+
     private final UserRepository userRepository;
 
     public UserEntity getCurrentUser() {
-        UUID userId = getCurrentUserId();
-        return userRepository.findById(userId).orElseThrow(()
-                -> new IllegalStateException("Current user not found in database"));
+        return userRepository.findByLogin(getCurrentLogin())
+                .orElseThrow(() -> new IllegalStateException("Current user not found"));
     }
 
     public UUID getCurrentUserId() {
-        Jwt jwt = getCurrentJwt();
-        String subject = jwt.getSubject();
-        try {
-            return UUID.fromString(subject);
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid UUID in JWT subject: {}", subject);
-            throw new IllegalStateException("Invalid user ID in token", e);
-        }
+        return getCurrentUser().getId();
     }
 
-    public Jwt getCurrentJwt() {
+    protected String getCurrentLogin() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new IllegalStateException("User is not authenticated");
         }
-
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof Jwt jwt) {
-            return jwt;
-        }
-
-        throw new IllegalStateException("Authentication is not JWT based");
+        return authentication.getName();
     }
 }
