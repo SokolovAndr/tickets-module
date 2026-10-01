@@ -10,8 +10,8 @@
 Основная бизнес-логика — управление билетами, маршрутами и перевозчиками.
 Дополнительно реализован web-модуль с HTML-формами на Spring MVC + Spring Security.
 
-> 🌐 **Живая версия:** https://tickets-module-production.up.railway.app  
-> 📄 **Swagger UI (REST API):** https://tickets-module-production.up.railway.app/swagger-ui/index.html
+> 🌐 **Production:** https://tickets-module-production.up.railway.app  
+> 📄 **API Documentation (Swagger UI):** https://tickets-module-production.up.railway.app/swagger-ui/index.html
 
 ## 📦 Модули проекта
 
@@ -100,7 +100,7 @@ coverage-report/target/site/jacoco/index.html
 ```bash
 java -jar tickets-module-app/target/tickets-module-app-0.0.1-SNAPSHOT.jar
 ```
-Приложение по умолчанию будет доступно на http://localhost:8080.
+Приложение по умолчанию будет доступно на http://localhost:8099.
 
 
 ## ⚙️ Конфигурация
@@ -124,8 +124,6 @@ docker build -t tickets-module .
 Dockerfile использует multi-stage build:
 1. **build** — `maven:3.9.6-eclipse-temurin-17`, кэширует зависимости (`dependency:go-offline`), собирает JAR.
 2. **runtime** — `eclipse-temurin:17-jre-jammy`, запускает `tickets-module-app`.
-
-> ⚠️ При добавлении нового Maven-модуля обязательно продублируйте его `pom.xml` и исходники в `Dockerfile` (шаги `COPY`), иначе сборка упадёт с ошибкой `Child module ... does not exist`.
 
 ## 🔐 Безопасность
 
