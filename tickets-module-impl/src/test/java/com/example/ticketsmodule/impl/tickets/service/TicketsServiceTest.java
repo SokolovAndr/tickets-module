@@ -9,8 +9,7 @@ import com.example.ticketsmodule.api.model.TicketsSearchRequest;
 import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
-import com.example.ticketsmodule.impl.tickets.conversion.TicketFromEntityConverter;
-import com.example.ticketsmodule.impl.tickets.conversion.TicketToEntityConverter;
+import com.example.ticketsmodule.impl.tickets.conversion.TicketMapper;
 import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
 import com.example.ticketsmodule.impl.tickets.repository.TicketRepository;
 import com.example.ticketsmodule.impl.users.domain.UserEntity;
@@ -49,8 +48,7 @@ import static org.mockito.Mockito.*;
 class TicketsServiceTest {
 
     @Mock private TicketRepository ticketRepository;
-    @Mock private TicketFromEntityConverter fromEntityConverter;
-    @Mock private TicketToEntityConverter toEntityConverter;
+    @Mock private TicketMapper ticketMapper;
     @Mock private RoutesService routesService;
     @Mock private JwtCurrentUserService jwtCurrentUserService;
     @Mock private UsersService usersService;
@@ -103,9 +101,9 @@ class TicketsServiceTest {
             request.setRouteId(routeId);
 
             when(routesService.findOneById(routeId)).thenReturn(route);
-            when(toEntityConverter.convert(request, route)).thenReturn(ticket);
+            when(ticketMapper.toEntity(request, route)).thenReturn(ticket);
             when(ticketRepository.save(ticket)).thenReturn(ticket);
-            when(fromEntityConverter.convert(ticket)).thenReturn(expectedResponse);
+            when(ticketMapper.toResponse(ticket)).thenReturn(expectedResponse);
 
             CreateTicketResponse actual = ticketsService.create(request);
 
@@ -121,7 +119,7 @@ class TicketsServiceTest {
             request.setRouteId(routeId);
 
             when(routesService.findOneById(routeId)).thenReturn(route);
-            when(toEntityConverter.convert(request, route)).thenReturn(null);
+            when(ticketMapper.toEntity(request, route)).thenReturn(null);
 
             assertThatThrownBy(() -> ticketsService.create(request))
                     .isInstanceOf(IllegalStateException.class)
@@ -142,7 +140,7 @@ class TicketsServiceTest {
             assertThatThrownBy(() -> ticketsService.create(request))
                     .isInstanceOf(EntityNotFoundException.class);
 
-            verifyNoInteractions(ticketRepository, toEntityConverter, fromEntityConverter);
+            verifyNoInteractions(ticketRepository, ticketMapper);
         }
     }
 
@@ -160,7 +158,7 @@ class TicketsServiceTest {
 
             when(ticketRepository.findAll(any(Specification.class), eq(pageable)))
                     .thenReturn(new PageImpl<>(List.of(ticket)));
-            when(fromEntityConverter.convert(ticket)).thenReturn(expectedResponse);
+            when(ticketMapper.toResponse(ticket)).thenReturn(expectedResponse);
 
             Page<CreateTicketResponse> actual = ticketsService.findAll(search, pageable);
 
@@ -178,7 +176,7 @@ class TicketsServiceTest {
             Page<CreateTicketResponse> actual = ticketsService.findAll(null, pageable);
 
             assertThat(actual).isEmpty();
-            verifyNoInteractions(fromEntityConverter);
+            verifyNoInteractions(ticketMapper);
         }
     }
 
@@ -192,7 +190,7 @@ class TicketsServiceTest {
         @DisplayName("should return response when ticket exists")
         void shouldReturnResponseWhenFound() {
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-            when(fromEntityConverter.convert(ticket)).thenReturn(expectedResponse);
+            when(ticketMapper.toResponse(ticket)).thenReturn(expectedResponse);
 
             CreateTicketResponse actual = ticketsService.findOne(ticketId);
 
@@ -225,7 +223,7 @@ class TicketsServiceTest {
 
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
             when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(fromEntityConverter.convert(any(TicketEntity.class))).thenReturn(expectedResponse);
+            when(ticketMapper.toResponse(any(TicketEntity.class))).thenReturn(expectedResponse);
 
             CreateTicketResponse actual = ticketsService.patch(ticketId, patch);
 
@@ -249,7 +247,7 @@ class TicketsServiceTest {
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
             when(routesService.findOneById(newRouteId)).thenReturn(newRoute);
             when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(fromEntityConverter.convert(any(TicketEntity.class))).thenReturn(expectedResponse);
+            when(ticketMapper.toResponse(any(TicketEntity.class))).thenReturn(expectedResponse);
 
             ticketsService.patch(ticketId, patch);
 
@@ -266,7 +264,7 @@ class TicketsServiceTest {
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
             when(usersService.findOneById(userId)).thenReturn(user);
             when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(fromEntityConverter.convert(any(TicketEntity.class))).thenReturn(expectedResponse);
+            when(ticketMapper.toResponse(any(TicketEntity.class))).thenReturn(expectedResponse);
 
             ticketsService.patch(ticketId, patch);
 
@@ -284,7 +282,7 @@ class TicketsServiceTest {
 
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
             when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(fromEntityConverter.convert(any(TicketEntity.class))).thenReturn(expectedResponse);
+            when(ticketMapper.toResponse(any(TicketEntity.class))).thenReturn(expectedResponse);
 
             ticketsService.patch(ticketId, patch);
 
@@ -317,7 +315,7 @@ class TicketsServiceTest {
             when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
             when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(fromEntityConverter.convert(any(TicketEntity.class))).thenReturn(expectedResponse);
+            when(ticketMapper.toResponse(any(TicketEntity.class))).thenReturn(expectedResponse);
 
             CreateTicketResponse actual = ticketsService.buyTicket(ticketId);
 
@@ -387,7 +385,7 @@ class TicketsServiceTest {
             when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
             when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(fromEntityConverter.convert(any(TicketEntity.class))).thenReturn(expectedResponse);
+            when(ticketMapper.toResponse(any(TicketEntity.class))).thenReturn(expectedResponse);
 
             CreateTicketResponse actual = ticketsService.returnTicket(ticketId);
 

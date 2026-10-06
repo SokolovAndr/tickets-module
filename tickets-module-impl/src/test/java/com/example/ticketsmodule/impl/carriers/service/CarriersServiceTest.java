@@ -4,8 +4,7 @@ import com.example.ticketsmodule.api.model.CarrierPatchRequest;
 import com.example.ticketsmodule.api.model.CarriersSearchRequest;
 import com.example.ticketsmodule.api.model.CreateCarrierRequest;
 import com.example.ticketsmodule.api.model.CreateCarrierResponse;
-import com.example.ticketsmodule.impl.carriers.conversion.CarrierFromEntityConverter;
-import com.example.ticketsmodule.impl.carriers.conversion.CarrierToEntityConverter;
+import com.example.ticketsmodule.impl.carriers.conversion.CarrierMapper;
 import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
 import com.example.ticketsmodule.impl.carriers.repository.CarriersRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -38,8 +37,7 @@ import static org.mockito.Mockito.*;
 class CarriersServiceTest {
 
     @Mock private CarriersRepository carriersRepository;
-    @Mock private CarrierToEntityConverter toEntityConverter;
-    @Mock private CarrierFromEntityConverter fromEntityConverter;
+    @Mock private CarrierMapper carrierMapper;
 
     @InjectMocks
     private CarriersService carriersService;
@@ -72,16 +70,16 @@ class CarriersServiceTest {
             CreateCarrierRequest request = new CreateCarrierRequest();
             request.setName("Acme Transport");
 
-            when(toEntityConverter.convert(request)).thenReturn(carrierEntity);
+            when(carrierMapper.toEntity(request)).thenReturn(carrierEntity);
             when(carriersRepository.save(carrierEntity)).thenReturn(carrierEntity);
-            when(fromEntityConverter.convert(carrierEntity)).thenReturn(expectedResponse);
+            when(carrierMapper.toResponse(carrierEntity)).thenReturn(expectedResponse);
 
             CreateCarrierResponse actual = carriersService.create(request);
 
             assertThat(actual).isSameAs(expectedResponse);
-            verify(toEntityConverter).convert(request);
+            verify(carrierMapper).toEntity(request);
             verify(carriersRepository).save(carrierEntity);
-            verify(fromEntityConverter).convert(carrierEntity);
+            verify(carrierMapper).toResponse(carrierEntity);
         }
 
         @Test
@@ -89,11 +87,11 @@ class CarriersServiceTest {
         void shouldPropagateWhenConverterReturnsNull() {
             CreateCarrierRequest request = new CreateCarrierRequest();
 
-            when(toEntityConverter.convert(request)).thenReturn(null);
+            when(carrierMapper.toEntity(request)).thenReturn(null);
 
             // assert carrierEntity != null — выбросит AssertionError при -ea
             assertThatThrownBy(() -> carriersService.create(request))
-                    .isInstanceOf(AssertionError.class);
+                    .isInstanceOf(IllegalStateException.class);
 
             verify(carriersRepository, never()).save(any());
         }
@@ -109,7 +107,7 @@ class CarriersServiceTest {
         @DisplayName("should return response when carrier exists")
         void shouldReturnResponseWhenFound() {
             when(carriersRepository.findById(carrierId)).thenReturn(Optional.of(carrierEntity));
-            when(fromEntityConverter.convert(carrierEntity)).thenReturn(expectedResponse);
+            when(carrierMapper.toResponse(carrierEntity)).thenReturn(expectedResponse);
 
             CreateCarrierResponse actual = carriersService.findOne(carrierId);
 
@@ -125,7 +123,7 @@ class CarriersServiceTest {
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasMessageContaining(carrierId.toString());
 
-            verifyNoInteractions(fromEntityConverter);
+            verifyNoInteractions(carrierMapper);
         }
     }
 
@@ -169,7 +167,7 @@ class CarriersServiceTest {
 
             when(carriersRepository.findAll(any(Specification.class), eq(pageable)))
                     .thenReturn(new PageImpl<>(List.of(carrierEntity)));
-            when(fromEntityConverter.convert(carrierEntity)).thenReturn(expectedResponse);
+            when(carrierMapper.toResponse(carrierEntity)).thenReturn(expectedResponse);
 
             Page<CreateCarrierResponse> actual = carriersService.findAll(search, pageable);
 
@@ -187,7 +185,7 @@ class CarriersServiceTest {
             Page<CreateCarrierResponse> actual = carriersService.findAll(null, pageable);
 
             assertThat(actual).isEmpty();
-            verifyNoInteractions(fromEntityConverter);
+            verifyNoInteractions(carrierMapper);
         }
     }
 
@@ -205,7 +203,7 @@ class CarriersServiceTest {
 
             when(carriersRepository.findById(carrierId)).thenReturn(Optional.of(carrierEntity));
             when(carriersRepository.save(any(CarrierEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(fromEntityConverter.convert(any(CarrierEntity.class))).thenReturn(expectedResponse);
+            when(carrierMapper.toResponse(any(CarrierEntity.class))).thenReturn(expectedResponse);
 
             CreateCarrierResponse actual = carriersService.patch(carrierId, patch);
 
@@ -223,7 +221,7 @@ class CarriersServiceTest {
 
             when(carriersRepository.findById(carrierId)).thenReturn(Optional.of(carrierEntity));
             when(carriersRepository.save(any(CarrierEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(fromEntityConverter.convert(any(CarrierEntity.class))).thenReturn(expectedResponse);
+            when(carrierMapper.toResponse(any(CarrierEntity.class))).thenReturn(expectedResponse);
 
             carriersService.patch(carrierId, patch);
 
@@ -238,7 +236,7 @@ class CarriersServiceTest {
 
             when(carriersRepository.findById(carrierId)).thenReturn(Optional.of(carrierEntity));
             when(carriersRepository.save(any(CarrierEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(fromEntityConverter.convert(any(CarrierEntity.class))).thenReturn(expectedResponse);
+            when(carrierMapper.toResponse(any(CarrierEntity.class))).thenReturn(expectedResponse);
 
             carriersService.patch(carrierId, patch);
 

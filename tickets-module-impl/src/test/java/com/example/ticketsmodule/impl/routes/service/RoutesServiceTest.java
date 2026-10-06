@@ -6,8 +6,7 @@ import com.example.ticketsmodule.api.model.RoutePatchRequest;
 import com.example.ticketsmodule.api.model.RoutesSearchRequest;
 import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
 import com.example.ticketsmodule.impl.carriers.service.CarriersService;
-import com.example.ticketsmodule.impl.routes.conversion.RouteFromEntityConverter;
-import com.example.ticketsmodule.impl.routes.conversion.RouteToEntityConverter;
+import com.example.ticketsmodule.impl.routes.conversion.RouteMapper;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
 import com.example.ticketsmodule.impl.routes.repository.RoutesRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -41,8 +40,7 @@ import static org.mockito.Mockito.*;
 class RoutesServiceTest {
 
     @Mock private RoutesRepository routesRepository;
-    @Mock private RouteFromEntityConverter fromEntityConverter;
-    @Mock private RouteToEntityConverter toEntityConverter;
+    @Mock private RouteMapper routeMapper;
     @Mock private CarriersService carriersService;
 
     @InjectMocks
@@ -87,17 +85,17 @@ class RoutesServiceTest {
             request.setCarrierId(carrierId);
 
             when(carriersService.findOneById(carrierId)).thenReturn(carrierEntity);
-            when(toEntityConverter.convert(request, carrierEntity)).thenReturn(routeEntity);
+            when(routeMapper.toEntity(request, carrierEntity)).thenReturn(routeEntity);
             when(routesRepository.save(routeEntity)).thenReturn(routeEntity);
-            when(fromEntityConverter.convert(routeEntity)).thenReturn(expectedResponse);
+            when(routeMapper.toResponse(routeEntity)).thenReturn(expectedResponse);
 
             CreateRouteResponse actual = routesService.create(request);
 
             assertThat(actual).isSameAs(expectedResponse);
             verify(carriersService).findOneById(carrierId);
-            verify(toEntityConverter).convert(request, carrierEntity);
+            verify(routeMapper).toEntity(request, carrierEntity);
             verify(routesRepository).save(routeEntity);
-            verify(fromEntityConverter).convert(routeEntity);
+            verify(routeMapper).toResponse(routeEntity);
         }
 
         @Test
@@ -113,7 +111,7 @@ class RoutesServiceTest {
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasMessageContaining("Carrier not found");
 
-            verifyNoInteractions(routesRepository, toEntityConverter, fromEntityConverter);
+            verifyNoInteractions(routesRepository, routeMapper);
         }
     }
 
@@ -132,7 +130,7 @@ class RoutesServiceTest {
             Page<RouteEntity> entityPage = new PageImpl<>(List.of(routeEntity));
             when(routesRepository.findAll(any(Specification.class), eq(pageable)))
                     .thenReturn(entityPage);
-            when(fromEntityConverter.convert(routeEntity)).thenReturn(expectedResponse);
+            when(routeMapper.toResponse(routeEntity)).thenReturn(expectedResponse);
 
             Page<CreateRouteResponse> actual = routesService.findAll(search, pageable);
 
@@ -151,7 +149,7 @@ class RoutesServiceTest {
             Page<CreateRouteResponse> actual = routesService.findAll(null, pageable);
 
             assertThat(actual).isEmpty();
-            verifyNoInteractions(fromEntityConverter);
+            verifyNoInteractions(routeMapper);
         }
     }
 
@@ -165,7 +163,7 @@ class RoutesServiceTest {
         @DisplayName("should return response when route exists")
         void shouldReturnResponseWhenFound() {
             when(routesRepository.findById(routeId)).thenReturn(Optional.of(routeEntity));
-            when(fromEntityConverter.convert(routeEntity)).thenReturn(expectedResponse);
+            when(routeMapper.toResponse(routeEntity)).thenReturn(expectedResponse);
 
             CreateRouteResponse actual = routesService.findOne(routeId);
 
@@ -181,7 +179,7 @@ class RoutesServiceTest {
                     .isInstanceOf(EntityNotFoundException.class)
                     .hasMessageContaining(routeId.toString());
 
-            verifyNoInteractions(fromEntityConverter);
+            verifyNoInteractions(routeMapper);
         }
     }
 
@@ -226,7 +224,7 @@ class RoutesServiceTest {
 
             when(routesRepository.findById(routeId)).thenReturn(Optional.of(routeEntity));
             when(routesRepository.save(any(RouteEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(fromEntityConverter.convert(any(RouteEntity.class))).thenReturn(expectedResponse);
+            when(routeMapper.toResponse(any(RouteEntity.class))).thenReturn(expectedResponse);
 
             CreateRouteResponse actual = routesService.patch(routeId, patch);
 
@@ -250,7 +248,7 @@ class RoutesServiceTest {
             when(routesRepository.findById(routeId)).thenReturn(Optional.of(routeEntity));
             when(carriersService.findOneById(newCarrierId)).thenReturn(newCarrier);
             when(routesRepository.save(any(RouteEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(fromEntityConverter.convert(any(RouteEntity.class))).thenReturn(expectedResponse);
+            when(routeMapper.toResponse(any(RouteEntity.class))).thenReturn(expectedResponse);
 
             routesService.patch(routeId, patch);
 

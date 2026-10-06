@@ -4,7 +4,7 @@ import com.example.ticketsmodule.api.model.LoginRequest;
 import com.example.ticketsmodule.api.model.LoginResponse;
 import com.example.ticketsmodule.api.model.RefreshTokenRequest;
 import com.example.ticketsmodule.api.model.RegisterRequest;
-import com.example.ticketsmodule.impl.users.convertion.RegisterUserToEntityConverter;
+import com.example.ticketsmodule.impl.users.conversion.RegisterMapper;
 import com.example.ticketsmodule.impl.users.domain.UserEntity;
 import com.example.ticketsmodule.impl.users.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,14 +21,12 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 
 import java.time.Instant;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,7 +37,7 @@ class AuthServiceTest {
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtService jwtService;
     @Mock private JwtDecoder refreshTokenJwtDecoder;
-    @Mock private RegisterUserToEntityConverter registerConverter;
+    @Mock private RegisterMapper registerMapper;
 
     @InjectMocks
     private AuthService authService;
@@ -214,14 +212,15 @@ class AuthServiceTest {
             newUser.setLogin("newuser");
 
             when(userRepository.findByLogin("newuser")).thenReturn(Optional.empty());
-            when(registerConverter.convert(request)).thenReturn(newUser);
+            when(registerMapper.toEntity(request)).thenReturn(newUser);
+            when(passwordEncoder.encode("secret")).thenReturn("$2a$10$encrypted");
             when(userRepository.save(newUser)).thenReturn(newUser);
             when(jwtService.createTokenPair(newUser)).thenReturn(expectedResponse);
 
             LoginResponse actual = authService.register(request);
 
             assertThat(actual).isSameAs(expectedResponse);
-            verify(registerConverter).convert(request);
+            verify(registerMapper).toEntity(request);
             verify(userRepository).save(newUser);
             verify(jwtService).createTokenPair(newUser);
         }
@@ -239,7 +238,7 @@ class AuthServiceTest {
                     .hasMessageContaining("Login is already occupied");
 
             verify(userRepository, never()).save(any());
-            verifyNoInteractions(registerConverter, jwtService);
+            verifyNoInteractions(registerMapper, jwtService);
         }
     }
 
