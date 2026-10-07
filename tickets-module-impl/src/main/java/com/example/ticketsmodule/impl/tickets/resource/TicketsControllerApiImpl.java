@@ -1,5 +1,6 @@
 package com.example.ticketsmodule.impl.tickets.resource;
 
+import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -27,6 +28,7 @@ import java.util.UUID;
 public class TicketsControllerApiImpl implements TicketsControllerApi {
 
     private final TicketsService tickersService;
+    private final JwtCurrentUserService jwtCurrentUserService;
 
     @Override
     public ResponseEntity<CreateTicketResponse> createTicket(@RequestBody CreateTicketRequest createTicketRequest) {
@@ -54,13 +56,15 @@ public class TicketsControllerApiImpl implements TicketsControllerApi {
 
     @Override
     public ResponseEntity<CreateTicketResponse> buyTicket(@NotNull UUID id) {
-        CreateTicketResponse result = tickersService.buyTicket(id);
+        UUID userId = jwtCurrentUserService.getCurrentUserId();
+        CreateTicketResponse result = tickersService.buyTicket(id, userId);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
     @Override
     public ResponseEntity<CreateTicketResponse> returnTicket(@NotNull UUID id) {
-        CreateTicketResponse result = tickersService.returnTicket(id);
+        UUID userId = jwtCurrentUserService.getCurrentUserId();
+        CreateTicketResponse result = tickersService.returnTicket(id, userId);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 

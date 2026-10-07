@@ -1,10 +1,10 @@
 package com.example.ticketsmodule.impl.tickets.service;
 
-import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.conversion.TicketMapper;
 import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.exception.TicketAlreadyPurchasedException;
 import com.example.ticketsmodule.impl.tickets.repository.TicketRepository;
 import com.example.ticketsmodule.impl.users.domain.UserEntity;
 import com.example.ticketsmodule.impl.users.service.UsersService;
@@ -45,7 +45,6 @@ public class TicketsService {
     private final TicketRepository ticketRepository;
     private final TicketMapper ticketMapper;
     private final RoutesService routesService;
-    private final JwtCurrentUserService jwtCurrentUserService;
     private final UsersService usersService;
 
     @Transactional
@@ -149,12 +148,15 @@ public class TicketsService {
     }
 
     @Transactional
-    public CreateTicketResponse buyTicket(@NotNull UUID id) {
-        final UserEntity currentUser = jwtCurrentUserService.getCurrentUser();
-        final TicketEntity ticket = ticketRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(String.format("ticket with id %s not found", id)));
+    public CreateTicketResponse buyTicket(@NotNull UUID id, @NotNull UUID userId) {
+
+        final UserEntity currentUser = usersService.findOneById(userId);
+
+        final TicketEntity ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(String.format("ticket with id %s not found", id)));
 
         if (ticket.isPurchased()) {
-            throw new IllegalStateException("Ticket already purchased");
+            throw new TicketAlreadyPurchasedException(id);
         }
 
         if (ticket.getRoute().getDepartureAt().isBefore(LocalDateTime.now())) {
@@ -171,8 +173,10 @@ public class TicketsService {
     }
 
     @Transactional
-    public CreateTicketResponse returnTicket(@NotNull UUID id) {
-        final UserEntity currentUser = jwtCurrentUserService.getCurrentUser();
+    public CreateTicketResponse returnTicket(@NotNull UUID id, @NotNull UUID userId) {
+
+        final UserEntity currentUser = usersService.findOneById(userId);
+
         final TicketEntity ticket = ticketRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(String.format("ticket with id %s not found", id)));
 
         if (!ticket.isPurchased()) {

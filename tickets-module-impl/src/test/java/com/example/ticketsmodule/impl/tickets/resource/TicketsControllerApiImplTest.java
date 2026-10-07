@@ -6,6 +6,7 @@ import com.example.ticketsmodule.api.model.ReleaseTicketsBatchRequest;
 import com.example.ticketsmodule.api.model.ReleaseTicketsBatchResponse;
 import com.example.ticketsmodule.api.model.TicketPatchRequest;
 import com.example.ticketsmodule.api.model.TicketsSearchRequest;
+import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,16 +36,19 @@ import static org.mockito.Mockito.*;
 class TicketsControllerApiImplTest {
 
     @Mock private TicketsService ticketsService;
+    @Mock private JwtCurrentUserService jwtCurrentUserService;
 
     @InjectMocks
     private TicketsControllerApiImpl controller;
 
     private UUID ticketId;
+    private UUID userId;
     private CreateTicketResponse response;
 
     @BeforeEach
     void setUp() {
         ticketId = UUID.randomUUID();
+        userId = UUID.randomUUID();
         response = new CreateTicketResponse();
     }
 
@@ -184,19 +188,22 @@ class TicketsControllerApiImplTest {
         @Test
         @DisplayName("should return 200 OK with purchased ticket")
         void shouldReturn200Ok() {
-            when(ticketsService.buyTicket(ticketId)).thenReturn(response);
+            when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
+            when(ticketsService.buyTicket(ticketId, userId)).thenReturn(response);
 
             ResponseEntity<CreateTicketResponse> result = controller.buyTicket(ticketId);
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getBody()).isSameAs(response);
-            verify(ticketsService).buyTicket(ticketId);
+            verify(ticketsService).buyTicket(ticketId, userId);
         }
 
         @Test
         @DisplayName("should propagate IllegalStateException when already purchased")
         void shouldPropagateIllegalState() {
-            when(ticketsService.buyTicket(ticketId))
+            when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
+
+            when(ticketsService.buyTicket(ticketId, userId))
                     .thenThrow(new IllegalStateException("Ticket already purchased"));
 
             assertThatThrownBy(() -> controller.buyTicket(ticketId))
@@ -214,19 +221,21 @@ class TicketsControllerApiImplTest {
         @Test
         @DisplayName("should return 200 OK with returned ticket")
         void shouldReturn200Ok() {
-            when(ticketsService.returnTicket(ticketId)).thenReturn(response);
+            when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
+            when(ticketsService.returnTicket(ticketId, userId)).thenReturn(response);
 
             ResponseEntity<CreateTicketResponse> result = controller.returnTicket(ticketId);
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getBody()).isSameAs(response);
-            verify(ticketsService).returnTicket(ticketId);
+            verify(ticketsService).returnTicket(ticketId, userId);
         }
 
         @Test
         @DisplayName("should propagate IllegalStateException when not purchased")
         void shouldPropagateIllegalState() {
-            when(ticketsService.returnTicket(ticketId))
+            when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
+            when(ticketsService.returnTicket(ticketId, userId))
                     .thenThrow(new IllegalStateException("Ticket is not purchased"));
 
             assertThatThrownBy(() -> controller.returnTicket(ticketId))

@@ -304,7 +304,7 @@ class TicketsControllerApiImplIT {
 
             mockMvc.perform(post("/api/tickets/{id}/buy", saved.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
-                    .andExpect(status().is5xxServerError());
+                    .andExpect(status().isUnprocessableEntity());
         }
 
         @Test
