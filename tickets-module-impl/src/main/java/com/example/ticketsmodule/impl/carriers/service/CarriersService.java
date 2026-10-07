@@ -1,7 +1,6 @@
 package com.example.ticketsmodule.impl.carriers.service;
 
-import com.example.ticketsmodule.impl.carriers.conversion.CarrierFromEntityConverter;
-import com.example.ticketsmodule.impl.carriers.conversion.CarrierToEntityConverter;
+import com.example.ticketsmodule.impl.carriers.conversion.CarrierMapper;
 import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
 import com.example.ticketsmodule.impl.carriers.repository.CarriersRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -36,21 +35,24 @@ import java.util.UUID;
 public class CarriersService {
 
     private final CarriersRepository carriersRepository;
-    private final CarrierToEntityConverter toEntityConverter;
-    private final CarrierFromEntityConverter fromEntityConverter;
+    private final CarrierMapper carrierMapper;
 
     @Transactional
     public CreateCarrierResponse create(CreateCarrierRequest createCarrierRequest) {
-        final CarrierEntity carrierEntity = toEntityConverter.convert(createCarrierRequest);
-        assert carrierEntity != null;
+        final CarrierEntity carrierEntity = carrierMapper.toEntity(createCarrierRequest);
+        if (carrierEntity == null) {
+            throw new IllegalStateException("Failed to convert carrier entity");
+        }
+        carrierEntity.setCreatedAt(LocalDateTime.now());
+        carrierEntity.setUpdatedAt(LocalDateTime.now());
         CarrierEntity response = carriersRepository.save(carrierEntity);
-        return fromEntityConverter.convert(response);
+        return carrierMapper.toResponse(response);
     }
 
     @Transactional(readOnly = true)
     public CreateCarrierResponse findOne(UUID id) {
         CarrierEntity response = carriersRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Carrier with id " + id + " not found"));
-        return fromEntityConverter.convert(response);
+        return carrierMapper.toResponse(response);
     }
 
     @Transactional(readOnly = true)
@@ -61,7 +63,7 @@ public class CarriersService {
     @Transactional(readOnly = true)
     public Page<CreateCarrierResponse> findAll(CarriersSearchRequest searchParam, Pageable pageable) {
         Specification<CarrierEntity> spec = buildSpecification(searchParam);
-        return carriersRepository.findAll(spec, pageable).map(fromEntityConverter::convert);
+        return carriersRepository.findAll(spec, pageable).map(carrierMapper::toResponse);
     }
 
     private Specification<CarrierEntity> buildSpecification(CarriersSearchRequest searchParam) {
@@ -107,8 +109,8 @@ public class CarriersService {
             entity.setUpdatedAt(LocalDateTime.now());
 
             return carriersRepository.save(entity);
-        }).orElseThrow(() -> new EntityNotFoundException(String.format("Carrier with id %s not found", carrierPatchRequest)));
+        }).orElseThrow(() -> new EntityNotFoundException(String.format("Carrier with id %s not found", id)));
 
-        return fromEntityConverter.convert(result);
+        return carrierMapper.toResponse(result);
     }
 }

@@ -3,8 +3,7 @@ package com.example.ticketsmodule.impl.tickets.service;
 import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
-import com.example.ticketsmodule.impl.tickets.conversion.TicketFromEntityConverter;
-import com.example.ticketsmodule.impl.tickets.conversion.TicketToEntityConverter;
+import com.example.ticketsmodule.impl.tickets.conversion.TicketMapper;
 import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
 import com.example.ticketsmodule.impl.tickets.repository.TicketRepository;
 import com.example.ticketsmodule.impl.users.domain.UserEntity;
@@ -44,8 +43,7 @@ import java.util.stream.IntStream;
 public class TicketsService {
 
     private final TicketRepository ticketRepository;
-    private final TicketFromEntityConverter fromEntityConverter;
-    private final TicketToEntityConverter toEntityConverter;
+    private final TicketMapper ticketMapper;
     private final RoutesService routesService;
     private final JwtCurrentUserService jwtCurrentUserService;
     private final UsersService usersService;
@@ -53,18 +51,20 @@ public class TicketsService {
     @Transactional
     public CreateTicketResponse create(CreateTicketRequest createTicketRequest) {
         final RouteEntity route = routesService.findOneById(createTicketRequest.getRouteId());
-        final TicketEntity ticketEntity = toEntityConverter.convert(createTicketRequest, route);
+        final TicketEntity ticketEntity = ticketMapper.toEntity(createTicketRequest, route);
         if (ticketEntity == null) {
             throw new IllegalStateException("Failed to convert ticket entity");
         }
+        ticketEntity.setCreatedAt(LocalDateTime.now());
+        ticketEntity.setUpdatedAt(LocalDateTime.now());
         TicketEntity response = ticketRepository.save(ticketEntity);
-        return fromEntityConverter.convert(response);
+        return ticketMapper.toResponse(response);
     }
 
     @Transactional(readOnly = true)
     public Page<CreateTicketResponse> findAll(@Valid TicketsSearchRequest searchParam, @Valid Pageable pageable) {
         Specification<TicketEntity> spec = buildSpecification(searchParam);
-        return ticketRepository.findAll(spec, pageable).map(fromEntityConverter::convert);
+        return ticketRepository.findAll(spec, pageable).map(ticketMapper::toResponse);
     }
 
     private Specification<TicketEntity> buildSpecification(TicketsSearchRequest searchParam) {
@@ -106,8 +106,9 @@ public class TicketsService {
 
     @Transactional(readOnly = true)
     public CreateTicketResponse findOne(@NotNull UUID id) {
-        TicketEntity response = ticketRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(String.format("Ticket with id %s not found", id)));
-        return fromEntityConverter.convert(response);
+        TicketEntity response = ticketRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(String.format("Ticket with id %s not found", id)));
+        return ticketMapper.toResponse(response);
     }
 
     @Transactional
@@ -144,7 +145,7 @@ public class TicketsService {
             return ticketRepository.save(entity);
         }).orElseThrow(() -> new EntityNotFoundException(String.format("Ticket with id %s not found", id)));
 
-        return fromEntityConverter.convert(result);
+        return ticketMapper.toResponse(result);
     }
 
     @Transactional
@@ -166,7 +167,7 @@ public class TicketsService {
         ticket.setPurchased(true);
 
         final TicketEntity savedTicket = ticketRepository.save(ticket);
-        return fromEntityConverter.convert(savedTicket);
+        return ticketMapper.toResponse(savedTicket);
     }
 
     @Transactional
@@ -192,7 +193,7 @@ public class TicketsService {
         ticket.setUpdatedAt(LocalDateTime.now());
 
         final TicketEntity savedTicket = ticketRepository.save(ticket);
-        return fromEntityConverter.convert(savedTicket);
+        return ticketMapper.toResponse(savedTicket);
     }
 
     @Transactional

@@ -1,7 +1,8 @@
 package com.example.ticketsmodule.impl.oauth.service;
 
-import com.example.ticketsmodule.impl.users.convertion.RegisterUserToEntityConverter;
+import com.example.ticketsmodule.impl.users.conversion.RegisterMapper;
 import com.example.ticketsmodule.impl.users.domain.UserEntity;
+import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
 import com.example.ticketsmodule.impl.users.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import com.example.ticketsmodule.api.model.LoginResponse;
 import com.example.ticketsmodule.api.model.RefreshTokenRequest;
 import com.example.ticketsmodule.api.model.RegisterRequest;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -32,7 +34,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final @Qualifier("refreshTokenJwtDecoder") JwtDecoder refreshTokenJwtDecoder;
-    private final RegisterUserToEntityConverter registerConverter;
+    private final RegisterMapper registerMapper;
 
     public LoginResponse login(@Valid LoginRequest request) {
         UserEntity user = userRepository.findByLogin(request.getLogin())
@@ -57,7 +59,15 @@ public class AuthService {
             throw new BadCredentialsException("Login is already occupied");
         }
 
-        final UserEntity newUser = userRepository.save(registerConverter.convert(registerRequest));
+        final UserEntity newUser = registerMapper.toEntity(registerRequest);
+        final String passwordEncrypted = passwordEncoder.encode(registerRequest.getPassword());
+
+        newUser.setPassword(passwordEncrypted);
+        newUser.setRole(UserRoleEnum.USER);
+        newUser.setCreatedAt(LocalDateTime.now());
+        newUser.setUpdatedAt(LocalDateTime.now());
+
+        userRepository.save(newUser);
 
         return jwtService.createTokenPair(newUser);
     }

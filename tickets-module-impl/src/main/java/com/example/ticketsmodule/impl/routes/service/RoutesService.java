@@ -2,8 +2,7 @@ package com.example.ticketsmodule.impl.routes.service;
 
 import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
 import com.example.ticketsmodule.impl.carriers.service.CarriersService;
-import com.example.ticketsmodule.impl.routes.conversion.RouteFromEntityConverter;
-import com.example.ticketsmodule.impl.routes.conversion.RouteToEntityConverter;
+import com.example.ticketsmodule.impl.routes.conversion.RouteMapper;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
 import com.example.ticketsmodule.impl.routes.repository.RoutesRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -38,27 +37,26 @@ import java.util.UUID;
 public class RoutesService {
 
     private final RoutesRepository routesRepository;
-    private final RouteFromEntityConverter fromEntityConverter;
-    private final RouteToEntityConverter toEntityConverter;
+    private final RouteMapper routeMapper;
     private final CarriersService carriersService;
-
-
 
     @Transactional
     public CreateRouteResponse create(CreateRouteRequest createRouteRequest) {
-
         final CarrierEntity carrier = carriersService.findOneById(createRouteRequest.getCarrierId());
-
-        final RouteEntity routeEntity = toEntityConverter.convert(createRouteRequest, carrier);
-        assert routeEntity != null;
+        final RouteEntity routeEntity = routeMapper.toEntity(createRouteRequest, carrier);
+        if (routeEntity == null) {
+            throw new IllegalStateException("Failed to convert route entity");
+        }
+        routeEntity.setCreatedAt(LocalDateTime.now());
+        routeEntity.setUpdatedAt(LocalDateTime.now());
         RouteEntity response = routesRepository.save(routeEntity);
-        return fromEntityConverter.convert(response);
+        return routeMapper.toResponse(response);
     }
 
     @Transactional(readOnly = true)
     public Page<CreateRouteResponse> findAll(@Valid RoutesSearchRequest searchParam, @Valid Pageable pageable) {
         Specification<RouteEntity> spec = buildSpecification(searchParam);
-        return routesRepository.findAll(spec, pageable).map(fromEntityConverter::convert);
+        return routesRepository.findAll(spec, pageable).map(routeMapper::toResponse);
     }
 
     private Specification<RouteEntity> buildSpecification(RoutesSearchRequest searchParam) {
@@ -110,7 +108,7 @@ public class RoutesService {
     @Transactional(readOnly = true)
     public CreateRouteResponse findOne(@NotNull UUID id) {
         RouteEntity response = routesRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Route with id " + id + " not found"));
-        return fromEntityConverter.convert(response);
+        return routeMapper.toResponse(response);
     }
 
     @Transactional(readOnly = true)
@@ -145,6 +143,6 @@ public class RoutesService {
             return routesRepository.save(entity);
         }).orElseThrow(() -> new EntityNotFoundException(String.format("Route with id %s not found", routePatchRequest)));
 
-        return fromEntityConverter.convert(result);
+        return routeMapper.toResponse(result);
     }
 }
