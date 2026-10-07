@@ -6,11 +6,11 @@ import com.example.ticketsmodule.api.model.ReleaseTicketsBatchRequest;
 import com.example.ticketsmodule.api.model.ReleaseTicketsBatchResponse;
 import com.example.ticketsmodule.api.model.TicketPatchRequest;
 import com.example.ticketsmodule.api.model.TicketsSearchRequest;
-import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.conversion.TicketMapper;
 import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.exception.TicketAlreadyPurchasedException;
 import com.example.ticketsmodule.impl.tickets.repository.TicketRepository;
 import com.example.ticketsmodule.impl.users.domain.UserEntity;
 import com.example.ticketsmodule.impl.users.service.UsersService;
@@ -50,7 +50,6 @@ class TicketsServiceTest {
     @Mock private TicketRepository ticketRepository;
     @Mock private TicketMapper ticketMapper;
     @Mock private RoutesService routesService;
-    @Mock private JwtCurrentUserService jwtCurrentUserService;
     @Mock private UsersService usersService;
 
     @InjectMocks
@@ -312,12 +311,12 @@ class TicketsServiceTest {
         @Test
         @DisplayName("should mark ticket as purchased for current user")
         void shouldBuyTicketSuccessfully() {
-            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
+            when(usersService.findOneById(userId)).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
             when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
             when(ticketMapper.toResponse(any(TicketEntity.class))).thenReturn(expectedResponse);
 
-            CreateTicketResponse actual = ticketsService.buyTicket(ticketId);
+            CreateTicketResponse actual = ticketsService.buyTicket(ticketId, userId);
 
             assertThat(actual).isSameAs(expectedResponse);
             assertThat(ticket.isPurchased()).isTrue();
@@ -330,11 +329,11 @@ class TicketsServiceTest {
         void shouldThrowWhenAlreadyPurchased() {
             ticket.setPurchased(true);
 
-            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
+            when(usersService.findOneById(userId)).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-            assertThatThrownBy(() -> ticketsService.buyTicket(ticketId))
-                    .isInstanceOf(IllegalStateException.class)
+            assertThatThrownBy(() -> ticketsService.buyTicket(ticketId, userId))
+                    .isInstanceOf(TicketAlreadyPurchasedException.class)
                     .hasMessageContaining("already purchased");
 
             verify(ticketRepository, never()).save(any());
@@ -344,11 +343,10 @@ class TicketsServiceTest {
         @DisplayName("should throw when route departure is in the past")
         void shouldThrowWhenDepartureInPast() {
             route.setDepartureAt(LocalDateTime.now().minusDays(1));
-
-            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
+            when(usersService.findOneById(userId)).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-            assertThatThrownBy(() -> ticketsService.buyTicket(ticketId))
+            assertThatThrownBy(() -> ticketsService.buyTicket(ticketId, userId))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("past departure");
 
@@ -358,10 +356,10 @@ class TicketsServiceTest {
         @Test
         @DisplayName("should throw when ticket not found")
         void shouldThrowWhenNotFound() {
-            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
+            when(usersService.findOneById(userId)).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> ticketsService.buyTicket(ticketId))
+            assertThatThrownBy(() -> ticketsService.buyTicket(ticketId, userId))
                     .isInstanceOf(EntityNotFoundException.class);
         }
     }
@@ -382,12 +380,12 @@ class TicketsServiceTest {
         @Test
         @DisplayName("should return ticket successfully")
         void shouldReturnTicketSuccessfully() {
-            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
+            when(usersService.findOneById(userId)).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
             when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
             when(ticketMapper.toResponse(any(TicketEntity.class))).thenReturn(expectedResponse);
 
-            CreateTicketResponse actual = ticketsService.returnTicket(ticketId);
+            CreateTicketResponse actual = ticketsService.returnTicket(ticketId, userId);
 
             assertThat(actual).isSameAs(expectedResponse);
             assertThat(ticket.isPurchased()).isFalse();
@@ -399,11 +397,10 @@ class TicketsServiceTest {
         @DisplayName("should throw when ticket is not purchased")
         void shouldThrowWhenNotPurchased() {
             ticket.setPurchased(false);
-
-            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
+            when(usersService.findOneById(userId)).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-            assertThatThrownBy(() -> ticketsService.returnTicket(ticketId))
+            assertThatThrownBy(() -> ticketsService.returnTicket(ticketId, userId))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("not purchased");
         }
@@ -412,11 +409,10 @@ class TicketsServiceTest {
         @DisplayName("should throw when departure is in the past")
         void shouldThrowWhenDepartureInPast() {
             route.setDepartureAt(LocalDateTime.now().minusDays(1));
-
-            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
+            when(usersService.findOneById(userId)).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-            assertThatThrownBy(() -> ticketsService.returnTicket(ticketId))
+            assertThatThrownBy(() -> ticketsService.returnTicket(ticketId, userId))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("after departure");
         }
@@ -427,11 +423,10 @@ class TicketsServiceTest {
             UserEntity otherUser = new UserEntity();
             otherUser.setId(UUID.randomUUID());
             ticket.setUser(otherUser);
-
-            when(jwtCurrentUserService.getCurrentUser()).thenReturn(user);
+            when(usersService.findOneById(userId)).thenReturn(user);
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-            assertThatThrownBy(() -> ticketsService.returnTicket(ticketId))
+            assertThatThrownBy(() -> ticketsService.returnTicket(ticketId, userId))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Users are different");
         }
