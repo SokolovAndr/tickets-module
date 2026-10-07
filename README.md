@@ -22,17 +22,16 @@
 | `tickets-module-web` | Web-слой: HTML-формы, Spring MVC-контроллеры |
 | `tickets-module-impl` | Реализация бизнес-логики, UNIT тесты |
 | `tickets-module-api` | Контракты REST API: DTO и интерфейсы контроллеров (генерируются из OpenAPI) |
-| `tickets-module-db` | Слой доступа к данным, миграции |
+| `tickets-module-db` | Только Liquibase-миграции (XML). Java-кода нет |
 
 ### Зависимости между модулями
 ```mermaid
 graph TD
-    APP[tickets-module-app] --> IMPL[tickets-module-impl]
-    APP --> WEB[tickets-module-web]
+    APP[tickets-module-app] --> WEB[tickets-module-web]
+    APP --> DB[tickets-module-db]
     APP --> COV[coverage-report<br/><i>только на этапе сборки</i>]
-    IMPL --> DB[tickets-module-db]
+    WEB --> IMPL[tickets-module-impl]
     IMPL --> API[tickets-module-api]
-    WEB --> IMPL
 ```
 
 ## 🛠 Технологии
@@ -50,6 +49,7 @@ graph TD
 | 🐳 Docker Compose              | Локальный запуск БД |
 | 📄 OpenAPI Generator           | Генерация DTO и интерфейсов контроллеров |
 | 🐳 Dockerfile                  | Сборка образа для деплоя на Railway |
+| 🔄 MapStruct 1.5.5             | Генерация мапперов Entity ↔ DTO |
 
 ## 🚀 Быстрый старт
 
