@@ -1,5 +1,6 @@
 package com.example.ticketsmodule.impl.tickets.service;
 
+import com.example.ticketsmodule.impl.config.CacheConfiguration;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.conversion.TicketMapper;
@@ -14,7 +15,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.Nullable;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -148,6 +150,7 @@ public class TicketsService {
         return ticketMapper.toResponse(result);
     }
 
+    @CacheEvict(value = CacheConfiguration.USER_TICKETS_CACHE, key = "#userId")
     @Transactional
     public CreateTicketResponse buyTicket(@NotNull UUID id, @NotNull UUID userId) {
 
@@ -173,6 +176,7 @@ public class TicketsService {
         return ticketMapper.toResponse(savedTicket);
     }
 
+    @CacheEvict(value = CacheConfiguration.USER_TICKETS_CACHE, key = "#userId")
     @Transactional
     public CreateTicketResponse returnTicket(@NotNull UUID id, @NotNull UUID userId) {
 
@@ -254,13 +258,12 @@ public class TicketsService {
      * Метод возвращающий все билеты купленные текущим пользователем
      */
 
+    @Cacheable(value = CacheConfiguration.USER_TICKETS_CACHE, key = "#userId")
     @Transactional(readOnly = true)
-    public Page<CreateTicketResponse> findAllMyTickets(
-            @Valid TicketsSearchRequest searchParam,
-            @Valid Pageable pageable, UUID userId) {
-        Specification<TicketEntity> spec = buildSpecification(searchParam)
-                .and((root, query, cb)
-                        -> cb.equal(root.get("user").get("id"), userId));
-        return ticketRepository.findAll(spec, pageable).map(ticketMapper::toResponse);
+    public List<CreateTicketResponse> findAllMyTickets(UUID userId) {
+
+        return ticketRepository.findPurchasedByUserId(userId).stream()
+                .map(ticketMapper::toResponse)
+                .toList();
     }
 }

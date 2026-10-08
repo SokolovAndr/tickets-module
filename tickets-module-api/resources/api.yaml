@@ -472,42 +472,15 @@ paths:
       operationId: getAllMyTickets
       tags:
         - TicketsController
-      parameters:
-        - in: query
-          name: pageable
-          required: false
-          schema:
-            $ref: "types.yaml#/components/schemas/Pageable"
-        - in: query
-          name: searchParam
-          required: false
-          schema:
-            $ref: "types.yaml#/components/schemas/TicketsSearchRequest"
       responses:
         200:
-          description: Поиск выполнен успешно
-          headers:
-            X-Total-Count:
-              description: Общее количество элементов при постраничном отображении
-              schema:
-                type: integer
-                format: int32
-                example: 100
-            Link:
-              description: Ссылки на страницы
-              schema:
-                type: string
-                format: uri
+          description: Список билетов
           content:
             application/json:
               schema:
-                $ref: "types.yaml#/components/schemas/Page"
-        400:
-          description: Ошибка в параметрах запроса
-          content:
-            application/json:
-              schema:
-                $ref: "types.yaml#/components/schemas/ErrorResponse"
+                type: array
+                items:
+                  $ref: "types.yaml#/components/schemas/CreateTicketResponse"
         401:
           description: Отсутствует или невалиден JWT-токен
         404:
