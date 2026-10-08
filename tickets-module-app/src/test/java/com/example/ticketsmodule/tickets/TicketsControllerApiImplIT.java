@@ -236,6 +236,64 @@ class TicketsControllerApiImplIT {
         }
     }
 
+    // ---------- LIST MY ----------
+
+    @Nested
+    @DisplayName("GET /api/tickets/my")
+    class ListMyTicketsTests {
+
+        @Test
+        @DisplayName("should return only tickets of current user")
+        void shouldReturnOnlyCurrentUserTickets() throws Exception {
+            UserEntity otherUser = createUserInDb("otheruser");
+
+            createTicketInDb(1, true, testUser);    // мой
+            createTicketInDb(2, true, otherUser);   // чужой
+
+            mockMvc.perform(get("/api/tickets/my")
+                            .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.content[0].seatNumber").value(1));
+        }
+
+        @Test
+        @DisplayName("should return empty list when current user has no tickets")
+        void shouldReturnEmptyWhenNoTickets() throws Exception {
+            UserEntity otherUser = createUserInDb("otheruser");
+            createTicketInDb(1, true, otherUser);
+
+            mockMvc.perform(get("/api/tickets/my")
+                            .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content", hasSize(0)));
+        }
+
+        @Test
+        @DisplayName("should return 401 without auth")
+        void shouldReturn401WithoutAuth() throws Exception {
+            mockMvc.perform(get("/api/tickets/my"))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("should apply search filters along with userId")
+        void shouldApplySearchFilters() throws Exception {
+            UserEntity otherUser = createUserInDb("otheruser");
+
+            createTicketInDb(1, true, testUser);    // мой, купленный
+            createTicketInDb(2, false, null);       // свободный, не мой
+            createTicketInDb(3, true, otherUser);   // чужой
+
+            mockMvc.perform(get("/api/tickets/my")
+                            .param("isPurchased", "true")
+                            .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.content[0].seatNumber").value(1));
+        }
+    }
+
     // ---------- PATCH ----------
 
     @Nested

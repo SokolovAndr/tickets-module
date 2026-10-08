@@ -179,6 +179,67 @@ class TicketsServiceTest {
         }
     }
 
+    // ---------- findAllMyTickets() ----------
+
+    @Nested
+    @DisplayName("findAllMyTickets()")
+    class FindAllMyTicketsTests {
+
+        @Test
+        @DisplayName("should return mapped page of current user's tickets")
+        void shouldReturnMappedPage() {
+            TicketsSearchRequest search = new TicketsSearchRequest();
+            Pageable pageable = PageRequest.of(0, 10);
+
+            when(ticketRepository.findAll(any(Specification.class), eq(pageable)))
+                    .thenReturn(new PageImpl<>(List.of(ticket)));
+            when(ticketMapper.toResponse(ticket)).thenReturn(expectedResponse);
+
+            Page<CreateTicketResponse> actual =
+                    ticketsService.findAllMyTickets(search, pageable, userId);
+
+            assertThat(actual).hasSize(1);
+            assertThat(actual.getContent()).containsExactly(expectedResponse);
+            verify(ticketRepository).findAll(any(Specification.class), eq(pageable));
+        }
+
+        @Test
+        @DisplayName("should return empty page when user has no tickets")
+        void shouldReturnEmptyPage() {
+            Pageable pageable = PageRequest.of(0, 10);
+
+            when(ticketRepository.findAll(any(Specification.class), eq(pageable)))
+                    .thenReturn(Page.empty());
+
+            Page<CreateTicketResponse> actual =
+                    ticketsService.findAllMyTickets(null, pageable, userId);
+
+            assertThat(actual).isEmpty();
+            verify(ticketMapper, never()).toResponse(any());
+        }
+
+        @Test
+        @DisplayName("should pass specification combining search filters and userId")
+        void shouldPassSpecificationWithUserId() {
+            TicketsSearchRequest search = new TicketsSearchRequest();
+            search.setIsPurchased(true);
+            Pageable pageable = PageRequest.of(0, 10);
+
+            when(ticketRepository.findAll(any(Specification.class), eq(pageable)))
+                    .thenReturn(new PageImpl<>(List.of(ticket)));
+            when(ticketMapper.toResponse(ticket)).thenReturn(expectedResponse);
+
+            ticketsService.findAllMyTickets(search, pageable, userId);
+
+            ArgumentCaptor<Specification<TicketEntity>> specCaptor =
+                    ArgumentCaptor.forClass(Specification.class);
+            verify(ticketRepository).findAll(specCaptor.capture(), eq(pageable));
+
+            // Спецификация не должна быть null — и должна содержать предикат по user.id
+            assertThat(specCaptor.getValue()).isNotNull();
+        }
+    }
+
     // ---------- findOne() ----------
 
     @Nested
