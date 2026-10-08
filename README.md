@@ -50,6 +50,8 @@ graph TD
 | 📄 OpenAPI Generator           | Генерация DTO и интерфейсов контроллеров |
 | 🐳 Dockerfile                  | Сборка образа для деплоя на Railway |
 | 🔄 MapStruct 1.5.5             | Генерация мапперов Entity ↔ DTO |
+| 🔴 Redis 7                    | Кэш купленных билетов пользователя |
+
 
 ## 🚀 Быстрый старт
 
@@ -60,6 +62,8 @@ graph TD
 | ☕ JDK | 17+ |
 | 📦 Maven | или встроенный `./mvnw` |
 | 🐳 Docker + Docker Compose | для запуска БД |
+| 🔴 Redis | через `docker compose` (для кэша) |
+
 
 ### 📥 Клонирование репозитория
 
@@ -68,11 +72,15 @@ git clone https://github.com/SokolovAndr/tickets-module.git
 cd tickets-module
 ```
 
-### 🐳 Запуск базы данных
+### 🐳 Запуск инфраструктуры
 
 ```bash
 docker compose up -d
 ```
+
+Поднимает два сервиса:
+- `postgres` — порт 5454
+- `redis` — порт 6379
 
 ### Сборка проекта
 
@@ -113,6 +121,8 @@ java -jar tickets-module-app/target/tickets-module-app-0.0.1-SNAPSHOT.jar
 | `application-railway.yml` | Конфигурация для деплоя на [Railway](https://railway.app/) |
 | `application-test.yml` | Конфигурация для тестов (H2 in-memory) |
 
+Redis подключается в профиле `application-local.yml`. В тестах кэш отключён (`spring.cache.type: none`).
+
 ## 🐳 Docker / Railway
 
 Сборка образа:
@@ -135,6 +145,34 @@ Dockerfile использует multi-stage build:
 | REST API | /api/**                               | JWT Bearer (OAuth2 Resource Server) |
 
 Для UI-цепочки текущий пользователь резолвится через SessionCurrentUserService, для REST — через JwtCurrentUserService.
+
+## ⚡ Кэширование
+
+Проект использует Redis для кэширования списка купленных билетов пользователя.
+
+### Что кэшируется
+
+- Метод `TicketsService.findAllMyTickets(userId)`.
+- Endpoint `GET /api/tickets/my`.
+- Один ключ на пользователя: `tickets:userTickets::<userId>`.
+
+### Настройки
+
+| Параметр | Значение |
+|---|---|
+| Сериализация | JSON (`GenericJackson2JsonRedisSerializer`) |
+| TTL | 30 минут |
+| Инвалидация | `@CacheEvict` на `buyTicket` и `returnTicket` |
+| Fallback | `LoggingCacheErrorHandler` — при падении Redis метод идёт в Postgres |
+
+### Проверка
+
+```bash
+docker exec -it tickets-module-redis redis-cli keys "tickets:*"
+docker exec -it tickets-module-redis redis-cli ttl "tickets:userTickets::<userId>"
+docker exec -it tickets-module-redis redis-cli get "tickets:userTickets::<userId>"
+
+```
 
 ## 🧪 Тестирование
 

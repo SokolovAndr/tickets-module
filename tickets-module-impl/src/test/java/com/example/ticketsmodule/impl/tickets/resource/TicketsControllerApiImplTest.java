@@ -125,48 +125,38 @@ class TicketsControllerApiImplTest {
     class GetAllMyTicketsTests {
 
         @Test
-        @DisplayName("should return 200 OK with page of current user's tickets")
-        void shouldReturn200OkWithPage() {
-            Pageable pageable = PageRequest.of(0, 10);
-            TicketsSearchRequest search = new TicketsSearchRequest();
-            Page<CreateTicketResponse> page = new PageImpl<>(List.of(response));
-
+        @DisplayName("should return 200 OK with list of current user's tickets")
+        void shouldReturn200OkWithList() {
             when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
-            when(ticketsService.findAllMyTickets(search, pageable, userId)).thenReturn(page);
+            when(ticketsService.findAllMyTickets(userId)).thenReturn(List.of(response));
 
-            ResponseEntity<Page> result = controller.getAllMyTickets(pageable, search);
+            ResponseEntity<List<CreateTicketResponse>> result = controller.getAllMyTickets();
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(result.getBody()).isSameAs(page);
+            assertThat(result.getBody()).containsExactly(response);
             verify(jwtCurrentUserService).getCurrentUserId();
-            verify(ticketsService).findAllMyTickets(search, pageable, userId);
+            verify(ticketsService).findAllMyTickets(userId);
         }
 
         @Test
-        @DisplayName("should return 200 OK with empty page when no tickets")
-        void shouldReturn200OkWithEmptyPage() {
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<CreateTicketResponse> empty = Page.empty();
-
+        @DisplayName("should return 200 OK with empty list when no tickets")
+        void shouldReturn200OkWithEmptyList() {
             when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
-            when(ticketsService.findAllMyTickets(null, pageable, userId)).thenReturn(empty);
+            when(ticketsService.findAllMyTickets(userId)).thenReturn(List.of());
 
-            ResponseEntity<Page> result = controller.getAllMyTickets(pageable, null);
+            ResponseEntity<List<CreateTicketResponse>> result = controller.getAllMyTickets();
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getBody()).isEmpty();
-            verify(ticketsService).findAllMyTickets(null, pageable, userId);
         }
 
         @Test
         @DisplayName("should propagate exception when current user cannot be resolved")
         void shouldPropagateExceptionFromJwtService() {
-            Pageable pageable = PageRequest.of(0, 10);
-
             when(jwtCurrentUserService.getCurrentUserId())
                     .thenThrow(new IllegalStateException("No authenticated user"));
 
-            assertThatThrownBy(() -> controller.getAllMyTickets(pageable, null))
+            assertThatThrownBy(() -> controller.getAllMyTickets())
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("No authenticated user");
 

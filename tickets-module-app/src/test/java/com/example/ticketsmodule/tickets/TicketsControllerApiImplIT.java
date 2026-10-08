@@ -253,8 +253,8 @@ class TicketsControllerApiImplIT {
             mockMvc.perform(get("/api/tickets/my")
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content", hasSize(1)))
-                    .andExpect(jsonPath("$.content[0].seatNumber").value(1));
+                    .andExpect(jsonPath("$", hasSize(1)))
+                    .andExpect(jsonPath("$[0].seatNumber").value(1));
         }
 
         @Test
@@ -266,7 +266,7 @@ class TicketsControllerApiImplIT {
             mockMvc.perform(get("/api/tickets/my")
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content", hasSize(0)));
+                    .andExpect(jsonPath("$", hasSize(0)));
         }
 
         @Test
@@ -274,23 +274,6 @@ class TicketsControllerApiImplIT {
         void shouldReturn401WithoutAuth() throws Exception {
             mockMvc.perform(get("/api/tickets/my"))
                     .andExpect(status().isUnauthorized());
-        }
-
-        @Test
-        @DisplayName("should apply search filters along with userId")
-        void shouldApplySearchFilters() throws Exception {
-            UserEntity otherUser = createUserInDb("otheruser");
-
-            createTicketInDb(1, true, testUser);    // мой, купленный
-            createTicketInDb(2, false, null);       // свободный, не мой
-            createTicketInDb(3, true, otherUser);   // чужой
-
-            mockMvc.perform(get("/api/tickets/my")
-                            .param("isPurchased", "true")
-                            .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content", hasSize(1)))
-                    .andExpect(jsonPath("$.content[0].seatNumber").value(1));
         }
     }
 

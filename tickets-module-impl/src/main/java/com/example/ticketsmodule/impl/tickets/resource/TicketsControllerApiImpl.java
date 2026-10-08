@@ -20,6 +20,7 @@ import com.example.ticketsmodule.api.model.ReleaseTicketsBatchResponse;
 import com.example.ticketsmodule.api.model.TicketPatchRequest;
 import com.example.ticketsmodule.api.model.TicketsSearchRequest;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -37,12 +38,9 @@ public class TicketsControllerApiImpl implements TicketsControllerApi {
     }
 
     @Override
-    public ResponseEntity<Page> getAllMyTickets(
-            @Valid Pageable pageable,
-            @Valid TicketsSearchRequest searchParam) {
+    public ResponseEntity<List<CreateTicketResponse>> getAllMyTickets() {
         UUID userId = jwtCurrentUserService.getCurrentUserId();
-        Page<CreateTicketResponse> result = ticketsService.findAllMyTickets(searchParam, pageable, userId);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(ticketsService.findAllMyTickets(userId));
     }
 
     @Override
