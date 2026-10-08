@@ -27,50 +27,59 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TicketsControllerApiImpl implements TicketsControllerApi {
 
-    private final TicketsService tickersService;
+    private final TicketsService ticketsService;
     private final JwtCurrentUserService jwtCurrentUserService;
 
     @Override
     public ResponseEntity<CreateTicketResponse> createTicket(@RequestBody CreateTicketRequest createTicketRequest) {
-        CreateTicketResponse result = tickersService.create(createTicketRequest);
+        CreateTicketResponse result = ticketsService.create(createTicketRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     @Override
+    public ResponseEntity<Page> getAllMyTickets(
+            @Valid Pageable pageable,
+            @Valid TicketsSearchRequest searchParam) {
+        UUID userId = jwtCurrentUserService.getCurrentUserId();
+        Page<CreateTicketResponse> result = ticketsService.findAllMyTickets(searchParam, pageable, userId);
+        return ResponseEntity.ok(result);
+    }
+
+    @Override
     public ResponseEntity<Page> getAllTickets(@Valid Pageable pageable, @Valid TicketsSearchRequest searchParam) {
-        Page<CreateTicketResponse> result = tickersService.findAll(searchParam, pageable);
+        Page<CreateTicketResponse> result = ticketsService.findAll(searchParam, pageable);
         return ResponseEntity.ok(result);
     }
 
     @Override
     public ResponseEntity<CreateTicketResponse> getTicket(@NotNull UUID id) {
-        CreateTicketResponse result = tickersService.findOne(id);
+        CreateTicketResponse result = ticketsService.findOne(id);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
     @Override
     public ResponseEntity<CreateTicketResponse> patchTicket(@NotNull UUID id, @Valid TicketPatchRequest ticketPatchRequest) {
-        CreateTicketResponse result = tickersService.patch(id, ticketPatchRequest);
+        CreateTicketResponse result = ticketsService.patch(id, ticketPatchRequest);
         return ResponseEntity.ok(result);
     }
 
     @Override
     public ResponseEntity<CreateTicketResponse> buyTicket(@NotNull UUID id) {
         UUID userId = jwtCurrentUserService.getCurrentUserId();
-        CreateTicketResponse result = tickersService.buyTicket(id, userId);
+        CreateTicketResponse result = ticketsService.buyTicket(id, userId);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
     @Override
     public ResponseEntity<CreateTicketResponse> returnTicket(@NotNull UUID id) {
         UUID userId = jwtCurrentUserService.getCurrentUserId();
-        CreateTicketResponse result = tickersService.returnTicket(id, userId);
+        CreateTicketResponse result = ticketsService.returnTicket(id, userId);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 
     @Override
     public ResponseEntity<ReleaseTicketsBatchResponse> releaseTicketsBatch(@RequestBody ReleaseTicketsBatchRequest request) {
-        ReleaseTicketsBatchResponse result = tickersService.releaseTicketsBatch(request);
+        ReleaseTicketsBatchResponse result = ticketsService.releaseTicketsBatch(request);
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 }

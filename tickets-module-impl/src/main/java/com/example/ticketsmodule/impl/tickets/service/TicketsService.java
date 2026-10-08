@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -249,4 +250,17 @@ public class TicketsService {
                 .routeId(request.getRouteId());
     }
 
+    /**
+     * Метод возвращающий все билеты купленные текущим пользователем
+     */
+
+    @Transactional(readOnly = true)
+    public Page<CreateTicketResponse> findAllMyTickets(
+            @Valid TicketsSearchRequest searchParam,
+            @Valid Pageable pageable, UUID userId) {
+        Specification<TicketEntity> spec = buildSpecification(searchParam)
+                .and((root, query, cb)
+                        -> cb.equal(root.get("user").get("id"), userId));
+        return ticketRepository.findAll(spec, pageable).map(ticketMapper::toResponse);
+    }
 }
