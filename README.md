@@ -36,21 +36,22 @@ graph TD
 
 ## 🛠 Технологии
 
-| Технология                     | Назначение |
-|--------------------------------|-----------|
-| ☕ Java 17 + Spring Boot 3.2.5  | Основной язык и фреймворк |
-| 🔐 Spring Security 6           | Сессии, JWT |
-| 🖼 Thymeleaf                   | Шаблонизатор для web-форм |
-| 📦 Maven (wrapper)             | Многомодульная сборка |
+| Технология                     | Назначение                                  |
+|--------------------------------|---------------------------------------------|
+| ☕ Java 17 + Spring Boot 3.2.5  | Основной язык и фреймворк                   |
+| 🔐 Spring Security 6           | Сессии, JWT                                 |
+| 🖼 Thymeleaf                   | Шаблонизатор для web-форм                   |
+| 📦 Maven (wrapper)             | Многомодульная сборка                       |
 | 🐘 PostgreSQL 13               | Основная база данных (через `compose.yaml`) |
-| 🧪 JUnit 5 + Mockito + MockMvc | Юнит- и интеграционные тесты |
-| 📊 JaCoCo 0.8.11               | Покрытие кода |
-| 🔍 SonarCloud                  | Анализ качества и Quality Gate |
-| 🐳 Docker Compose              | Локальный запуск БД |
-| 📄 OpenAPI Generator           | Генерация DTO и интерфейсов контроллеров |
-| 🐳 Dockerfile                  | Сборка образа для деплоя на Railway |
-| 🔄 MapStruct 1.5.5             | Генерация мапперов Entity ↔ DTO |
-| 🔴 Redis 7                    | Кэш купленных билетов пользователя |
+| 🧪 JUnit 5 + Mockito + MockMvc | Юнит- и интеграционные тесты                |
+| 📊 JaCoCo 0.8.11               | Покрытие кода                               |
+| 🔍 SonarCloud                  | Анализ качества и Quality Gate              |
+| 🐳 Docker Compose              | Локальный запуск БД и Redis                 |
+| 📦 Testcontainers              | Подъём PostgreSQL для интеграционных тестов |
+| 📄 OpenAPI Generator           | Генерация DTO и интерфейсов контроллеров    |
+| 🏗 Dockerfile                  | Сборка образа для деплоя на Railway         |
+| 🔄 MapStruct 1.5.5             | Генерация мапперов Entity ↔ DTO             |
+| 🔴 Redis 7                    | Кэш купленных билетов пользователя          |
 
 
 ## 🚀 Быстрый старт
@@ -119,7 +120,11 @@ java -jar tickets-module-app/target/tickets-module-app-0.0.1-SNAPSHOT.jar
 |---------|-----------|
 | `application-local.yml` | Локальная конфигурация |
 | `application-railway.yml` | Конфигурация для деплоя на [Railway](https://railway.app/) |
-| `application-test.yml` | Конфигурация для тестов (H2 in-memory) |
+| `application-test.yml` | Конфигурация для интеграционных тестов (PostgreSQL в Docker через Testcontainers) |
+
+Интеграционные тесты (`*IT`) используют `Testcontainers`. 
+При запуске тестов автоматически поднимается одноразовый контейнер PostgreSQL 13, миграции Liquibase накатываются на него, а после завершения — контейнер останавливается. 
+Отдельно поднимать БД через `docker compose` для тестов не нужно — достаточно, чтобы был доступен Docker.
 
 Redis подключается в профиле `application-local.yml`. В тестах кэш отключён (`spring.cache.type: none`).
 
@@ -176,10 +181,10 @@ docker exec -it tickets-module-redis redis-cli get "tickets:userTickets::<userId
 
 ## 🧪 Тестирование
 
-| Тип тестов           | Плагин   | Расположение                                             |
-|----------------------|----------|----------------------------------------------------------|
-| Юнит-тесты           | Surefire | */src/test/java (классы *Test)                           |
-| Интеграционные тесты | Failsafe | tickets-module-app/src/test/java, классы с суффиксом *IT |
+| Тип тестов           | Плагин   | Инфраструктура              | Расположение                                             |
+|----------------------|----------|-----------------------------|----------------------------------------------------------|
+| Юнит-тесты           | Surefire | без внешних зависимостей    | */src/test/java (классы *Test)                           |
+| Интеграционные тесты | Failsafe | Testcontainers (PostgreSQL) | tickets-module-app/src/test/java, классы с суффиксом *IT |
 
 ### Запуск только юнит-тестов:
 
