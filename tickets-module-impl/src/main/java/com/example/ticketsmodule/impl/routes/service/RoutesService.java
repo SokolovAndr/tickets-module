@@ -23,9 +23,13 @@ import com.example.ticketsmodule.api.model.RoutePatchRequest;
 import com.example.ticketsmodule.api.model.RoutesSearchRequest;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Сервис для работы с маршрутами
@@ -77,19 +81,27 @@ public class RoutesService {
                 }
 
                 if (searchParam.getDepartureFrom() != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(root.get("departureAt"), searchParam.getDepartureFrom()));
+                    predicates.add(cb.greaterThanOrEqualTo(
+                            root.get("departureAt"),
+                            searchParam.getDepartureFrom().atStartOfDay()));
                 }
 
                 if (searchParam.getDepartureTo() != null) {
-                    predicates.add(cb.lessThanOrEqualTo(root.get("departureAt"), searchParam.getDepartureTo()));
+                    predicates.add(cb.lessThanOrEqualTo(
+                            root.get("departureAt"),
+                            searchParam.getDepartureTo().atTime(LocalTime.MAX)));
                 }
 
                 if (searchParam.getDestinationFrom() != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(root.get("destinationAt"), searchParam.getDestinationFrom()));
+                    predicates.add(cb.greaterThanOrEqualTo(
+                            root.get("destinationAt"),
+                            searchParam.getDestinationFrom().atStartOfDay()));
                 }
 
                 if (searchParam.getDestinationTo() != null) {
-                    predicates.add(cb.lessThanOrEqualTo(root.get("destinationAt"), searchParam.getDestinationTo()));
+                    predicates.add(cb.lessThanOrEqualTo(
+                            root.get("destinationAt"),
+                            searchParam.getDestinationTo().atTime(LocalTime.MAX)));
                 }
 
                 if (searchParam.getCreateDateFrom() != null) {
@@ -144,5 +156,14 @@ public class RoutesService {
         }).orElseThrow(() -> new EntityNotFoundException(String.format("Route with id %s not found", routePatchRequest)));
 
         return routeMapper.toResponse(result);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, RouteEntity> findAllByIds(Collection<UUID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Map.of();
+        }
+        return routesRepository.findAllById(ids).stream()
+                .collect(Collectors.toMap(RouteEntity::getId, r -> r));
     }
 }

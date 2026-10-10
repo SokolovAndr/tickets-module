@@ -24,4 +24,7 @@ public interface TicketRepository extends JpaRepository<TicketEntity, UUID>, Jpa
 
     @Query("SELECT t FROM TicketEntity t WHERE t.user.id = :userId AND t.isPurchased = true ORDER BY t.purchasedAt DESC")
     List<TicketEntity> findPurchasedByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT t FROM TicketEntity t WHERE t.route.id = :routeId AND t.isPurchased = false ORDER BY t.seatNumber ASC")
+    List<TicketEntity> findAvailableByRouteId(@Param("routeId") UUID routeId);
 }
