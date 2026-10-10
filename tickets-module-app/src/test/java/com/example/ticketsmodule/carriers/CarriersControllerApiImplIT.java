@@ -3,7 +3,7 @@ package com.example.ticketsmodule.carriers;
 import com.example.ticketsmodule.api.model.CarrierPatchRequest;
 import com.example.ticketsmodule.api.model.CreateCarrierRequest;
 import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
-import com.example.ticketsmodule.impl.carriers.repository.CarriersRepository;
+import com.example.ticketsmodule.support.AbstractIntegrationTest;
 import com.example.ticketsmodule.support.JwtTestHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,10 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.UUID;
@@ -24,19 +21,15 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
 @DisplayName("CarriersControllerApiImpl integration tests")
-class CarriersControllerApiImplIT {
+class CarriersControllerApiImplIT extends AbstractIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
-    @Autowired private CarriersRepository carriersRepository;
 
     @BeforeEach
     void cleanDb() {
-        carriersRepository.deleteAll();
+        cleanDatabase();
     }
 
     // ---------- Security ----------

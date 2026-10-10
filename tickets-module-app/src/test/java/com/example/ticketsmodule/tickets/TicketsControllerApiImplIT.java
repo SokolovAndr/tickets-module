@@ -4,14 +4,11 @@ import com.example.ticketsmodule.api.model.CreateTicketRequest;
 import com.example.ticketsmodule.api.model.ReleaseTicketsBatchRequest;
 import com.example.ticketsmodule.api.model.TicketPatchRequest;
 import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
-import com.example.ticketsmodule.impl.carriers.repository.CarriersRepository;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
-import com.example.ticketsmodule.impl.routes.repository.RoutesRepository;
 import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
-import com.example.ticketsmodule.impl.tickets.repository.TicketRepository;
 import com.example.ticketsmodule.impl.users.domain.UserEntity;
 import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
-import com.example.ticketsmodule.impl.users.repository.UserRepository;
+import com.example.ticketsmodule.support.AbstractIntegrationTest;
 import com.example.ticketsmodule.support.JwtTestHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,11 +16,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -38,18 +32,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
 @DisplayName("TicketsControllerApiImpl integration tests")
-class TicketsControllerApiImplIT {
+class TicketsControllerApiImplIT extends AbstractIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
-    @Autowired private TicketRepository ticketRepository;
-    @Autowired private RoutesRepository routesRepository;
-    @Autowired private CarriersRepository carriersRepository;
-    @Autowired private UserRepository userRepository;
     @Autowired private PasswordEncoder passwordEncoder;
 
     private UUID routeId;
@@ -57,10 +44,7 @@ class TicketsControllerApiImplIT {
 
     @BeforeEach
     void cleanDb() {
-        ticketRepository.deleteAll();
-        routesRepository.deleteAll();
-        carriersRepository.deleteAll();
-        userRepository.deleteAll();
+        cleanDatabase();
 
         routeId = createRouteInDb();
         testUser = createUserInDb("testuser");

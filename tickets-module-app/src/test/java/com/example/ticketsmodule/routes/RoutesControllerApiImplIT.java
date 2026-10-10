@@ -3,9 +3,8 @@ package com.example.ticketsmodule.routes;
 import com.example.ticketsmodule.api.model.CreateRouteRequest;
 import com.example.ticketsmodule.api.model.RoutePatchRequest;
 import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
-import com.example.ticketsmodule.impl.carriers.repository.CarriersRepository;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
-import com.example.ticketsmodule.impl.routes.repository.RoutesRepository;
+import com.example.ticketsmodule.support.AbstractIntegrationTest;
 import com.example.ticketsmodule.support.JwtTestHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,10 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -27,23 +23,17 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
 @DisplayName("RoutesControllerApiImpl integration tests")
-class RoutesControllerApiImplIT {
+class RoutesControllerApiImplIT extends AbstractIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
-    @Autowired private RoutesRepository routesRepository;
-    @Autowired private CarriersRepository carriersRepository;
 
     private UUID carrierId;
 
     @BeforeEach
     void cleanDb() {
-        routesRepository.deleteAll();
-        carriersRepository.deleteAll();
+        cleanDatabase();
         carrierId = createCarrierInDb();
     }
 
@@ -154,7 +144,7 @@ class RoutesControllerApiImplIT {
                     .andExpect(jsonPath("$.id").value(saved.getId().toString()))
                     .andExpect(jsonPath("$.departurePoint").value("Moscow"))
                     .andExpect(jsonPath("$.destinationPoint").value("SPb"))
-                    .andExpect(jsonPath("$.carrierId").value(carrierId.toString()));
+                    .andExpect(jsonPath("$.carrierId").value(saved.getCarrier().getId().toString()));
         }
 
         @Test
@@ -258,7 +248,12 @@ class RoutesControllerApiImplIT {
     }
 
     private RouteEntity createRouteInDb() {
-        CarrierEntity carrier = carriersRepository.findById(carrierId).orElseThrow();
+        CarrierEntity carrier = carriersRepository.save(
+                CarrierEntity.builder()
+                        .name("Acme-" + UUID.randomUUID())
+                        .phone("+7-999")
+                        .build());
+
         RouteEntity route = RouteEntity.builder()
                 .departurePoint("Moscow")
                 .destinationPoint("SPb")
@@ -268,6 +263,7 @@ class RoutesControllerApiImplIT {
                 .destinationAt(LocalDateTime.now().plusDays(1).plusHours(2))
                 .build();
         return routesRepository.save(route);
+
     }
 
     private CreateRouteRequest validRouteRequest() {
