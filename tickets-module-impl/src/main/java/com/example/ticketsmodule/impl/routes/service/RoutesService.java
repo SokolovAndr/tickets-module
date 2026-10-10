@@ -23,6 +23,7 @@ import com.example.ticketsmodule.api.model.RoutePatchRequest;
 import com.example.ticketsmodule.api.model.RoutesSearchRequest;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -80,19 +81,27 @@ public class RoutesService {
                 }
 
                 if (searchParam.getDepartureFrom() != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(root.get("departureAt"), searchParam.getDepartureFrom()));
+                    predicates.add(cb.greaterThanOrEqualTo(
+                            root.get("departureAt"),
+                            searchParam.getDepartureFrom().atStartOfDay()));
                 }
 
                 if (searchParam.getDepartureTo() != null) {
-                    predicates.add(cb.lessThanOrEqualTo(root.get("departureAt"), searchParam.getDepartureTo()));
+                    predicates.add(cb.lessThanOrEqualTo(
+                            root.get("departureAt"),
+                            searchParam.getDepartureTo().atTime(LocalTime.MAX)));
                 }
 
                 if (searchParam.getDestinationFrom() != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(root.get("destinationAt"), searchParam.getDestinationFrom()));
+                    predicates.add(cb.greaterThanOrEqualTo(
+                            root.get("destinationAt"),
+                            searchParam.getDestinationFrom().atStartOfDay()));
                 }
 
                 if (searchParam.getDestinationTo() != null) {
-                    predicates.add(cb.lessThanOrEqualTo(root.get("destinationAt"), searchParam.getDestinationTo()));
+                    predicates.add(cb.lessThanOrEqualTo(
+                            root.get("destinationAt"),
+                            searchParam.getDestinationTo().atTime(LocalTime.MAX)));
                 }
 
                 if (searchParam.getCreateDateFrom() != null) {

@@ -12,11 +12,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,12 +35,38 @@ public class RoutesViewController {
     private final SessionCurrentUserService sessionCurrentUserService;
 
     @GetMapping("/routes")
-    public String list(@RequestParam(defaultValue = "0") int page, Model model) {
+    public String list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String departurePoint,
+            @RequestParam(required = false) String destinationPoint,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate departureDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate destinationDate,
+            Model model) {
+
+        RoutesSearchRequest search = new RoutesSearchRequest();
+        search.setDeparturePoint(StringUtils.hasText(departurePoint) ? departurePoint : null);
+        search.setDestinationPoint(StringUtils.hasText(destinationPoint) ? destinationPoint : null);
+
+        if (departureDate != null) {
+            search.setDepartureFrom(departureDate);
+            search.setDepartureTo(departureDate);
+        }
+        if (destinationDate != null) {
+            search.setDestinationFrom(destinationDate);
+            search.setDestinationTo(destinationDate);
+        }
+
         Pageable pageable = PageRequest.of(Math.max(page, 0), PAGE_SIZE,
                 Sort.by(Sort.Direction.ASC, "departureAt"));
-        Page<CreateRouteResponse> routesPage =
-                routesService.findAll(new RoutesSearchRequest(), pageable);
+        Page<CreateRouteResponse> routesPage = routesService.findAll(search, pageable);
+
         model.addAttribute("page", routesPage);
+        model.addAttribute("departurePoint", departurePoint);
+        model.addAttribute("destinationPoint", destinationPoint);
+        model.addAttribute("departureDate", departureDate);
+        model.addAttribute("destinationDate", destinationDate);
         return "routes/list";
     }
 
