@@ -85,7 +85,6 @@
             gap: 8px;
         }
 
-        /* ← ДОБАВЛЕНО: стили для навигационных ссылок в шапке */
         .nav-link {
             padding: 8px 14px;
             border-radius: 10px;
@@ -94,6 +93,7 @@
             font-size: 14px;
             font-weight: 500;
             transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .nav-link:hover {
@@ -126,6 +126,7 @@
             background: linear-gradient(135deg, var(--accent), #8b5cf6);
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+            flex-shrink: 0;
         }
 
         .brand-logo svg {
@@ -343,8 +344,16 @@
                 font-size: 13px;
             }
 
+            .logout-btn {
+                padding: 8px 10px;
+            }
+
+            .logout-btn span {
+                display: none;
+            }
+
             .main {
-                padding: 40px 20px;
+                padding: 32px 20px 60px;
             }
 
             .hero h1 {
@@ -353,10 +362,6 @@
 
             .hero p {
                 font-size: 15px;
-            }
-
-            .logout-btn span {
-                display: none;
             }
         }
     </style>
