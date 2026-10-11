@@ -2,6 +2,7 @@ package com.example.ticketsmodule.impl.carriers.service;
 
 import com.example.ticketsmodule.impl.carriers.conversion.CarrierMapper;
 import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
+import com.example.ticketsmodule.impl.carriers.exception.CarrierNameAlreadyExistsException;
 import com.example.ticketsmodule.impl.carriers.repository.CarriersRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Predicate;
@@ -39,6 +40,9 @@ public class CarriersService {
 
     @Transactional
     public CreateCarrierResponse create(CreateCarrierRequest createCarrierRequest) {
+        if (carriersRepository.existsByName(createCarrierRequest.getName())) {
+            throw new CarrierNameAlreadyExistsException(createCarrierRequest.getName());
+        }
         final CarrierEntity carrierEntity = carrierMapper.toEntity(createCarrierRequest);
         if (carrierEntity == null) {
             throw new IllegalStateException("Failed to convert carrier entity");
@@ -73,6 +77,15 @@ public class CarriersService {
             query.orderBy(cb.desc(root.get("createdAt")));
 
             if (searchParam != null) {
+
+                if (StringUtils.hasText(searchParam.getQuery())) {
+                    var pattern = "%" + searchParam.getQuery().toLowerCase() + "%";
+                    predicates.add(cb.or(
+                            cb.like(cb.lower(root.get("name")), pattern),
+                            cb.like(cb.lower(root.get("phone")), pattern)
+                    ));
+                }
+
                 if (StringUtils.hasText(searchParam.getName())) {
                     var pattern = "%" + searchParam.getName().toLowerCase() + "%";
                     predicates.add(cb.like(cb.lower(root.get("name")), pattern));

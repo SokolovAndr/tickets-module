@@ -12,4 +12,7 @@ import java.util.UUID;
  */
 @Repository
 public interface CarriersRepository extends JpaRepository<CarrierEntity, UUID>, JpaSpecificationExecutor<CarrierEntity> {
+
+    boolean existsByName(String name);
+
 }

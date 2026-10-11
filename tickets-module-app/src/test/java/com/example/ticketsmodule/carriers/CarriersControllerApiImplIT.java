@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,6 +68,23 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isForbidden());
         }
+
+        @Test
+        @DisplayName("PATCH /api/carriers/{id} with USER role → 403")
+        void shouldForbidUserToPatchCarrier() throws Exception {
+            CarrierEntity saved = carriersRepository.save(
+                    CarrierEntity.builder().name("Acme").phone("+7-111").build());
+
+            CarrierPatchRequest patch = new CarrierPatchRequest();
+            patch.setName("New");
+
+            mockMvc.perform(patch("/api/carriers/{id}", saved.getId())
+                            .with(JwtTestHelper.withRole("USER"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(patch)))
+                    .andExpect(status().isForbidden());
+        }
+
     }
 
     // ---------- CREATE ----------
@@ -129,6 +148,26 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("should return user message when name is duplicate")
+        void shouldReturnUserMessageOnDuplicateName() throws Exception {
+            carriersRepository.save(CarrierEntity.builder()
+                    .name("Acme Transport").phone("+7-111").build());
+
+            CreateCarrierRequest request = new CreateCarrierRequest();
+            request.setName("Acme Transport");
+            request.setPhone("+7-222");
+
+            mockMvc.perform(post("/api/carriers")
+                            .with(JwtTestHelper.withRole("ADMIN"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.message").exists())
+                    .andExpect(jsonPath("$.userMessage")
+                            .value("Перевозчик с таким названием уже существует"));
         }
     }
 
@@ -209,6 +248,89 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].name").value("Acme"));
+        }
+
+        @Test
+        @DisplayName("should filter by phone")
+        void shouldFilterByPhone() throws Exception {
+            carriersRepository.save(CarrierEntity.builder()
+                    .name("Acme").phone("+7-111").build());
+            carriersRepository.save(CarrierEntity.builder()
+                    .name("Beta").phone("+7-222").build());
+
+            mockMvc.perform(get("/api/carriers")
+                            .param("phone", "+7-111")
+                            .with(JwtTestHelper.withRole("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.content[0].name").value("Acme"));
+        }
+
+        @Test
+        @DisplayName("should filter by query")
+        void shouldFilterByQuery() throws Exception {
+            carriersRepository.save(CarrierEntity.builder()
+                    .name("Acme").phone("+7-111").build());
+            carriersRepository.save(CarrierEntity.builder()
+                    .name("Beta").phone("+7-222").build());
+
+            mockMvc.perform(get("/api/carriers")
+                            .param("query", "acm")
+                            .with(JwtTestHelper.withRole("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content", hasSize(1)));
+        }
+
+        @Test
+        @DisplayName("should filter by createDateFrom")
+        void shouldFilterByCreateDateFrom() throws Exception {
+            CarrierEntity old = CarrierEntity.builder()
+                    .name("Old").phone("+7-111")
+                    .createdAt(LocalDateTime.now().minusDays(10))
+                    .updatedAt(LocalDateTime.now().minusDays(10))
+                    .build();
+            CarrierEntity fresh = CarrierEntity.builder()
+                    .name("Fresh").phone("+7-222")
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+            carriersRepository.save(old);
+            carriersRepository.save(fresh);
+
+            String from = LocalDate.now().minusDays(1).toString();
+
+            mockMvc.perform(get("/api/carriers")
+                            .param("createDateFrom", from)
+                            .with(JwtTestHelper.withRole("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.content[0].name").value("Fresh"));
+        }
+
+        @Test
+        @DisplayName("should filter by createDateTo")
+        void shouldFilterByCreateDateTo() throws Exception {
+            CarrierEntity old = CarrierEntity.builder()
+                    .name("Old").phone("+7-111")
+                    .createdAt(LocalDateTime.now().minusDays(10))
+                    .updatedAt(LocalDateTime.now().minusDays(10))
+                    .build();
+            CarrierEntity fresh = CarrierEntity.builder()
+                    .name("Fresh").phone("+7-222")
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+            carriersRepository.save(old);
+            carriersRepository.save(fresh);
+
+            String to = LocalDate.now().minusDays(1).toString();
+
+            mockMvc.perform(get("/api/carriers")
+                            .param("createDateTo", to)
+                            .with(JwtTestHelper.withRole("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.content[0].name").value("Old"));
         }
     }
 

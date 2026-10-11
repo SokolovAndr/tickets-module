@@ -534,4 +534,35 @@ class TicketsServiceTest {
             verify(ticketRepository, never()).saveAll(any());
         }
     }
+
+    @Nested
+    @DisplayName("findAvailableByRoute()")
+    class FindAvailableByRouteTests {
+
+        @Test
+        @DisplayName("should return mapped available tickets")
+        void shouldReturnMappedAvailableTickets() {
+            when(routesService.findOneById(routeId)).thenReturn(route);
+            when(ticketRepository.findAvailableByRouteId(routeId)).thenReturn(List.of(ticket));
+            when(ticketMapper.toResponse(ticket)).thenReturn(expectedResponse);
+
+            List<CreateTicketResponse> actual = ticketsService.findAvailableByRoute(routeId);
+
+            assertThat(actual).containsExactly(expectedResponse);
+            verify(routesService).findOneById(routeId);
+            verify(ticketRepository).findAvailableByRouteId(routeId);
+        }
+
+        @Test
+        @DisplayName("should propagate exception when route not found")
+        void shouldPropagateExceptionWhenRouteNotFound() {
+            when(routesService.findOneById(routeId))
+                    .thenThrow(new EntityNotFoundException("Route not found"));
+
+            assertThatThrownBy(() -> ticketsService.findAvailableByRoute(routeId))
+                    .isInstanceOf(EntityNotFoundException.class);
+
+            verifyNoInteractions(ticketRepository, ticketMapper);
+        }
+    }
 }

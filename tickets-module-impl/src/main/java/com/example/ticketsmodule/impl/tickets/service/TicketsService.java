@@ -266,4 +266,12 @@ public class TicketsService {
                 .map(ticketMapper::toResponse)
                 .toList();
     }
+
+    @Transactional(readOnly = true)
+    public List<CreateTicketResponse> findAvailableByRoute(UUID routeId) {
+        routesService.findOneById(routeId);
+        return ticketRepository.findAvailableByRouteId(routeId).stream()
+                .map(ticketMapper::toResponse)
+                .toList();
+    }
 }

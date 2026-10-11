@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -67,6 +68,22 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
                             .with(JwtTestHelper.withRole("USER"))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isForbidden());
+        }
+
+
+        @Test
+        @DisplayName("PATCH /api/routes/{id} with USER role → 403")
+        void shouldForbidUserToPatchRoute() throws Exception {
+            RouteEntity saved = createRouteInDb();
+
+            RoutePatchRequest patch = new RoutePatchRequest();
+            patch.setDeparturePoint("Kazan");
+
+            mockMvc.perform(patch("/api/routes/{id}", saved.getId())
+                            .with(JwtTestHelper.withRole("USER"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(patch)))
                     .andExpect(status().isForbidden());
         }
     }
@@ -194,6 +211,36 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
                             .with(JwtTestHelper.withRole("USER")))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(2)));
+        }
+
+        @Test
+        @DisplayName("should filter by destinationPoint")
+        void shouldFilterByDestinationPoint() throws Exception {
+            createRouteInDb();
+            createRouteInDb();
+
+            mockMvc.perform(get("/api/routes")
+                            .param("destinationPoint", "spb")
+                            .with(JwtTestHelper.withRole("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content", hasSize(2)));
+        }
+
+
+        @Test
+        @DisplayName("should filter by departure date range")
+        void shouldFilterByDepartureDateRange() throws Exception {
+            createRouteInDb();
+
+            String from = LocalDate.now().toString();
+            String to = LocalDate.now().plusDays(3).toString();
+
+            mockMvc.perform(get("/api/routes")
+                            .param("departureFrom", from)
+                            .param("departureTo", to)
+                            .with(JwtTestHelper.withRole("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content", hasSize(1)));
         }
     }
 

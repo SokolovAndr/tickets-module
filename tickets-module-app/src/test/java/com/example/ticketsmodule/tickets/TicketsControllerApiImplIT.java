@@ -82,6 +82,21 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isForbidden());
         }
+
+        @Test
+        @DisplayName("PATCH /api/tickets/{id} with USER role → 403")
+        void shouldForbidUserToPatchTicket() throws Exception {
+            TicketEntity saved = createTicketInDb(1, false, null);
+
+            TicketPatchRequest patch = new TicketPatchRequest();
+            patch.setPrice(new BigDecimal("100"));
+
+            mockMvc.perform(patch("/api/tickets/{id}", saved.getId())
+                            .with(JwtTestHelper.withRole("USER"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(patch)))
+                    .andExpect(status().isForbidden());
+        }
     }
 
     // ---------- CREATE ----------
@@ -218,6 +233,24 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].seatNumber").value(2));
         }
+
+        @Test
+        @DisplayName("should filter by price range")
+        void shouldFilterByPriceRange() throws Exception {
+            TicketEntity saved = createTicketInDb(1, false, null);
+            saved.setPrice(new BigDecimal("300.00"));
+            ticketRepository.save(saved);
+            createTicketInDb(2, false, null); // цена 150.00
+
+            mockMvc.perform(get("/api/tickets")
+                            .param("priceFrom", "200")
+                            .param("priceTo", "400")
+                            .with(JwtTestHelper.withRole("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.content[0].seatNumber").value(1));
+        }
+
     }
 
     // ---------- LIST MY ----------
@@ -339,6 +372,24 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
                     .andExpect(status().isNotFound());
         }
+
+
+        @Test
+        @DisplayName("should reject buy for past departure")
+        void shouldRejectBuyForPastDeparture() throws Exception {
+            RouteEntity route = routesRepository.findById(routeId).orElseThrow();
+            route.setDepartureAt(LocalDateTime.now().minusDays(1));
+            routesRepository.save(route);
+
+            TicketEntity saved = createTicketInDb(1, false, null);
+
+            mockMvc.perform(post("/api/tickets/{id}/buy", saved.getId())
+                            .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
+                    .andExpect(status().isInternalServerError());
+
+            TicketEntity updated = ticketRepository.findById(saved.getId()).orElseThrow();
+            assertThat(updated.isPurchased()).isFalse();
+        }
     }
 
     // ---------- RETURN ----------
@@ -370,7 +421,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
 
             mockMvc.perform(post("/api/tickets/{id}/return", saved.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
-                    .andExpect(status().is5xxServerError());
+                    .andExpect(status().isInternalServerError());
         }
     }
 
@@ -381,7 +432,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
     class ReleaseBatchTests {
 
         @Test
-        @DisplayName("should release batch of tickets and return 201")
+        @DisplayName("should release batch of tickets and return 200")
         void shouldReleaseBatch() throws Exception {
             ReleaseTicketsBatchRequest request = new ReleaseTicketsBatchRequest();
             request.setRouteId(routeId);
@@ -434,6 +485,27 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
+        }
+
+        @Test
+        @DisplayName("should reject release for past departure")
+        void shouldRejectReleaseForPastDeparture() throws Exception {
+            RouteEntity route = routesRepository.findById(routeId).orElseThrow();
+            route.setDepartureAt(LocalDateTime.now().minusDays(1));
+            routesRepository.save(route);
+
+            ReleaseTicketsBatchRequest request = new ReleaseTicketsBatchRequest();
+            request.setRouteId(routeId);
+            request.setSeatCount(3);
+            request.setPrice(new BigDecimal("100.00"));
+
+            mockMvc.perform(post("/api/tickets/release-batch")
+                            .with(JwtTestHelper.withRole("ADMIN"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isInternalServerError());
+
+            assertThat(ticketRepository.findAll()).isEmpty();
         }
     }
 

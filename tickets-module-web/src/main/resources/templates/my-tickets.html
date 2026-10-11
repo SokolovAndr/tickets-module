@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои билеты — Система билетов</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-start: #0f172a; --bg-end: #1e293b;
+            --accent: #6366f1; --accent-hover: #818cf8;
+            --danger: #ef4444; --success: #10b981;
+            --text: #e2e8f0; --text-muted: #94a3b8;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-hover: rgba(51, 65, 85, 0.85);
+            --border: rgba(148, 163, 184, 0.15);
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+            color: var(--text); position: relative; overflow-x: hidden;
+        }
+        body::before, body::after {
+            content: ''; position: fixed; border-radius: 50%;
+            filter: blur(120px); opacity: 0.35;
+            pointer-events: none; z-index: 0;
+        }
+        body::before { width: 500px; height: 500px; background: var(--accent); top: -200px; left: -200px; }
+        body::after { width: 400px; height: 400px; background: #8b5cf6; bottom: -150px; right: -150px; }
+
+        .header {
+            position: relative; z-index: 2;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 32px; border-bottom: 1px solid var(--border);
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        }
+        .brand { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 700; letter-spacing: -0.3px; text-decoration: none; color: inherit; }
+        .brand-logo { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6); border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
+        .brand-logo svg { width: 22px; height: 22px; stroke: #fff; }
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+        .nav-link { padding: 8px 14px; border-radius: 10px; color: var(--text-muted); text-decoration: none;
+            font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .nav-link:hover { color: var(--text); background: rgba(99, 102, 241, 0.1); }
+        .nav-link.active { color: var(--accent-hover); background: rgba(99, 102, 241, 0.15); }
+        .logout-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px;
+            background: rgba(239, 68, 68, 0.1); color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 10px;
+            font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer;
+            transition: all 0.2s ease; }
+        .logout-btn:hover { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #fecaca; transform: translateY(-1px); }
+        .logout-btn svg { width: 16px; height: 16px; stroke: currentColor; }
+
+        .main { position: relative; z-index: 1; max-width: 1000px; margin: 0 auto; padding: 48px 32px 80px; }
+        .page-head { margin-bottom: 32px; animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .page-head h1 { font-size: 32px; font-weight: 700; letter-spacing: -1px; margin-bottom: 8px; }
+        .page-head p { color: var(--text-muted); font-size: 15px; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .alert { padding: 12px 16px; border-radius: 10px; font-size: 14px; margin-bottom: 16px; animation: slideDown 0.3s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .alert-success { background: rgba(16, 185, 129, 0.12); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.25); }
+        .alert-danger { background: rgba(239, 68, 68, 0.12); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.25); }
+
+        .tickets { display: grid; gap: 16px; }
+        .ticket-card {
+            display: flex; align-items: center; justify-content: space-between; gap: 20px;
+            padding: 22px 24px; background: var(--card-bg);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: 16px;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+        }
+        .ticket-card:hover { transform: translateY(-2px); border-color: rgba(99, 102, 241, 0.4); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3); }
+        .ticket-main { display: flex; align-items: center; gap: 20px; flex: 1; min-width: 0; }
+        .seat-badge {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 64px; height: 64px; flex-shrink: 0;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+            border: 1px solid rgba(99, 102, 241, 0.35); border-radius: 14px;
+        }
+        .seat-badge .seat-num { font-size: 22px; font-weight: 700; color: var(--accent-hover); line-height: 1; }
+        .seat-badge .seat-label { font-size: 10px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-top: 2px; }
+        .ticket-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .ticket-info .price { font-size: 18px; font-weight: 700; }
+        .ticket-info .meta { font-size: 13px; color: var(--text-muted); }
+        .ticket-route {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .ticket-route .arrow {
+            color: var(--accent-hover);
+            display: flex;
+            align-items: center;
+        }
+        .ticket-route .arrow svg { width: 16px; height: 16px; stroke: currentColor; }
+        .ticket-time {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .ticket-time svg { width: 14px; height: 14px; stroke: var(--text-muted); flex-shrink: 0; }
+        .ticket-time .value { color: var(--text); font-weight: 500; }
+
+        .btn-return {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 16px; border-radius: 10px;
+            background: rgba(239, 68, 68, 0.1); color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            font-size: 14px; font-weight: 500; font-family: inherit;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .btn-return:hover { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #fecaca; }
+        .btn-return svg { width: 16px; height: 16px; stroke: currentColor; }
+
+        .empty { text-align: center; padding: 80px 20px; animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .empty-icon { display: flex; align-items: center; justify-content: center;
+            width: 72px; height: 72px; margin: 0 auto 20px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+            border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 18px; }
+        .empty-icon svg { width: 36px; height: 36px; stroke: var(--accent-hover); }
+        .empty h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+        .empty p { color: var(--text-muted); font-size: 15px; margin-bottom: 24px; }
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 12px 22px; border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6); color: #fff;
+            text-decoration: none; font-size: 15px; font-weight: 600;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35); transition: all 0.2s ease;
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5); filter: brightness(1.05); }
+        .btn-primary svg { width: 18px; height: 18px; stroke: currentColor; }
+
+        @media (max-width: 640px) {
+            .header { padding: 16px 20px; }
+            .nav-link { padding: 8px 10px; font-size: 13px; }
+            .main { padding: 32px 20px 60px; }
+            .page-head h1 { font-size: 26px; }
+            .ticket-card { flex-direction: column; align-items: stretch; }
+            .btn-return { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <a th:href="@{/}" class="brand">
+        <div class="brand-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
+                <path d="M13 5v2"/><path d="M13 17v2"/><path d="M13 11v2"/>
+            </svg>
+        </div>
+        <span>Система билетов</span>
+    </a>
+    <div class="header-actions">
+        <a th:href="@{/}" class="nav-link">Главная</a>
+        <a th:href="@{/routes}" class="nav-link">Маршруты</a>
+        <a th:href="@{/my-tickets}" class="nav-link active">Мои билеты</a>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="logout-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                <span>Выйти</span>
+            </button>
+        </form>
+    </div>
+</header>
+
+<main class="main">
+    <div class="page-head">
+        <h1>Мои билеты</h1>
+        <p>Купленные вами билеты. Вы можете вернуть билет до момента отправления.</p>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+    <div th:if="${#lists.isEmpty(tickets)}" class="empty">
+        <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
+                <path d="M13 5v14"/>
+            </svg>
+        </div>
+        <h2>У вас пока нет билетов</h2>
+        <p>Перейдите в раздел «Маршруты» и выберите свободное место.</p>
+        <a th:href="@{/routes}" class="btn-primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7"/>
+                <path d="M9 7l6-3 5.553 2.776A1 1 0 0 1 21 7.618v10.764a1 1 0 0 1-1.447.894L15 17"/>
+                <path d="M15 17l-6 3"/>
+                <line x1="9" y1="7" x2="9" y2="20"/>
+            </svg>
+            К маршрутам
+        </a>
+    </div>
+
+    <div th:unless="${#lists.isEmpty(tickets)}" class="tickets">
+        <div class="ticket-card" th:each="t : ${tickets}">
+            <div class="ticket-main">
+                <div class="seat-badge">
+                    <span class="seat-num" th:text="${t.seatNumber}">1</span>
+                    <span class="seat-label">место</span>
+                </div>
+                <div class="ticket-info">
+                    <div class="ticket-route">
+                        <span th:text="${t.departurePoint}">Москва</span>
+                        <span class="arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+            </svg>
+        </span>
+                        <span th:text="${t.destinationPoint}">СПб</span>
+                    </div>
+
+                    <div class="ticket-time" th:if="${t.departureAt}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span>Отправление:</span>
+                        <span class="value" th:text="${#temporals.format(t.departureAt, 'dd.MM.yyyy HH:mm')}">—</span>
+                    </div>
+
+                    <div class="ticket-time" th:if="${t.destinationAt}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <span>Прибытие:</span>
+                        <span class="value" th:text="${#temporals.format(t.destinationAt, 'dd.MM.yyyy HH:mm')}">—</span>
+                    </div>
+
+                    <div class="price" th:text="${t.price} + ' ₽'">150 ₽</div>
+                    <div class="meta" th:if="${t.purchasedAt}">
+                        Куплен:
+                        <span th:text="${#temporals.format(t.purchasedAt, 'dd.MM.yyyy HH:mm')}">—</span>
+                    </div>
+                </div>
+            </div>
+            <form th:action="@{'/my-tickets/' + ${t.id} + '/return'}" method="post">
+                <button type="submit" class="btn-return">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 14 4 9 9 4"/>
+                        <path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
+                    </svg>
+                    Вернуть
+                </button>
+            </form>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>
