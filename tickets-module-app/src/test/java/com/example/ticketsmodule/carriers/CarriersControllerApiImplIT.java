@@ -66,6 +66,23 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isForbidden());
         }
+
+        @Test
+        @DisplayName("PATCH /api/carriers/{id} with USER role → 403")
+        void shouldForbidUserToPatchCarrier() throws Exception {
+            CarrierEntity saved = carriersRepository.save(
+                    CarrierEntity.builder().name("Acme").phone("+7-111").build());
+
+            CarrierPatchRequest patch = new CarrierPatchRequest();
+            patch.setName("New");
+
+            mockMvc.perform(patch("/api/carriers/{id}", saved.getId())
+                            .with(JwtTestHelper.withRole("USER"))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(patch)))
+                    .andExpect(status().isForbidden());
+        }
+
     }
 
     // ---------- CREATE ----------
@@ -209,6 +226,37 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content", hasSize(1)))
                     .andExpect(jsonPath("$.content[0].name").value("Acme"));
+        }
+
+        @Test
+        @DisplayName("should filter by phone")
+        void shouldFilterByPhone() throws Exception {
+            carriersRepository.save(CarrierEntity.builder()
+                    .name("Acme").phone("+7-111").build());
+            carriersRepository.save(CarrierEntity.builder()
+                    .name("Beta").phone("+7-222").build());
+
+            mockMvc.perform(get("/api/carriers")
+                            .param("phone", "+7-111")
+                            .with(JwtTestHelper.withRole("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content", hasSize(1)))
+                    .andExpect(jsonPath("$.content[0].name").value("Acme"));
+        }
+
+        @Test
+        @DisplayName("should filter by query")
+        void shouldFilterByQuery() throws Exception {
+            carriersRepository.save(CarrierEntity.builder()
+                    .name("Acme").phone("+7-111").build());
+            carriersRepository.save(CarrierEntity.builder()
+                    .name("Beta").phone("+7-222").build());
+
+            mockMvc.perform(get("/api/carriers")
+                            .param("query", "acm")
+                            .with(JwtTestHelper.withRole("USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content", hasSize(1)));
         }
     }
 

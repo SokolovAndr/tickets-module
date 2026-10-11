@@ -26,6 +26,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -266,6 +267,36 @@ class RoutesServiceTest {
                     .isInstanceOf(EntityNotFoundException.class);
 
             verify(routesRepository, never()).save(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("findAllByIds()")
+    class FindAllByIdsTests {
+
+        @Test
+        @DisplayName("should return empty map for null or empty ids")
+        void shouldReturnEmptyMapForNullOrEmpty() {
+            assertThat(routesService.findAllByIds(null)).isEmpty();
+            assertThat(routesService.findAllByIds(List.of())).isEmpty();
+            verifyNoInteractions(routesRepository);
+        }
+
+        @Test
+        @DisplayName("should return map by id")
+        void shouldReturnMapById() {
+            RouteEntity second = new RouteEntity();
+            second.setId(UUID.randomUUID());
+
+            when(routesRepository.findAllById(List.of(routeId, second.getId())))
+                    .thenReturn(List.of(routeEntity, second));
+
+            Map<UUID, RouteEntity> result =
+                    routesService.findAllByIds(List.of(routeId, second.getId()));
+
+            assertThat(result)
+                    .containsEntry(routeId, routeEntity)
+                    .containsEntry(second.getId(), second);
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.ticketsmodule.impl.common.web.rest.exceptions;
 
+import com.example.ticketsmodule.impl.carriers.exception.CarrierNameAlreadyExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -8,6 +9,7 @@ import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -79,6 +81,15 @@ public class ApiExceptionHandler {
         response.setMessage(ex.getMessage());
         response.setUserMessage("Нарушение уникальности данных");
         return response;
+    }
+
+    @ExceptionHandler(CarrierNameAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateCarrier(
+            CarrierNameAlreadyExistsException ex) {
+        ErrorResponse body = new ErrorResponse();
+        body.setMessage(ex.getMessage());
+        body.setUserMessage("Перевозчик с таким названием уже существует");
+        return ResponseEntity.badRequest().body(body);
     }
 
     private HttpStatus getStatus(Exception exception) {
