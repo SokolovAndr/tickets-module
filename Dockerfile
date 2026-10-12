@@ -28,4 +28,4 @@ WORKDIR /app
 COPY --from=build /app/tickets-module-app/target/tickets-module-app-0.0.1-SNAPSHOT.jar app.jar
 
 # Railway сам подставит $PORT через application-railway.yml
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-Xmx384m", "-jar", "app.jar"]
