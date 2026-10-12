@@ -13,6 +13,38 @@
 > 🌐 **Production:** https://tickets-module-production.up.railway.app  
 > 📄 **API Documentation (Swagger UI):** https://tickets-module-production.up.railway.app/swagger-ui/index.html
 
+## 📸 Скриншоты
+
+<table>
+  <tr>
+    <td style="text-align: center; width: 50%;">
+      <img src="docs/images/desktop-01-home.png" alt="Главная"/>
+      <br/><b>Главная</b>
+    </td>
+    <td style="text-align: center; width: 50%;">
+      <img src="docs/images/desktop-02-routes.png" alt="Маршруты"/>
+      <br/><b>Маршруты с поиском</b>
+    </td>
+  </tr>
+  <tr>
+    <td style="text-align: center; width: 50%;">
+      <img src="docs/images/desktop-03-details.png" alt="Покупка"/>
+      <br/><b>Выбор места</b>
+    </td>
+    <td style="text-align: center; width: 50%;">
+      <img src="docs/images/desktop-04-my-tickets.png" alt="Мои билеты"/>
+      <br/><b>Мои билеты</b>
+    </td>
+  </tr>
+</table>
+
+<p style="text-align: center;">
+  <b>📱 Мобильная версия</b><br/>
+  <img src="docs/images/mobile-01-home.png" width="180" alt="Мобильная главная"/>
+  <img src="docs/images/mobile-02-routes.png" width="180" alt="Мобильные маршруты"/>
+  <img src="docs/images/mobile-03-my-tickets.png" width="180" alt="Мобильные билеты"/>
+</p>
+
 ## 📦 Модули проекта
 
 | Модуль | Назначение |
@@ -205,6 +237,15 @@ docker exec -it tickets-module-redis redis-cli get "tickets:userTickets::<userId
 ```
 SonarCloud использует агрегированный отчёт через параметр:
 sonar.coverage.jacoco.aggregateXmlReportPaths=coverage-report/target/site/jacoco/jacoco.xml
+
+## 📖 Архитектурные решения
+
+Ключевые решения зафиксированы в [ADR](docs/adr/):
+- [0001 — Разбиение на Maven-модули](docs/adr/0001-multimodule-structure.md)
+- [0002 — JPA-сущности как доменные модели](docs/adr/0002-jpa-as-domain.md)
+- [0003 — Две цепочки Security: session + JWT](docs/adr/0003-jwt-and-sessions.md)
+- [0004 — Redis для кэша купленных билетов](docs/adr/0004-caching-strategy.md)
+- [0005 — Отклонение от правила web → impl](docs/adr/0005-web-impl-coupling.md)
 
 ## 👤 Автор
 
