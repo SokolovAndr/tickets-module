@@ -40,8 +40,17 @@ public class ApiSecurityConfiguration {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, API+"/login", API+"/token", API+"/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, API+"/tickets/{id}/buy", API+"/tickets/{id}/return").hasAnyRole(ROLE_USER, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.POST,
+                                API+"/login",
+                                API+"/token",
+                                API+"/register")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                API+"/tickets/{id}/buy",
+                                API+"/tickets/{id}/return",
+                                API+"/users/me/password")
+                        .hasAnyRole(ROLE_USER, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.PATCH, API+"/users/me").hasAnyRole(ROLE_USER, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.GET).hasAnyRole(ROLE_USER, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.POST).hasRole(ROLE_ADMIN)
                         .requestMatchers(HttpMethod.PUT).hasRole(ROLE_ADMIN)
