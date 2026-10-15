@@ -103,3 +103,13 @@ components:
           type: string
           format: date-time
           nullable: true
+
+    UserPatchRequest:
+      type: object
+      description: Частичное обновление данных пользователя.
+      properties:
+        fullName:
+          title: ФИО
+          description: ФИО
+          type: string
+          nullable: true

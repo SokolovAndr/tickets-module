@@ -217,7 +217,7 @@ paths:
             schema:
               $ref: "patch-types.yaml#/components/schemas/CarrierPatchRequest"
       responses:
-        201:
+        200:
           description: Компания перевозчик успешно обновлена
           content:
             application/json:
@@ -371,7 +371,7 @@ paths:
             schema:
               $ref: "patch-types.yaml#/components/schemas/RoutePatchRequest"
       responses:
-        201:
+        200:
           description: Маршрут успешно обновлен
           content:
             application/json:
@@ -488,7 +488,6 @@ paths:
         500:
           description: Внутренняя ошибка сервера
 
-
   /api/tickets/{id}:
     get:
       description: Метод получения билета по id
@@ -548,8 +547,8 @@ paths:
             schema:
               $ref: "patch-types.yaml#/components/schemas/TicketPatchRequest"
       responses:
-        201:
-          description: Маршрут успешно обновлен
+        200:
+          description: Билет успешно обновлен
           content:
             application/json:
               schema:
@@ -676,3 +675,97 @@ paths:
         500:
           description: Внутренняя ошибка сервера
 
+  /api/users/me:
+    get:
+      description: Метод получения данных текущего пользователя
+      operationId: getCurrentUser
+      tags:
+        - UsersController
+      responses:
+        200:
+          description: Операция обработана успешно, результат предоставлен
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/UserResponse"
+        400:
+          description: Переданы не корректные параметры запроса
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        401:
+          description: Отсутствует или невалиден JWT-токен
+        403:
+          description: Пользователь не имеет ни одной из необходимых ролей
+        404:
+          description: Объект не найден
+        500:
+          description: Ошибка сервера/сервиса/БД
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+
+    patch:
+      description: Частичное обновление данных текущего пользователя
+      operationId: patchCurrentUser
+      tags:
+        - UsersController
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "patch-types.yaml#/components/schemas/UserPatchRequest"
+      responses:
+        200:
+          description: Учетные данные успешно обновлены
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/UserResponse"
+        400:
+          description: Ошибка в параметрах запроса
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        401:
+          description: Отсутствует или невалиден JWT-токен
+        403:
+          description: Пользователь не имеет ни одной из необходимых ролей
+
+  /api/users/me/password:
+    post:
+      description: Смена пароля
+      operationId: changeCurrentUserPassword
+      tags:
+        - UsersController
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "types.yaml#/components/schemas/ChangePasswordRequest"
+      responses:
+        200:
+          description: Пароль успешно изменен
+        400:
+          description: Ошибка в параметрах запроса
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        401:
+          description: Отсутствует или невалиден JWT-токен
+        403:
+          description: Пользователь не имеет ни одной из необходимых ролей
+        422:
+          description: Бизнес-правило нарушено (неверный старый пароль, новый = старому)
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        500:
+          description: Внутренняя ошибка сервера

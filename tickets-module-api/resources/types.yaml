@@ -582,3 +582,56 @@ components:
           items:
             type: string
             format: uuid
+
+    UserResponse:
+      type: object
+      required:
+        - login
+        - fullName
+        - role
+        - createdAt
+        - updatedAt
+      properties:
+        login:
+          title: Логин
+          description: Логин
+          type: string
+        fullName:
+          title: ФИО
+          description: ФИО
+          type: string
+        role:
+          title: Роль
+          description: Роль пользователя в системе
+          type: string
+          enum: [ USER, ADMIN ]
+        createdAt:
+          title: Дата создания
+          description: Дата создания
+          type: string
+          format: date-time
+        updatedAt:
+          title: Дата обновления
+          description: Дата обновления
+          type: string
+          format: date-time
+
+    ChangePasswordRequest:
+      type: object
+      required:
+        - oldPassword
+        - newPassword
+      properties:
+        oldPassword:
+          title: Старый пароль
+          description: Старый пароль
+          type: string
+          format: password
+          example: oldPass123
+        newPassword:
+          title: Новый пароль
+          description: Новый пароль
+          type: string
+          format: password
+          minLength: 5
+          example: newPass123
