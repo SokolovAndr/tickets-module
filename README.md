@@ -18,31 +18,43 @@
 <table>
   <tr>
     <td style="text-align: center; width: 50%;">
-      <img src="docs/images/desktop-01-home.png" alt="Главная"/>
-      <br/><b>Главная</b>
+      <img src="docs/images/desktop-01-login.png" alt="Вход"/>
+      <br/><b>Вход</b>
     </td>
     <td style="text-align: center; width: 50%;">
-      <img src="docs/images/desktop-02-routes.png" alt="Маршруты"/>
-      <br/><b>Маршруты с поиском</b>
+      <img src="docs/images/desktop-02-home.png" alt="Главная"/>
+      <br/><b>Главная</b>
     </td>
   </tr>
   <tr>
     <td style="text-align: center; width: 50%;">
-      <img src="docs/images/desktop-03-details.png" alt="Покупка"/>
-      <br/><b>Выбор места</b>
+      <img src="docs/images/desktop-03-routes-list.png" alt="Маршруты"/>
+      <br/><b>Маршруты с поиском</b>
     </td>
     <td style="text-align: center; width: 50%;">
-      <img src="docs/images/desktop-04-my-tickets.png" alt="Мои билеты"/>
+      <img src="docs/images/desktop-04-route.png" alt="Маршрут с билетами"/>
+      <br/><b>Маршрут с билетами</b>
+    </td>
+  </tr>
+  <tr>
+    <td style="text-align: center; width: 50%;">
+      <img src="docs/images/desktop-05-my-tickets.png" alt="Мои билеты"/>
       <br/><b>Мои билеты</b>
+    </td>
+    <td style="text-align: center; width: 50%;">
+      <img src="docs/images/desktop-06-profile.png" alt="Профиль"/>
+      <br/><b>Профиль</b>
     </td>
   </tr>
 </table>
 
 <p style="text-align: center;">
   <b>📱 Мобильная версия</b><br/>
-  <img src="docs/images/mobile-01-home.png" width="180" alt="Мобильная главная"/>
-  <img src="docs/images/mobile-02-routes.png" width="180" alt="Мобильные маршруты"/>
-  <img src="docs/images/mobile-03-my-tickets.png" width="180" alt="Мобильные билеты"/>
+  <img src="docs/images/mobile-01-home.png" width="180" alt="Главная страница, мобильная версия"/>
+  <img src="docs/images/mobile-02-routes-list.png" width="180" alt="Список маршрутов, мобильная версия"/>
+  <img src="docs/images/mobile-03-route.png" width="180" alt="Детали маршрута, мобильная версия"/>
+  <img src="docs/images/mobile-04-my-tickets.png" width="180" alt="Мои билеты, мобильная версия"/>
+  <img src="docs/images/mobile-05-profile.png" width="180" alt="Профиль, мобильная версия"/>
 </p>
 
 ## 📦 Модули проекта
