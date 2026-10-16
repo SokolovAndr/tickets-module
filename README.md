@@ -90,12 +90,11 @@ graph TD
 
 ### ✅ Требования
 
-| Требование | Версия / Примечание |
-|------------|---------------------|
-| ☕ JDK | 17+ |
-| 📦 Maven | или встроенный `./mvnw` |
-| 🐳 Docker + Docker Compose | для запуска БД |
-| 🔴 Redis | через `docker compose` (для кэша) |
+| Требование | Версия / Примечание               |
+|------------|-----------------------------------|
+| ☕ JDK | 17+                               |
+| 📦 Maven | или встроенный `./mvnw`           |
+| 🐳 Docker + Docker Compose | для запуска БД и Redis         |
 
 
 ### 📥 Клонирование репозитория
@@ -115,11 +114,30 @@ docker compose up -d
 - `postgres` — порт 5454
 - `redis` — порт 6379
 
-### Сборка проекта
 
-```bash
-./mvnw clean install
+### ▶️ Запуск приложения
+
+#### Для локального запуска через IDEA необходимо:
+1. создать environment variable "JWT_SECRET" в Run/Debug Configuration. Значение переменной нужно уточнить у автора.
+2. Указать профиль: _local_
+3. Запустить
+
+#### Для локального запуска через терминал необходимо:
+1. собрать приложение командой:
+
 ```
+./mvnw clean package
+# или
+mvn clean package
+```
+
+2. запустить командой:
+
+```cmd
+$env:JWT_SECRET="ПОДСТАВИТЬ_ЗНАЧЕНИЕ_JWT_SECRET"
+java -jar tickets-module-app/target/tickets-module-app-0.0.1-SNAPSHOT.jar --spring.profiles.active=local
+```
+Приложение по умолчанию будет доступно на http://localhost:8099.
 
 ### 🔨 Для полной сборки с интеграционными тестами и агрегированным отчётом JaCoCo:
 
@@ -128,21 +146,6 @@ docker compose up -d
 ```
 Агрегированный отчёт будет доступен по пути:
 coverage-report/target/site/jacoco/index.html
-
-
-### ▶️ Запуск приложения
-
-```bash
-./mvnw spring-boot:run -pl tickets-module-app
-```
-
-### или через собранный JAR:
-
-```bash
-java -jar tickets-module-app/target/tickets-module-app-0.0.1-SNAPSHOT.jar
-```
-Приложение по умолчанию будет доступно на http://localhost:8099.
-
 
 ## ⚙️ Конфигурация
 
@@ -172,6 +175,18 @@ Dockerfile использует multi-stage build:
 1. **build** — `maven:3.9.6-eclipse-temurin-17`, кэширует зависимости (`dependency:go-offline`), собирает JAR.
 2. **runtime** — `eclipse-temurin:17-jre-jammy`, запускает `tickets-module-app`.
 
+## ⚠️ Ограничения Free-плана Railway
+
+Приложение размещено на **бесплатном плане Railway (Free)**, поэтому производительность ограничена ресурсами хостинга, а не кодом:
+
+- **CPU** — shared, с троттлингом под нагрузкой;
+- **RAM** — ~512 МБ, часто приводит к частому GC и замедлению JVM;
+- **Cold start** — приложение «засыпает» при простое, первый запрос долгий;
+- **БД** — те же лимиты по CPU/RAM и количеству подключений;
+- **Redis на Railway не подключён** — кэш отключён, запросы `GET /api/tickets/my` идут напрямую в PostgreSQL;
+
+Как следствие: медленный старт, долгие ответы API, долгая загрузка web-страниц. Это ожидаемое поведение Free-плана, а не баг приложения.
+
 ## 🔐 Безопасность
 
 В проекте используются две независимые цепочки Spring Security:
@@ -185,7 +200,7 @@ Dockerfile использует multi-stage build:
 
 ## ⚡ Кэширование
 
-Проект использует Redis для кэширования списка купленных билетов пользователя.
+Проект использует Redis для кэширования списка купленных билетов пользователя (в локальном профиле).
 
 ### Что кэшируется
 
@@ -201,6 +216,8 @@ Dockerfile использует multi-stage build:
 | TTL | 30 минут |
 | Инвалидация | `@CacheEvict` на `buyTicket` и `returnTicket` |
 | Fallback | `LoggingCacheErrorHandler` — при падении Redis метод идёт в Postgres |
+
+> ℹ️ Кэш активен только в профиле `local`. На Railway Redis не развёрнут, поэтому метод уходит в PostgreSQL.
 
 ### Проверка
 
