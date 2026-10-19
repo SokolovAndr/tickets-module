@@ -565,4 +565,37 @@ class TicketsServiceTest {
             verifyNoInteractions(ticketRepository, ticketMapper);
         }
     }
+
+    // ---------- findById() ----------
+
+    @Nested
+    @DisplayName("findById()")
+    class FindByIdTests {
+
+        @Test
+        @DisplayName("should return TicketEntity when ticket exists")
+        void shouldReturnEntityWhenFound() {
+            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+
+            TicketEntity actual = ticketsService.findById(ticketId);
+
+            assertThat(actual).isSameAs(ticket);
+            assertThat(actual.getId()).isEqualTo(ticketId);
+            verify(ticketRepository).findById(ticketId);
+        }
+
+        @Test
+        @DisplayName("should throw EntityNotFoundException when ticket not found")
+        void shouldThrowWhenNotFound() {
+            when(ticketRepository.findById(ticketId)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> ticketsService.findById(ticketId))
+                    .isInstanceOf(EntityNotFoundException.class)
+                    .hasMessageContaining("Ticket with id")
+                    .hasMessageContaining(ticketId.toString())
+                    .hasMessageContaining("not found");
+
+            verify(ticketRepository).findById(ticketId);
+        }
+    }
 }

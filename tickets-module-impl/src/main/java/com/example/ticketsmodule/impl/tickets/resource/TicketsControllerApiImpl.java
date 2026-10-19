@@ -1,14 +1,20 @@
 package com.example.ticketsmodule.impl.tickets.resource;
 
 import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
+import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,6 +36,7 @@ public class TicketsControllerApiImpl implements TicketsControllerApi {
 
     private final TicketsService ticketsService;
     private final JwtCurrentUserService jwtCurrentUserService;
+    private final TicketPdfService ticketPdfService;
 
     @Override
     public ResponseEntity<CreateTicketResponse> createTicket(@RequestBody CreateTicketRequest createTicketRequest) {
@@ -79,5 +86,24 @@ public class TicketsControllerApiImpl implements TicketsControllerApi {
     public ResponseEntity<ReleaseTicketsBatchResponse> releaseTicketsBatch(@RequestBody ReleaseTicketsBatchRequest request) {
         ReleaseTicketsBatchResponse result = ticketsService.releaseTicketsBatch(request);
         return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @Override
+    public ResponseEntity<Resource> downloadTicketPdf(UUID id) {
+        UUID userId = jwtCurrentUserService.getCurrentUserId();
+
+        TicketEntity ticket = ticketsService.findById(id);
+        if (ticket.getUser() == null || !ticket.getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Это не ваш билет");
+        }
+
+        byte[] pdfBytes = ticketPdfService.generatePdf(ticket);
+        ByteArrayResource resource = new ByteArrayResource(pdfBytes);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"ticket-" + id + ".pdf\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .contentLength(pdfBytes.length)
+                .body(resource);
     }
 }

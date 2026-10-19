@@ -113,6 +113,12 @@ public class TicketsService {
         return ticketMapper.toResponse(response);
     }
 
+    @Transactional(readOnly = true)
+    public TicketEntity findById(@NotNull UUID id) {
+        return ticketRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(String.format("Ticket with id %s not found", id)));
+    }
+
     @Transactional
     public CreateTicketResponse patch(@NotNull UUID id, @Valid TicketPatchRequest ticketPatchRequest) {
 
@@ -264,7 +270,7 @@ public class TicketsService {
 
         return ticketRepository.findPurchasedByUserId(userId).stream()
                 .map(ticketMapper::toResponse)
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @Transactional(readOnly = true)

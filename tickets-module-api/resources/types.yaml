@@ -239,6 +239,10 @@ components:
           description: Идентификатор компании перевозчика
           type: string
           format: uuid
+        carrierName:
+          title: Название компании перевозчика
+          description: Название компании перевозчика
+          type: string
         durationMinutes:
           title: Длительность в минутах
           description: Длительность в минутах

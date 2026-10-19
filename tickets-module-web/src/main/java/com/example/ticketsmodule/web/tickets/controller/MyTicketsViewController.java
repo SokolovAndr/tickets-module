@@ -4,10 +4,18 @@ import com.example.ticketsmodule.api.model.CreateTicketResponse;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
+import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
 import com.example.ticketsmodule.web.tickets.dto.MyTicketView;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +38,7 @@ public class MyTicketsViewController {
     private final TicketsService ticketsService;
     private final RoutesService routesService;
     private final SessionCurrentUserService sessionCurrentUserService;
+    private final TicketPdfService ticketPdfService;
 
     @GetMapping("/my-tickets")
     public String list(Model model) {
@@ -74,5 +83,25 @@ public class MyTicketsViewController {
             ra.addFlashAttribute("errorMessage", e.getMessage());
         }
         return "redirect:/my-tickets";
+    }
+
+    @GetMapping("/my-tickets/{id}/pdf")
+    public ResponseEntity<Resource> downloadTicketPdf(@PathVariable UUID id) {
+        UUID currentUserId = sessionCurrentUserService.getCurrentUserId();
+
+        TicketEntity ticket = ticketsService.findById(id);
+
+        if (ticket.getUser() == null || !ticket.getUser().getId().equals(currentUserId)) {
+            throw new AccessDeniedException("Это не ваш билет");
+        }
+
+        byte[] pdfBytes = ticketPdfService.generatePdf(ticket);
+        ByteArrayResource resource = new ByteArrayResource(pdfBytes);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"ticket-" + id + ".pdf\"")
+                .contentType(MediaType.APPLICATION_PDF)
+                .contentLength(pdfBytes.length)
+                .body(resource);
     }
 }
