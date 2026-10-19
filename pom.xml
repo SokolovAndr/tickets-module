@@ -36,6 +36,7 @@
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
         <jspecify.version>1.0.0</jspecify.version>
         <springdoc.version>2.6.0</springdoc.version>
+        <testcontainers.version>1.21.4</testcontainers.version>
     </properties>
 
     <dependencyManagement>
