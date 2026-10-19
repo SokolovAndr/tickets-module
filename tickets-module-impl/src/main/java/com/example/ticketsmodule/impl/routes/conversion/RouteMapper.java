@@ -16,5 +16,6 @@ public interface RouteMapper {
     RouteEntity toEntity (CreateRouteRequest request, CarrierEntity carrier);
 
     @Mapping(source = "carrier.id", target = "carrierId")
+    @Mapping(source = "carrier.name", target = "carrierName")
     CreateRouteResponse toResponse (RouteEntity entity);
 }

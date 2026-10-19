@@ -21,6 +21,7 @@ class RouteMapperTest {
 
     private UUID routeId;
     private UUID carrierId;
+    private String carrierName;
     private CarrierEntity carrier;
 
     @BeforeEach
@@ -29,10 +30,11 @@ class RouteMapperTest {
 
         routeId = UUID.randomUUID();
         carrierId = UUID.randomUUID();
+        carrierName = "PonyExpress";
 
         carrier = new CarrierEntity();
         carrier.setId(carrierId);
-        carrier.setName("Acme");
+        carrier.setName(carrierName);
     }
 
     // ---------- toEntity() ----------
@@ -78,6 +80,7 @@ class RouteMapperTest {
 
             assertThat(entity.getCarrier()).isSameAs(carrier);
             assertThat(entity.getCarrier().getId()).isEqualTo(carrierId);
+            assertThat(entity.getCarrier().getName()).isEqualTo(carrierName);
         }
 
         @Test
@@ -186,8 +189,8 @@ class RouteMapperTest {
         }
 
         @Test
-        @DisplayName("should map carrier.id to carrierId")
-        void shouldMapCarrierIdFromNestedCarrier() {
+        @DisplayName("should map carrier.id and carrier.name to carrierId and carrierName")
+        void shouldMapCarrierIdAndCarrierNameFromNestedCarrier() {
             RouteEntity entity = RouteEntity.builder()
                     .id(routeId)
                     .departurePoint("A")
@@ -201,6 +204,7 @@ class RouteMapperTest {
             CreateRouteResponse response = mapper.toResponse(entity);
 
             assertThat(response.getCarrierId()).isEqualTo(carrierId);
+            assertThat(response.getCarrierName()).isEqualTo(carrierName);
         }
 
         @Test
@@ -300,6 +304,7 @@ class RouteMapperTest {
             assertThat(response.getDepartureAt()).isEqualTo(departureAt);
             assertThat(response.getDestinationAt()).isEqualTo(destinationAt);
             assertThat(response.getCarrierId()).isEqualTo(carrierId);
+            assertThat(response.getCarrierName()).isEqualTo(carrierName);
         }
     }
 

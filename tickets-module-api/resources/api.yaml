@@ -644,6 +644,35 @@ paths:
               schema:
                 $ref: "types.yaml#/components/schemas/ErrorResponse"
 
+  /api/tickets/{id}/pdf:
+    get:
+      description: Скачать купленный билет в формате PDF
+      operationId: downloadTicketPdf
+      tags:
+        - TicketsController
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор билета
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: PDF-файл билета
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        401:
+          description: Отсутствует или невалиден JWT-токен
+        403:
+          description: Билет принадлежит другому пользователю
+        404:
+          description: Билет не найден
+
   /api/tickets/release-batch:
     post:
       description: Метод создания билета

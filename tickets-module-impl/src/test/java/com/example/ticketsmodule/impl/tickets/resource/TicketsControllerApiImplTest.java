@@ -7,7 +7,10 @@ import com.example.ticketsmodule.api.model.ReleaseTicketsBatchResponse;
 import com.example.ticketsmodule.api.model.TicketPatchRequest;
 import com.example.ticketsmodule.api.model.TicketsSearchRequest;
 import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
+import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
+import com.example.ticketsmodule.impl.users.domain.UserEntity;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,12 +20,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 import java.util.UUID;
@@ -37,6 +45,7 @@ class TicketsControllerApiImplTest {
 
     @Mock private TicketsService ticketsService;
     @Mock private JwtCurrentUserService jwtCurrentUserService;
+    @Mock private TicketPdfService ticketPdfService;
 
     @InjectMocks
     private TicketsControllerApiImpl controller;
@@ -321,6 +330,101 @@ class TicketsControllerApiImplTest {
             assertThatThrownBy(() -> controller.releaseTicketsBatch(request))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Нет свободных мест");
+        }
+    }
+
+    // ---------- downloadTicketPdf() ----------
+
+    @Nested
+    @DisplayName("downloadTicketPdf()")
+    class DownloadTicketPdfTests {
+
+        private TicketEntity ticket;
+        private byte[] pdfBytes;
+
+        @BeforeEach
+        void setUp() {
+            UserEntity user = new UserEntity();
+            user.setId(userId);
+
+            ticket = new TicketEntity();
+            ticket.setId(ticketId);
+            ticket.setUser(user);
+
+            pdfBytes = new byte[]{37, 80, 68, 70}; // %PDF (магия PDF файла)
+        }
+
+        @Test
+        @DisplayName("should return 200 OK with PDF file when user owns the ticket")
+        void shouldReturn200OkWithPdf() {
+            // given
+            when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
+            when(ticketsService.findById(ticketId)).thenReturn(ticket);
+            when(ticketPdfService.generatePdf(ticket)).thenReturn(pdfBytes);
+
+            // when
+            ResponseEntity<Resource> response = controller.downloadTicketPdf(ticketId);
+
+            // then
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
+            assertThat(response.getHeaders().getContentLength()).isEqualTo(pdfBytes.length);
+            assertThat(response.getHeaders().getFirst(HttpHeaders.CONTENT_DISPOSITION))
+                    .isEqualTo("attachment; filename=\"ticket-" + ticketId + ".pdf\"");
+
+            assertThat(response.getBody()).isInstanceOf(ByteArrayResource.class);
+            assertThat(((ByteArrayResource) response.getBody()).getByteArray()).isEqualTo(pdfBytes);
+
+            verify(ticketPdfService).generatePdf(ticket);
+        }
+
+        @Test
+        @DisplayName("should throw AccessDeniedException when ticket belongs to another user")
+        void shouldThrowWhenDifferentUser() {
+            // given
+            UserEntity otherUser = new UserEntity();
+            otherUser.setId(UUID.randomUUID());
+            ticket.setUser(otherUser);
+
+            when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
+            when(ticketsService.findById(ticketId)).thenReturn(ticket);
+
+            // when & then
+            assertThatThrownBy(() -> controller.downloadTicketPdf(ticketId))
+                    .isInstanceOf(AccessDeniedException.class)
+                    .hasMessage("Это не ваш билет");
+
+            verifyNoInteractions(ticketPdfService);
+        }
+
+        @Test
+        @DisplayName("should throw AccessDeniedException when ticket is not purchased")
+        void shouldThrowWhenTicketHasNoUser() {
+            // given
+            ticket.setUser(null);
+
+            when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
+            when(ticketsService.findById(ticketId)).thenReturn(ticket);
+
+            // when & then
+            assertThatThrownBy(() -> controller.downloadTicketPdf(ticketId))
+                    .isInstanceOf(AccessDeniedException.class)
+                    .hasMessage("Это не ваш билет");
+
+            verifyNoInteractions(ticketPdfService);
+        }
+
+        @Test
+        @DisplayName("should propagate EntityNotFoundException when ticket not found")
+        void shouldPropagateExceptionWhenNotFound() {
+            when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
+            when(ticketsService.findById(ticketId))
+                    .thenThrow(new EntityNotFoundException("Ticket with id " + ticketId + " not found"));
+
+            assertThatThrownBy(() -> controller.downloadTicketPdf(ticketId))
+                    .isInstanceOf(EntityNotFoundException.class);
+
+            verifyNoInteractions(ticketPdfService);
         }
     }
 }

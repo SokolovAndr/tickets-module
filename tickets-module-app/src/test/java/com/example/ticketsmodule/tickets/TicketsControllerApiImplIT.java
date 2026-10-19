@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.HttpHeaders;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -29,8 +31,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @DisplayName("TicketsControllerApiImpl integration tests")
 class TicketsControllerApiImplIT extends AbstractIntegrationTest {
@@ -506,6 +507,65 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(status().isInternalServerError());
 
             assertThat(ticketRepository.findAll()).isEmpty();
+        }
+    }
+
+    // ---------- DOWNLOAD PDF ----------
+
+    @Nested
+    @DisplayName("GET /api/tickets/{id}/pdf")
+    class DownloadPdfTests {
+
+        @Test
+        @DisplayName("should download PDF for owned ticket and return 200")
+        void shouldDownloadPdf() throws Exception {
+            // given: создаем купленный билет для текущего пользователя
+            TicketEntity saved = createTicketInDb(1, true, testUser);
+
+            // when & then
+            MvcResult result = mockMvc.perform(get("/api/tickets/{id}/pdf", saved.getId())
+                            .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                    .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"ticket-" + saved.getId() + ".pdf\""))
+                    .andReturn();
+
+            // Проверяем, что вернулся непустой массив байт и это реально PDF
+            byte[] content = result.getResponse().getContentAsByteArray();
+            assertThat(content).isNotEmpty();
+
+            // Первые 4 байта любого PDF-файла — это "%PDF"
+            String pdfHeader = new String(content, 0, 4);
+            assertThat(pdfHeader).isEqualTo("%PDF");
+        }
+
+        @Test
+        @DisplayName("should return 403 when downloading someone else's ticket")
+        void shouldForbidDownloadingOthersTicket() throws Exception {
+            // given: создаем билет для ДРУГОГО пользователя
+            UserEntity otherUser = createUserInDb("otheruser");
+            TicketEntity saved = createTicketInDb(1, true, otherUser);
+
+            // when & then: текущий пользователь (testUser) пытается скачать чужой билет
+            mockMvc.perform(get("/api/tickets/{id}/pdf", saved.getId())
+                            .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
+                    .andExpect(status().isForbidden()); // Ожидаем 403 из-за AccessDeniedException
+        }
+
+        @Test
+        @DisplayName("should return 401 without auth")
+        void shouldReturn401WithoutAuth() throws Exception {
+            mockMvc.perform(get("/api/tickets/{id}/pdf", UUID.randomUUID()))
+                    .andExpect(status().isUnauthorized());
+        }
+
+        @Test
+        @DisplayName("should return 404 when ticket not found")
+        void shouldReturn404WhenNotFound() throws Exception {
+            mockMvc.perform(get("/api/tickets/{id}/pdf", UUID.randomUUID())
+                            .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
+                    .andExpect(status().isNotFound());
         }
     }
 

@@ -141,6 +141,27 @@
             text-decoration: none; font-size: 15px; font-weight: 600;
             box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35); transition: all 0.2s ease;
         }
+        .ticket-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .btn-download {
+             display: inline-flex; align-items: center; gap: 8px;
+             padding: 10px 16px; border-radius: 10px;
+             background: rgba(99, 102, 241, 0.1); color: #818cf8;
+             border: 1px solid rgba(99, 102, 241, 0.25);
+             font-size: 14px; font-weight: 500; font-family: inherit;
+             text-decoration: none;
+             cursor: pointer; transition: all 0.2s ease;
+         }
+        .btn-download:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: rgba(99, 102, 241, 0.4);
+            color: #a5b4fc;
+            transform: translateY(-1px);
+        }
+        .btn-download svg { width: 16px; height: 16px; stroke: currentColor; }
         .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99, 102, 241, 0.5); filter: brightness(1.05); }
         .btn-primary svg { width: 18px; height: 18px; stroke: currentColor; }
 
@@ -180,6 +201,16 @@
                 align-items: stretch;
             }
 
+            .btn-return {
+                justify-content: center;
+            }
+            .ticket-actions {
+                flex-direction: column;
+                align-items: stretch;
+                width: 100%;
+                margin-top: 16px;
+            }
+            .btn-download,
             .btn-return {
                 justify-content: center;
             }
@@ -288,15 +319,26 @@
                     </div>
                 </div>
             </div>
-            <form th:action="@{'/my-tickets/' + ${t.id} + '/return'}" method="post">
-                <button type="submit" class="btn-return">
+            <div class="ticket-actions">
+                <a th:href="@{'/my-tickets/' + ${t.id} + '/pdf'}" class="btn-download" title="Скачать билет">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 14 4 9 9 4"/>
-                        <path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
                     </svg>
-                    Вернуть
-                </button>
-            </form>
+                    PDF
+                </a>
+
+                <form th:action="@{'/my-tickets/' + ${t.id} + '/return'}" method="post" style="margin: 0;">
+                    <button type="submit" class="btn-return">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 14 4 9 9 4"/>
+                            <path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
+                        </svg>
+                        Вернуть
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </main>

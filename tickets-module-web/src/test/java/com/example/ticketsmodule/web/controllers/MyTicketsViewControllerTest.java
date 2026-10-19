@@ -4,7 +4,10 @@ import com.example.ticketsmodule.api.model.CreateTicketResponse;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
+import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
+import com.example.ticketsmodule.impl.users.domain.UserEntity;
 import com.example.ticketsmodule.web.tickets.controller.MyTicketsViewController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -43,6 +47,10 @@ class MyTicketsViewControllerTest {
 
     @MockBean
     private SessionCurrentUserService sessionCurrentUserService;
+
+    @MockBean
+    private TicketPdfService ticketPdfService;
+
 
     private UUID ticketId;
     private UUID routeId;
@@ -105,5 +113,30 @@ class MyTicketsViewControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/my-tickets"))
                 .andExpect(flash().attribute("errorMessage", "Cannot return"));
+    }
+
+    @Test
+    @DisplayName("GET /my-tickets/{id}/pdf returns PDF file")
+    void downloadTicketPdfShouldReturnFile() throws Exception {
+        //
+        UserEntity user = new UserEntity();
+        user.setId(userId);
+
+        TicketEntity ticket = new TicketEntity();
+        ticket.setId(ticketId);
+        ticket.setUser(user);
+
+        byte[] mockPdf = new byte[]{37, 80, 68, 70};
+
+        when(sessionCurrentUserService.getCurrentUserId()).thenReturn(userId);
+        when(ticketsService.findById(ticketId)).thenReturn(ticket);
+        when(ticketPdfService.generatePdf(ticket)).thenReturn(mockPdf);
+
+        // when & then
+        mockMvc.perform(get("/my-tickets/{id}/pdf", ticketId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"ticket-" + ticketId + ".pdf\""))
+                .andExpect(content().bytes(mockPdf));
     }
 }
