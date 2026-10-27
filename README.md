@@ -61,7 +61,6 @@
 
 | Модуль | Назначение |
 |--------|-----------|
-| `coverage-report` | Агрегация отчётов JaCoCo из всех модулей для SonarCloud |
 | `tickets-module-app` | Точка входа, конфигурация, интеграционные тесты |
 | `tickets-module-web` | Web-слой: HTML-формы, Spring MVC-контроллеры |
 | `tickets-module-impl` | Реализация бизнес-логики, UNIT тесты |
@@ -73,7 +72,6 @@
 graph TD
     APP[tickets-module-app] --> WEB[tickets-module-web]
     APP --> DB[tickets-module-db]
-    APP --> COV[coverage-report<br/><i>только на этапе сборки</i>]
     WEB --> IMPL[tickets-module-impl]
     IMPL --> API[tickets-module-api]
 ```
@@ -154,10 +152,10 @@ java -jar tickets-module-app/target/tickets-module-app-0.0.1-SNAPSHOT.jar --spri
 ### 🔨 Для полной сборки с интеграционными тестами и агрегированным отчётом JaCoCo:
 
 ```bash
-./mvnw clean verify
+./mvnw clean verify -P aggregate-coverage
 ```
 Агрегированный отчёт будет доступен по пути:
-coverage-report/target/site/jacoco/index.html
+tickets-module-app/target/site/jacoco/index.html
 
 ## ⚙️ Конфигурация
 
@@ -255,17 +253,28 @@ docker exec -it tickets-module-redis redis-cli get "tickets:userTickets::<userId
 ### Запуск всех тестов (юнит + интеграционные):
 
 ```bash
-./mvnw verify
+./mvnw verify -P aggregate-coverage
 ```
 
 ## 📊 Покрытие кода
 
-Проект использует агрегированный отчёт JaCoCo — отчёты со всех модулей собираются в coverage-report:
+Проект использует агрегированный отчёт JaCoCo — отчёты со всех модулей собираются в tickets-module-app:
 ```bash
-./mvnw verify
+./mvnw clean verify -P aggregate-coverage
 ```
 SonarCloud использует агрегированный отчёт через параметр:
-sonar.coverage.jacoco.aggregateXmlReportPaths=coverage-report/target/site/jacoco/jacoco.xml
+`sonar.coverage.jacoco.aggregateXmlReportPaths=tickets-module-app/target/site/jacoco/jacoco.xml`
+
+### 🛠 Почему используется профиль `aggregate-coverage`?
+
+Плагин `jacoco-maven-plugin` (цель `report-aggregate`) собирает отчёт **только по прямым зависимостям** модуля, в котором он запускается. Так как `tickets-module-impl` для `tickets-module-app` — транзитивная зависимость (идёт через `web`), JaCoCo не видит его и не включает в отчёт.
+
+Чтобы не нарушать архитектуру (где `app` не должен напрямую зависеть от `impl`), используется Maven-профиль `aggregate-coverage`:
+
+- **Обычная сборка** (`./mvnw clean verify`) — зависимости остаются чистыми, архитектура не нарушается.
+- **Сборка с профилем** (`./mvnw clean verify -P aggregate-coverage`) — профиль временно добавляет `impl` в зависимости `app`, чтобы JaCoCo собрал единый корректный отчёт для SonarCloud.
+
+> 💡 Это осознанный обход ограничения JaCoCo, а не архитектурное решение. В CI (`ci.yaml`) сборка всегда запускается с этим профилем.
 
 ## 📖 Архитектурные решения
 

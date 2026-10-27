@@ -24,7 +24,7 @@ jobs:
           cache: maven # Кэширует зависимости Maven, ускоряя сборку
 
       - name: Build and test
-        run: ./mvnw -B verify
+        run: ./mvnw -B verify -P aggregate-coverage
 
       - name: Set up JDK 21 (only for Sonar)
         uses: actions/setup-java@v4
@@ -42,7 +42,7 @@ jobs:
           -Dsonar.projectKey=SokolovAndr_tickets-module
           -Dsonar.organization=sokolovandr
           -Dsonar.host.url=https://sonarcloud.io
-          -Dsonar.coverage.jacoco.aggregateXmlReportPaths=coverage-report/target/site/jacoco/jacoco.xml
+          -Dsonar.coverage.jacoco.aggregateXmlReportPaths=tickets-module-app/target/site/jacoco/jacoco.xml
           -Dsonar.coverage.exclusions=**/Application.java,**/config/**,**/common/aop/**,**/common/web/rest/exceptions/**,**/common/domain/enumeration/**,**/domain/*Entity.java,**/domain/*Builder.java,**/repository/**,**/common/domain/exception/**,**/oauth/service/CurrentUserService.java,**/registration/dto/**,**/*Form.java,**/*Request.java,**/*Response.java
           -Dsonar.exclusions=**/templates/**,**/static/**,**/*.html,**/*.css,**/*.js,**/*.map
           -Dsonar.cpd.exclusions=**/*.html,**/*.css,**/*.js
@@ -53,7 +53,7 @@ jobs:
         with:
           name: jacoco-report
           path: |
-            coverage-report/target/site/jacoco/jacoco.xml
+            tickets-module-app/target/site/jacoco/jacoco.xml
             tickets-module-impl/target/*.exec
             tickets-module-app/target/*.exec
             tickets-module-web/target/*.exec
