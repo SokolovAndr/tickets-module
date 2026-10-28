@@ -101,7 +101,7 @@
         <dependency>
             <groupId>com.openhtmltopdf</groupId>
             <artifactId>openhtmltopdf-pdfbox</artifactId>
-            <version>1.0.10</version>
+            <version>${openhtmltopdf-pdfbox.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
