@@ -1,4 +1,4 @@
-package com.example.ticketsmodule.impl.config;
+package com.example.ticketsmodule.config;
 
 import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,6 +29,13 @@ public class ApiSecurityConfiguration {
     private static final String ROLE_USER = UserRoleEnum.USER.name();
 
     private static final String API = "/api";
+    private static final String LOGIN_PATH = "/login";
+    private static final String REGISTER_PATH = "/register";
+    private static final String TOKEN_PATH = "/token";
+    private static final String TICKETS_PATH = "/tickets";
+    private static final String USERS_ME_PATH = "/users/me";
+
+    private static final String CONTENT_TYPE = "application/json; charset=UTF-8";
 
     @Bean
     @Order(1)
@@ -41,16 +48,16 @@ public class ApiSecurityConfiguration {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST,
-                                API+"/login",
-                                API+"/token",
-                                API+"/register")
+                                API+LOGIN_PATH,
+                                API+TOKEN_PATH,
+                                API+REGISTER_PATH)
                         .permitAll()
                         .requestMatchers(HttpMethod.POST,
-                                API+"/tickets/{id}/buy",
-                                API+"/tickets/{id}/return",
-                                API+"/users/me/password")
+                                API+TICKETS_PATH+"/{id}/buy",
+                                API+TICKETS_PATH+"/{id}/return",
+                                API+USERS_ME_PATH+"/password")
                         .hasAnyRole(ROLE_USER, ROLE_ADMIN)
-                        .requestMatchers(HttpMethod.PATCH, API+"/users/me").hasAnyRole(ROLE_USER, ROLE_ADMIN)
+                        .requestMatchers(HttpMethod.PATCH, API+USERS_ME_PATH).hasAnyRole(ROLE_USER, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.GET).hasAnyRole(ROLE_USER, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.POST).hasRole(ROLE_ADMIN)
                         .requestMatchers(HttpMethod.PUT).hasRole(ROLE_ADMIN)
@@ -62,7 +69,7 @@ public class ApiSecurityConfiguration {
                         .authenticationEntryPoint((request, response, authException)
                                 -> {
                             response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                            response.setContentType("application/json; charset=UTF-8");
+                            response.setContentType(CONTENT_TYPE);
 
                             ErrorResponse authErrorResponse = new ErrorResponse()
                                     .message(authException.getMessage())
@@ -73,7 +80,7 @@ public class ApiSecurityConfiguration {
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setStatus(HttpStatus.FORBIDDEN.value());
-                            response.setContentType("application/json; charset=UTF-8");
+                            response.setContentType(CONTENT_TYPE);
 
                             ErrorResponse accessErrorResponse = new ErrorResponse()
                                     .message(accessDeniedException.getMessage())

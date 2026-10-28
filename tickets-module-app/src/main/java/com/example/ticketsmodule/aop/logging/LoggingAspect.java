@@ -1,4 +1,4 @@
-package com.example.ticketsmodule.impl.common.aop.logging;
+package com.example.ticketsmodule.aop.logging;
 
 import java.util.Arrays;
 import org.aspectj.lang.JoinPoint;
@@ -42,9 +42,10 @@ public class LoggingAspect {
      * Pointcut that matches all Spring beans in the application's main packages.
      */
     @Pointcut(
-            "within(com.example.ticketsmoduleimpl.*.repository..*)"
-                    + " || within(com.example.ticketsmoduleimpl..*.service..*)"
-                    + " || within(com.example.ticketsmoduleimpl..*.resource..*)"
+            "within(com.example.ticketsmodule.*.repository..*)"
+                    + " || within(com.example.ticketsmodule.impl..*.service..*)"
+                    + " || within(com.example.ticketsmodule.impl..*.resource..*)"
+                    + " || within(com.example.ticketsmodule.web..*)"
     )
     public void applicationPackagePointcut() {
         // Method is empty as this is just a Pointcut, the implementations are in the advices.

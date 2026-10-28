@@ -1,6 +1,6 @@
-package com.example.ticketsmodule.impl.config;
+package com.example.ticketsmodule.config;
 
-import com.example.ticketsmodule.impl.common.aop.logging.LoggingAspect;
+import com.example.ticketsmodule.aop.logging.LoggingAspect;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;

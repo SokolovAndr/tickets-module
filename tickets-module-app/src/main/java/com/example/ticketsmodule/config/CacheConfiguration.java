@@ -1,4 +1,4 @@
-package com.example.ticketsmodule.impl.config;
+package com.example.ticketsmodule.config;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
