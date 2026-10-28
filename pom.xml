@@ -36,6 +36,9 @@
         <jspecify.version>1.0.0</jspecify.version>
         <springdoc.version>2.6.0</springdoc.version>
         <testcontainers.version>1.21.4</testcontainers.version>
+        <openhtmltopdf-pdfbox.version>1.0.10</openhtmltopdf-pdfbox.version>
+        <sonar-maven-plugin.version>3.11.0.3922</sonar-maven-plugin.version>
+        <archunit-junit5.version>1.3.0</archunit-junit5.version>
     </properties>
 
     <dependencyManagement>
@@ -130,7 +133,7 @@
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
                 <artifactId>sonar-maven-plugin</artifactId>
-                <version>3.11.0.3922</version>
+                <version>${sonar-maven-plugin.version}</version>
             </plugin>
         </plugins>
     </build>
