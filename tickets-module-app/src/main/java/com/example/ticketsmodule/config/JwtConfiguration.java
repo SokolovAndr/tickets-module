@@ -1,5 +1,6 @@
-package com.example.ticketsmodule.impl.config;
+package com.example.ticketsmodule.config;
 
+import com.example.ticketsmodule.impl.config.JwtProperties;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

@@ -1,4 +1,4 @@
-package com.example.ticketsmodule.impl.config;
+package com.example.ticketsmodule.config;
 
 import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.cache.annotation.CachingConfigurer;

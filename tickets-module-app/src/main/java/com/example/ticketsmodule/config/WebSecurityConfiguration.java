@@ -1,4 +1,4 @@
-package com.example.ticketsmodule.impl.config;
+package com.example.ticketsmodule.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,6 +11,7 @@ public class WebSecurityConfiguration {
 
     private static final String LOGIN_PATH = "/login";
     private static final String REGISTER_PATH = "/register";
+    private static final String ERROR_PATH = "/error";
 
     @Bean
     @Order(2)
@@ -20,7 +21,7 @@ public class WebSecurityConfiguration {
                         .requestMatchers(
                                 REGISTER_PATH,
                                 LOGIN_PATH,
-                                "/error",
+                                ERROR_PATH,
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",

@@ -1,6 +1,5 @@
 package com.example.ticketsmodule.impl.tickets.service;
 
-import com.example.ticketsmodule.impl.config.CacheConfiguration;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.conversion.TicketMapper;
@@ -49,6 +48,8 @@ public class TicketsService {
     private final TicketMapper ticketMapper;
     private final RoutesService routesService;
     private final UsersService usersService;
+
+    private static final String USER_TICKETS_CACHE = "userTickets";
 
     @Transactional
     public CreateTicketResponse create(CreateTicketRequest createTicketRequest) {
@@ -156,7 +157,7 @@ public class TicketsService {
         return ticketMapper.toResponse(result);
     }
 
-    @CacheEvict(value = CacheConfiguration.USER_TICKETS_CACHE, key = "#userId")
+    @CacheEvict(value = USER_TICKETS_CACHE, key = "#userId")
     @Transactional
     public CreateTicketResponse buyTicket(@NotNull UUID id, @NotNull UUID userId) {
 
@@ -182,7 +183,7 @@ public class TicketsService {
         return ticketMapper.toResponse(savedTicket);
     }
 
-    @CacheEvict(value = CacheConfiguration.USER_TICKETS_CACHE, key = "#userId")
+    @CacheEvict(value = USER_TICKETS_CACHE, key = "#userId")
     @Transactional
     public CreateTicketResponse returnTicket(@NotNull UUID id, @NotNull UUID userId) {
 
@@ -264,7 +265,7 @@ public class TicketsService {
      * Метод возвращающий все билеты купленные текущим пользователем
      */
 
-    @Cacheable(value = CacheConfiguration.USER_TICKETS_CACHE, key = "#userId")
+    @Cacheable(value = USER_TICKETS_CACHE, key = "#userId")
     @Transactional(readOnly = true)
     public List<CreateTicketResponse> findAllMyTickets(UUID userId) {
 
