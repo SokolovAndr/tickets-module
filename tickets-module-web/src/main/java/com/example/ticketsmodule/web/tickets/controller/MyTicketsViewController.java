@@ -2,7 +2,7 @@ package com.example.ticketsmodule.web.tickets.controller;
 
 import com.example.ticketsmodule.api.model.CreateTicketResponse;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
-import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
+import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
 import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
@@ -50,11 +50,11 @@ public class MyTicketsViewController {
                 .map(CreateTicketResponse::getRouteId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        Map<UUID, RouteEntity> routes = routesService.findAllByIds(routeIds);
+        Map<UUID, RouteJpaEntity> routes = routesService.findAllByIds(routeIds);
 
         List<MyTicketView> views = tickets.stream()
                 .map(t -> {
-                    RouteEntity r = routes.get(t.getRouteId());
+                    RouteJpaEntity r = routes.get(t.getRouteId());
                     return MyTicketView.builder()
                             .id(t.getId())
                             .seatNumber(t.getSeatNumber())

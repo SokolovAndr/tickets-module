@@ -4,7 +4,7 @@ import com.example.ticketsmodule.api.model.CreateTicketRequest;
 import com.example.ticketsmodule.api.model.ReleaseTicketsBatchRequest;
 import com.example.ticketsmodule.api.model.TicketPatchRequest;
 import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
-import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
+import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
 import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
 import com.example.ticketsmodule.impl.users.domain.UserEntity;
 import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
@@ -378,9 +378,9 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should reject buy for past departure")
         void shouldRejectBuyForPastDeparture() throws Exception {
-            RouteEntity route = routesRepository.findById(routeId).orElseThrow();
+            RouteJpaEntity route = routeSpringDataRepository.findById(routeId).orElseThrow();
             route.setDepartureAt(LocalDateTime.now().minusDays(1));
-            routesRepository.save(route);
+            routeSpringDataRepository.save(route);
 
             TicketEntity saved = createTicketInDb(1, false, null);
 
@@ -491,9 +491,9 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should reject release for past departure")
         void shouldRejectReleaseForPastDeparture() throws Exception {
-            RouteEntity route = routesRepository.findById(routeId).orElseThrow();
+            RouteJpaEntity route = routeSpringDataRepository.findById(routeId).orElseThrow();
             route.setDepartureAt(LocalDateTime.now().minusDays(1));
-            routesRepository.save(route);
+            routeSpringDataRepository.save(route);
 
             ReleaseTicketsBatchRequest request = new ReleaseTicketsBatchRequest();
             request.setRouteId(routeId);
@@ -578,8 +578,8 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                         .phone("+7-999")
                         .build());
 
-        RouteEntity route = routesRepository.save(
-                RouteEntity.builder()
+        RouteJpaEntity route = routeSpringDataRepository.save(
+                RouteJpaEntity.builder()
                         .departurePoint("Moscow")
                         .destinationPoint("SPb")
                         .carrier(carrier)
@@ -603,7 +603,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
     }
 
     private TicketEntity createTicketInDb(int seat, boolean purchased, UserEntity user) {
-        RouteEntity route = routesRepository.findById(routeId).orElseThrow();
+        RouteJpaEntity route = routeSpringDataRepository.findById(routeId).orElseThrow();
 
         return ticketRepository.save(TicketEntity.builder()
                 .route(route)

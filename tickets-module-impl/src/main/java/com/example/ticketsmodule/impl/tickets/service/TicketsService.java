@@ -1,6 +1,6 @@
 package com.example.ticketsmodule.impl.tickets.service;
 
-import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
+import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.conversion.TicketMapper;
 import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
@@ -53,7 +53,7 @@ public class TicketsService {
 
     @Transactional
     public CreateTicketResponse create(CreateTicketRequest createTicketRequest) {
-        final RouteEntity route = routesService.findOneById(createTicketRequest.getRouteId());
+        final RouteJpaEntity route = routesService.findOneById(createTicketRequest.getRouteId());
         final TicketEntity ticketEntity = ticketMapper.toEntity(createTicketRequest, route);
         if (ticketEntity == null) {
             throw new IllegalStateException("Failed to convert ticket entity");
@@ -126,7 +126,7 @@ public class TicketsService {
         var result = ticketRepository.findById(id).map(entity -> {
 
             if (ticketPatchRequest.getRouteId() != null) {
-                final RouteEntity route = routesService.findOneById(ticketPatchRequest.getRouteId());
+                final RouteJpaEntity route = routesService.findOneById(ticketPatchRequest.getRouteId());
                 entity.setRoute(route);
             }
             if (ticketPatchRequest.getSeatNumber() != null) {
@@ -218,7 +218,7 @@ public class TicketsService {
         log.info("Запрос на выпуск билетов: маршрут={}, кол-во мест={}, цена={}",
                 request.getRouteId(), request.getSeatCount(), request.getPrice());
 
-        final RouteEntity route = routesService.findOneById(request.getRouteId());
+        final RouteJpaEntity route = routesService.findOneById(request.getRouteId());
 
         if (route.getDepartureAt().isBefore(LocalDateTime.now())) {
             throw new IllegalStateException(

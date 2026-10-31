@@ -2,7 +2,7 @@ package com.example.ticketsmodule.web.controllers;
 
 import com.example.ticketsmodule.api.model.CreateTicketResponse;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
-import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
+import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
 import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
@@ -73,7 +73,7 @@ class MyTicketsViewControllerTest {
         ticket.setPrice(BigDecimal.TEN);
         ticket.setPurchasedAt(LocalDateTime.now());
 
-        RouteEntity route = new RouteEntity();
+        RouteJpaEntity route = new RouteJpaEntity();
         route.setId(routeId);
         route.setDeparturePoint("Moscow");
         route.setDestinationPoint("SPb");

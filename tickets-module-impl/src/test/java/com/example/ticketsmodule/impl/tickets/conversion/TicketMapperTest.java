@@ -2,7 +2,7 @@ package com.example.ticketsmodule.impl.tickets.conversion;
 
 import com.example.ticketsmodule.api.model.CreateTicketRequest;
 import com.example.ticketsmodule.api.model.CreateTicketResponse;
-import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
+import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
 import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
 import com.example.ticketsmodule.impl.users.domain.UserEntity;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +24,7 @@ class TicketMapperTest {
     private UUID ticketId;
     private UUID routeId;
     private UUID userId;
-    private RouteEntity route;
+    private RouteJpaEntity route;
     private UserEntity user;
 
     @BeforeEach
@@ -35,7 +35,7 @@ class TicketMapperTest {
         routeId = UUID.randomUUID();
         userId = UUID.randomUUID();
 
-        route = new RouteEntity();
+        route = new RouteJpaEntity();
         route.setId(routeId);
 
         user = new UserEntity();
@@ -225,7 +225,7 @@ class TicketMapperTest {
         @DisplayName("should map route.id to routeId")
         void shouldMapRouteIdFromNestedRoute() {
             UUID customRouteId = UUID.randomUUID();
-            RouteEntity customRoute = new RouteEntity();
+            RouteJpaEntity customRoute = new RouteJpaEntity();
             customRoute.setId(customRouteId);
 
             TicketEntity entity = TicketEntity.builder()

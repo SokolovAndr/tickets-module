@@ -1,6 +1,6 @@
 package com.example.ticketsmodule.impl.tickets.domain;
 
-import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
+import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
 import com.example.ticketsmodule.impl.users.domain.UserEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -58,7 +58,7 @@ public class TicketEntity {
     @JoinColumn(name = "route_id", nullable = false)
     @Comment("Идентификатор маршрута")
     @ToString.Exclude
-    private RouteEntity route;
+    private RouteJpaEntity route;
 
     /**
      * Номер места

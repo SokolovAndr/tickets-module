@@ -1,4 +1,4 @@
-package com.example.ticketsmodule.impl.routes.domain;
+package com.example.ticketsmodule.impl.routes.persistence.entity;
 
 import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
 import jakarta.persistence.Column;
@@ -37,7 +37,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "routes")
 @Comment("Сущность маршрута – определенный путь движения")
-public class RouteEntity {
+public class RouteJpaEntity {
 
     /**
      * Идентификатор

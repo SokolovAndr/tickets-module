@@ -3,7 +3,7 @@ package com.example.ticketsmodule.impl.routes.conversion;
 import com.example.ticketsmodule.api.model.CreateRouteRequest;
 import com.example.ticketsmodule.api.model.CreateRouteResponse;
 import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
-import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
+import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -56,7 +56,7 @@ class RouteMapperTest {
             request.setDepartureAt(departureAt);
             request.setDestinationAt(destinationAt);
 
-            RouteEntity entity = mapper.toEntity(request, carrier);
+            RouteJpaEntity entity = mapper.toEntity(request, carrier);
 
             assertThat(entity).isNotNull();
             assertThat(entity.getDeparturePoint()).isEqualTo("Moscow");
@@ -76,7 +76,7 @@ class RouteMapperTest {
             request.setDepartureAt(LocalDateTime.now());
             request.setDestinationAt(LocalDateTime.now());
 
-            RouteEntity entity = mapper.toEntity(request, carrier);
+            RouteJpaEntity entity = mapper.toEntity(request, carrier);
 
             assertThat(entity.getCarrier()).isSameAs(carrier);
             assertThat(entity.getCarrier().getId()).isEqualTo(carrierId);
@@ -88,7 +88,7 @@ class RouteMapperTest {
         void shouldIgnoreId() {
             CreateRouteRequest request = createMinimalRequest();
 
-            RouteEntity entity = mapper.toEntity(request, carrier);
+            RouteJpaEntity entity = mapper.toEntity(request, carrier);
 
             assertThat(entity.getId()).isNull();
         }
@@ -98,7 +98,7 @@ class RouteMapperTest {
         void shouldIgnoreCreatedAt() {
             CreateRouteRequest request = createMinimalRequest();
 
-            RouteEntity entity = mapper.toEntity(request, carrier);
+            RouteJpaEntity entity = mapper.toEntity(request, carrier);
 
             assertThat(entity.getCreatedAt()).isNull();
         }
@@ -108,7 +108,7 @@ class RouteMapperTest {
         void shouldIgnoreUpdatedAt() {
             CreateRouteRequest request = createMinimalRequest();
 
-            RouteEntity entity = mapper.toEntity(request, carrier);
+            RouteJpaEntity entity = mapper.toEntity(request, carrier);
 
             assertThat(entity.getUpdatedAt()).isNull();
         }
@@ -116,7 +116,7 @@ class RouteMapperTest {
         @Test
         @DisplayName("should return null when both sources are null")
         void shouldReturnNullWhenSourceNull() {
-            RouteEntity entity = mapper.toEntity(null, null);
+            RouteJpaEntity entity = mapper.toEntity(null, null);
 
             assertThat(entity).isNull();
         }
@@ -126,7 +126,7 @@ class RouteMapperTest {
         void shouldAcceptNullCarrier() {
             CreateRouteRequest request = createMinimalRequest();
 
-            RouteEntity entity = mapper.toEntity(request, null);
+            RouteJpaEntity entity = mapper.toEntity(request, null);
 
             assertThat(entity).isNotNull();
             assertThat(entity.getCarrier()).isNull();
@@ -142,7 +142,7 @@ class RouteMapperTest {
             request.setDepartureAt(LocalDateTime.now());
             request.setDestinationAt(LocalDateTime.now());
 
-            RouteEntity entity = mapper.toEntity(request, carrier);
+            RouteJpaEntity entity = mapper.toEntity(request, carrier);
 
             assertThat(entity.getDeparturePoint()).isEmpty();
             assertThat(entity.getDestinationPoint()).isEmpty();
@@ -163,7 +163,7 @@ class RouteMapperTest {
             LocalDateTime created = LocalDateTime.now().minusDays(1);
             LocalDateTime updated = LocalDateTime.now();
 
-            RouteEntity entity = RouteEntity.builder()
+            RouteJpaEntity entity = RouteJpaEntity.builder()
                     .id(routeId)
                     .departurePoint("Moscow")
                     .destinationPoint("SPb")
@@ -191,7 +191,7 @@ class RouteMapperTest {
         @Test
         @DisplayName("should map carrier.id and carrier.name to carrierId and carrierName")
         void shouldMapCarrierIdAndCarrierNameFromNestedCarrier() {
-            RouteEntity entity = RouteEntity.builder()
+            RouteJpaEntity entity = RouteJpaEntity.builder()
                     .id(routeId)
                     .departurePoint("A")
                     .destinationPoint("B")
@@ -218,7 +218,7 @@ class RouteMapperTest {
         @Test
         @DisplayName("should preserve null timestamps")
         void shouldPreserveNullTimestamps() {
-            RouteEntity entity = RouteEntity.builder()
+            RouteJpaEntity entity = RouteJpaEntity.builder()
                     .id(routeId)
                     .departurePoint("A")
                     .destinationPoint("B")
@@ -239,7 +239,7 @@ class RouteMapperTest {
         @Test
         @DisplayName("should preserve null id")
         void shouldPreserveNullId() {
-            RouteEntity entity = RouteEntity.builder()
+            RouteJpaEntity entity = RouteJpaEntity.builder()
                     .departurePoint("A")
                     .destinationPoint("B")
                     .carrier(carrier)
@@ -256,7 +256,7 @@ class RouteMapperTest {
         @Test
         @DisplayName("should handle empty strings")
         void shouldHandleEmptyStrings() {
-            RouteEntity entity = RouteEntity.builder()
+            RouteJpaEntity entity = RouteJpaEntity.builder()
                     .departurePoint("")
                     .destinationPoint("")
                     .carrier(carrier)
@@ -291,7 +291,7 @@ class RouteMapperTest {
             request.setDepartureAt(departureAt);
             request.setDestinationAt(destinationAt);
 
-            RouteEntity entity = mapper.toEntity(request, carrier);
+            RouteJpaEntity entity = mapper.toEntity(request, carrier);
             entity.setId(routeId);
             entity.setCreatedAt(LocalDateTime.now());
             entity.setUpdatedAt(LocalDateTime.now());

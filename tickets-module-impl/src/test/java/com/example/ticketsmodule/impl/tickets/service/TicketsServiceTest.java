@@ -6,7 +6,7 @@ import com.example.ticketsmodule.api.model.ReleaseTicketsBatchRequest;
 import com.example.ticketsmodule.api.model.ReleaseTicketsBatchResponse;
 import com.example.ticketsmodule.api.model.TicketPatchRequest;
 import com.example.ticketsmodule.api.model.TicketsSearchRequest;
-import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
+import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.conversion.TicketMapper;
 import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
@@ -59,7 +59,7 @@ class TicketsServiceTest {
     private UUID routeId;
     private UUID userId;
     private TicketEntity ticket;
-    private RouteEntity route;
+    private RouteJpaEntity route;
     private UserEntity user;
     private CreateTicketResponse expectedResponse;
 
@@ -69,7 +69,7 @@ class TicketsServiceTest {
         routeId = UUID.randomUUID();
         userId = UUID.randomUUID();
 
-        route = new RouteEntity();
+        route = new RouteJpaEntity();
         route.setId(routeId);
         route.setDepartureAt(LocalDateTime.now().plusDays(1));
 
@@ -266,7 +266,7 @@ class TicketsServiceTest {
         @DisplayName("should update route when routeId provided")
         void shouldUpdateRouteWhenProvided() {
             UUID newRouteId = UUID.randomUUID();
-            RouteEntity newRoute = new RouteEntity();
+            RouteJpaEntity newRoute = new RouteJpaEntity();
             newRoute.setId(newRouteId);
 
             TicketPatchRequest patch = new TicketPatchRequest();

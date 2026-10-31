@@ -3,7 +3,7 @@ package com.example.ticketsmodule.routes;
 import com.example.ticketsmodule.api.model.CreateRouteRequest;
 import com.example.ticketsmodule.api.model.RoutePatchRequest;
 import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
-import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
+import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
 import com.example.ticketsmodule.support.AbstractIntegrationTest;
 import com.example.ticketsmodule.support.JwtTestHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -75,7 +75,7 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("PATCH /api/routes/{id} with USER role → 403")
         void shouldForbidUserToPatchRoute() throws Exception {
-            RouteEntity saved = createRouteInDb();
+            RouteJpaEntity saved = createRouteInDb();
 
             RoutePatchRequest patch = new RoutePatchRequest();
             patch.setDeparturePoint("Kazan");
@@ -112,7 +112,7 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(jsonPath("$.createdAt").exists())
                     .andExpect(jsonPath("$.updatedAt").exists());
 
-            assertThat(routesRepository.findAll()).hasSize(1);
+            assertThat(routeSpringDataRepository.findAll()).hasSize(1);
         }
 
         @Test
@@ -127,7 +127,7 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
 
-            assertThat(routesRepository.findAll()).isEmpty();
+            assertThat(routeSpringDataRepository.findAll()).isEmpty();
         }
 
         @Test
@@ -153,7 +153,7 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should return 200 with route")
         void shouldReturnRoute() throws Exception {
-            RouteEntity saved = createRouteInDb();
+            RouteJpaEntity saved = createRouteInDb();
 
             mockMvc.perform(get("/api/routes/{id}", saved.getId())
                             .with(JwtTestHelper.withRole("USER")))
@@ -253,7 +253,7 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should patch departurePoint and return 200")
         void shouldPatchDeparturePoint() throws Exception {
-            RouteEntity saved = createRouteInDb();
+            RouteJpaEntity saved = createRouteInDb();
 
             RoutePatchRequest patch = new RoutePatchRequest();
             patch.setDeparturePoint("Kazan");
@@ -266,7 +266,7 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(jsonPath("$.departurePoint").value("Kazan"))
                     .andExpect(jsonPath("$.destinationPoint").value("SPb"));
 
-            RouteEntity updated = routesRepository.findById(saved.getId()).orElseThrow();
+            RouteJpaEntity updated = routeSpringDataRepository.findById(saved.getId()).orElseThrow();
             assertThat(updated.getDeparturePoint()).isEqualTo("Kazan");
         }
 
@@ -294,14 +294,14 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
         return carrierSpringDataRepository.save(carrier).getId();
     }
 
-    private RouteEntity createRouteInDb() {
+    private RouteJpaEntity createRouteInDb() {
         CarrierJpaEntity carrier = carrierSpringDataRepository.save(
                 CarrierJpaEntity.builder()
                         .name("Acme-" + UUID.randomUUID())
                         .phone("+7-999")
                         .build());
 
-        RouteEntity route = RouteEntity.builder()
+        RouteJpaEntity route = RouteJpaEntity.builder()
                 .departurePoint("Moscow")
                 .destinationPoint("SPb")
                 .carrier(carrier)
@@ -309,7 +309,7 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
                 .departureAt(LocalDateTime.now().plusDays(1))
                 .destinationAt(LocalDateTime.now().plusDays(1).plusHours(2))
                 .build();
-        return routesRepository.save(route);
+        return routeSpringDataRepository.save(route);
 
     }
 
