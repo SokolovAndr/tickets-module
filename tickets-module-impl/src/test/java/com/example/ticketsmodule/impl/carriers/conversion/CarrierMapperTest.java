@@ -2,7 +2,7 @@ package com.example.ticketsmodule.impl.carriers.conversion;
 
 import com.example.ticketsmodule.api.model.CreateCarrierRequest;
 import com.example.ticketsmodule.api.model.CreateCarrierResponse;
-import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
+import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -36,7 +36,7 @@ class CarrierMapperTest {
             request.setName("Acme Transport");
             request.setPhone("+7-999-000-00-00");
 
-            CarrierEntity entity = mapper.toEntity(request);
+            CarrierJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity).isNotNull();
             assertThat(entity.getName()).isEqualTo("Acme Transport");
@@ -50,7 +50,7 @@ class CarrierMapperTest {
             request.setName("Acme");
             request.setPhone("+7-000");
 
-            CarrierEntity entity = mapper.toEntity(request);
+            CarrierJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity.getId()).isNull();
         }
@@ -62,7 +62,7 @@ class CarrierMapperTest {
             request.setName("Acme");
             request.setPhone("+7-000");
 
-            CarrierEntity entity = mapper.toEntity(request);
+            CarrierJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity.getCreatedAt()).isNull();
         }
@@ -74,7 +74,7 @@ class CarrierMapperTest {
             request.setName("Acme");
             request.setPhone("+7-000");
 
-            CarrierEntity entity = mapper.toEntity(request);
+            CarrierJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity.getUpdatedAt()).isNull();
         }
@@ -82,7 +82,7 @@ class CarrierMapperTest {
         @Test
         @DisplayName("should return null when source is null")
         void shouldReturnNullWhenSourceNull() {
-            CarrierEntity entity = mapper.toEntity(null);
+            CarrierJpaEntity entity = mapper.toEntity(null);
 
             assertThat(entity).isNull();
         }
@@ -94,7 +94,7 @@ class CarrierMapperTest {
             request.setName(null);
             request.setPhone(null);
 
-            CarrierEntity entity = mapper.toEntity(request);
+            CarrierJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity).isNotNull();
             assertThat(entity.getName()).isNull();
@@ -108,7 +108,7 @@ class CarrierMapperTest {
             request.setName("");
             request.setPhone("");
 
-            CarrierEntity entity = mapper.toEntity(request);
+            CarrierJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity.getName()).isEmpty();
             assertThat(entity.getPhone()).isEmpty();
@@ -128,7 +128,7 @@ class CarrierMapperTest {
             LocalDateTime created = LocalDateTime.now().minusDays(1);
             LocalDateTime updated = LocalDateTime.now();
 
-            CarrierEntity entity = CarrierEntity.builder()
+            CarrierJpaEntity entity = CarrierJpaEntity.builder()
                     .id(id)
                     .name("Acme Transport")
                     .phone("+7-999-000-00-00")
@@ -157,7 +157,7 @@ class CarrierMapperTest {
         @Test
         @DisplayName("should preserve null id")
         void shouldPreserveNullId() {
-            CarrierEntity entity = CarrierEntity.builder()
+            CarrierJpaEntity entity = CarrierJpaEntity.builder()
                     .name("Acme")
                     .phone("+7-000")
                     .build();
@@ -170,7 +170,7 @@ class CarrierMapperTest {
         @Test
         @DisplayName("should preserve null timestamps")
         void shouldPreserveNullTimestamps() {
-            CarrierEntity entity = CarrierEntity.builder()
+            CarrierJpaEntity entity = CarrierJpaEntity.builder()
                     .id(UUID.randomUUID())
                     .name("Acme")
                     .phone("+7-000")
@@ -187,7 +187,7 @@ class CarrierMapperTest {
         @Test
         @DisplayName("should handle empty strings")
         void shouldHandleEmptyStrings() {
-            CarrierEntity entity = CarrierEntity.builder()
+            CarrierJpaEntity entity = CarrierJpaEntity.builder()
                     .name("")
                     .phone("")
                     .build();
@@ -212,7 +212,7 @@ class CarrierMapperTest {
             request.setName("Acme");
             request.setPhone("+7-000");
 
-            CarrierEntity entity = mapper.toEntity(request);
+            CarrierJpaEntity entity = mapper.toEntity(request);
             entity.setId(UUID.randomUUID());
             entity.setCreatedAt(LocalDateTime.now());
             entity.setUpdatedAt(LocalDateTime.now());

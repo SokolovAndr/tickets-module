@@ -1,6 +1,6 @@
 package com.example.ticketsmodule.impl.routes.service;
 
-import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
+import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
 import com.example.ticketsmodule.impl.carriers.service.CarriersService;
 import com.example.ticketsmodule.impl.routes.conversion.RouteMapper;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
@@ -46,7 +46,7 @@ public class RoutesService {
 
     @Transactional
     public CreateRouteResponse create(CreateRouteRequest createRouteRequest) {
-        final CarrierEntity carrier = carriersService.findOneById(createRouteRequest.getCarrierId());
+        final CarrierJpaEntity carrier = carriersService.findOneById(createRouteRequest.getCarrierId());
         final RouteEntity routeEntity = routeMapper.toEntity(createRouteRequest, carrier);
         if (routeEntity == null) {
             throw new IllegalStateException("Failed to convert route entity");
@@ -144,7 +144,7 @@ public class RoutesService {
                 entity.setDestinationAt(routePatchRequest.getDestinationAt());
             }
             if (routePatchRequest.getCarrierId() != null) {
-                final CarrierEntity carrier = carriersService.findOneById(routePatchRequest.getCarrierId());
+                final CarrierJpaEntity carrier = carriersService.findOneById(routePatchRequest.getCarrierId());
                 entity.setCarrier(carrier);
             }
             if (routePatchRequest.getDurationMinutes() != null) {

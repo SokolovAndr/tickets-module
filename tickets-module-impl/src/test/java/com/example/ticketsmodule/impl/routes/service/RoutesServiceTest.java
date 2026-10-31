@@ -4,7 +4,7 @@ import com.example.ticketsmodule.api.model.CreateRouteRequest;
 import com.example.ticketsmodule.api.model.CreateRouteResponse;
 import com.example.ticketsmodule.api.model.RoutePatchRequest;
 import com.example.ticketsmodule.api.model.RoutesSearchRequest;
-import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
+import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
 import com.example.ticketsmodule.impl.carriers.service.CarriersService;
 import com.example.ticketsmodule.impl.routes.conversion.RouteMapper;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
@@ -50,7 +50,7 @@ class RoutesServiceTest {
     private UUID routeId;
     private UUID carrierId;
     private RouteEntity routeEntity;
-    private CarrierEntity carrierEntity;
+    private CarrierJpaEntity carrierJpaEntity;
     private CreateRouteResponse expectedResponse;
 
     @BeforeEach
@@ -58,12 +58,12 @@ class RoutesServiceTest {
         routeId = UUID.randomUUID();
         carrierId = UUID.randomUUID();
 
-        carrierEntity = new CarrierEntity();
-        carrierEntity.setId(carrierId);
+        carrierJpaEntity = new CarrierJpaEntity();
+        carrierJpaEntity.setId(carrierId);
 
         routeEntity = new RouteEntity();
         routeEntity.setId(routeId);
-        routeEntity.setCarrier(carrierEntity);
+        routeEntity.setCarrier(carrierJpaEntity);
         routeEntity.setDeparturePoint("Moscow");
         routeEntity.setDestinationPoint("SPb");
         routeEntity.setDepartureAt(LocalDateTime.now().plusDays(1));
@@ -85,8 +85,8 @@ class RoutesServiceTest {
             CreateRouteRequest request = new CreateRouteRequest();
             request.setCarrierId(carrierId);
 
-            when(carriersService.findOneById(carrierId)).thenReturn(carrierEntity);
-            when(routeMapper.toEntity(request, carrierEntity)).thenReturn(routeEntity);
+            when(carriersService.findOneById(carrierId)).thenReturn(carrierJpaEntity);
+            when(routeMapper.toEntity(request, carrierJpaEntity)).thenReturn(routeEntity);
             when(routesRepository.save(routeEntity)).thenReturn(routeEntity);
             when(routeMapper.toResponse(routeEntity)).thenReturn(expectedResponse);
 
@@ -94,7 +94,7 @@ class RoutesServiceTest {
 
             assertThat(actual).isSameAs(expectedResponse);
             verify(carriersService).findOneById(carrierId);
-            verify(routeMapper).toEntity(request, carrierEntity);
+            verify(routeMapper).toEntity(request, carrierJpaEntity);
             verify(routesRepository).save(routeEntity);
             verify(routeMapper).toResponse(routeEntity);
         }
@@ -240,7 +240,7 @@ class RoutesServiceTest {
         @DisplayName("should update carrier when carrierId provided")
         void shouldUpdateCarrierWhenProvided() {
             UUID newCarrierId = UUID.randomUUID();
-            CarrierEntity newCarrier = new CarrierEntity();
+            CarrierJpaEntity newCarrier = new CarrierJpaEntity();
             newCarrier.setId(newCarrierId);
 
             RoutePatchRequest patch = new RoutePatchRequest();

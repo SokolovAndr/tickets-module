@@ -1,6 +1,6 @@
 package com.example.ticketsmodule.support;
 
-import com.example.ticketsmodule.impl.carriers.repository.CarriersRepository;
+import com.example.ticketsmodule.impl.carriers.persistence.repository.CarrierSpringDataRepository;
 import com.example.ticketsmodule.impl.routes.repository.RoutesRepository;
 import com.example.ticketsmodule.impl.tickets.repository.TicketRepository;
 import com.example.ticketsmodule.impl.users.repository.UserRepository;
@@ -36,13 +36,13 @@ public abstract class AbstractIntegrationTest {
 
     @Autowired protected TicketRepository ticketRepository;
     @Autowired protected RoutesRepository routesRepository;
-    @Autowired protected CarriersRepository carriersRepository;
+    @Autowired protected CarrierSpringDataRepository carrierSpringDataRepository;
     @Autowired protected UserRepository userRepository;
 
     protected void cleanDatabase() {
         ticketRepository.deleteAll();
         routesRepository.deleteAll();
-        carriersRepository.deleteAll();
+        carrierSpringDataRepository.deleteAll();
         userRepository.deleteAll();
     }
 }

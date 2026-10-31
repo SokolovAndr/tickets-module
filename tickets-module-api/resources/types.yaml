@@ -491,7 +491,7 @@ components:
           type: boolean
 
     Page:
-      description: Объект постраничного ответа org.springframework.data.domain.Page
+      description: Объект постраничного ответа org.springframework.data.persistence.Page
       type: object
       properties:
         content:

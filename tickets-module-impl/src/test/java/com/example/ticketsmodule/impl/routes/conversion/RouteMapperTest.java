@@ -2,7 +2,7 @@ package com.example.ticketsmodule.impl.routes.conversion;
 
 import com.example.ticketsmodule.api.model.CreateRouteRequest;
 import com.example.ticketsmodule.api.model.CreateRouteResponse;
-import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
+import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,7 +22,7 @@ class RouteMapperTest {
     private UUID routeId;
     private UUID carrierId;
     private String carrierName;
-    private CarrierEntity carrier;
+    private CarrierJpaEntity carrier;
 
     @BeforeEach
     void setUp() {
@@ -32,7 +32,7 @@ class RouteMapperTest {
         carrierId = UUID.randomUUID();
         carrierName = "PonyExpress";
 
-        carrier = new CarrierEntity();
+        carrier = new CarrierJpaEntity();
         carrier.setId(carrierId);
         carrier.setName(carrierName);
     }

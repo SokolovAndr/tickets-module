@@ -1,4 +1,4 @@
-package com.example.ticketsmodule.impl.carriers.domain;
+package com.example.ticketsmodule.impl.carriers.persistence.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -31,7 +31,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "carriers")
 @Comment("Сущность перевозчика – компания, осуществляющая перевозки.")
-public class CarrierEntity {
+public class CarrierJpaEntity {
 
     /**
      * Идентификатор

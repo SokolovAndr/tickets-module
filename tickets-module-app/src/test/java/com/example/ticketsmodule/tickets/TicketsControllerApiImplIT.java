@@ -3,7 +3,7 @@ package com.example.ticketsmodule.tickets;
 import com.example.ticketsmodule.api.model.CreateTicketRequest;
 import com.example.ticketsmodule.api.model.ReleaseTicketsBatchRequest;
 import com.example.ticketsmodule.api.model.TicketPatchRequest;
-import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
+import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
 import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
 import com.example.ticketsmodule.impl.users.domain.UserEntity;
@@ -572,8 +572,8 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
     // ---------- HELPERS ----------
 
     private UUID createRouteInDb() {
-        CarrierEntity carrier = carriersRepository.save(
-                CarrierEntity.builder()
+        CarrierJpaEntity carrier = carrierSpringDataRepository.save(
+                CarrierJpaEntity.builder()
                         .name("Acme-" + UUID.randomUUID())
                         .phone("+7-999")
                         .build());

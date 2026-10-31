@@ -2,7 +2,7 @@ package com.example.ticketsmodule.routes;
 
 import com.example.ticketsmodule.api.model.CreateRouteRequest;
 import com.example.ticketsmodule.api.model.RoutePatchRequest;
-import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
+import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
 import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
 import com.example.ticketsmodule.support.AbstractIntegrationTest;
 import com.example.ticketsmodule.support.JwtTestHelper;
@@ -287,16 +287,16 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
     // ---------- helpers ----------
 
     private UUID createCarrierInDb() {
-        CarrierEntity carrier = CarrierEntity.builder()
+        CarrierJpaEntity carrier = CarrierJpaEntity.builder()
                 .name("Acme-" + UUID.randomUUID())
                 .phone("+7-999")
                 .build();
-        return carriersRepository.save(carrier).getId();
+        return carrierSpringDataRepository.save(carrier).getId();
     }
 
     private RouteEntity createRouteInDb() {
-        CarrierEntity carrier = carriersRepository.save(
-                CarrierEntity.builder()
+        CarrierJpaEntity carrier = carrierSpringDataRepository.save(
+                CarrierJpaEntity.builder()
                         .name("Acme-" + UUID.randomUUID())
                         .phone("+7-999")
                         .build());

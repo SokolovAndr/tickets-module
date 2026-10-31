@@ -1,6 +1,6 @@
 package com.example.ticketsmodule.impl.routes.domain;
 
-import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
+import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -72,7 +72,7 @@ public class RouteEntity {
     @JoinColumn(name = "carrier_id", nullable = false)
     @Comment("Идентификатор перевозчика")
     @ToString.Exclude
-    private CarrierEntity carrier;
+    private CarrierJpaEntity carrier;
 
     /**
      * Длительность в минутах

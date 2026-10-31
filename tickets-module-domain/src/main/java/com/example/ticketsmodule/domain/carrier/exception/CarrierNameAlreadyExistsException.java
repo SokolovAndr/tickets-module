@@ -1,4 +1,4 @@
-package com.example.ticketsmodule.impl.carriers.exception;
+package com.example.ticketsmodule.domain.carrier.exception;
 
 public class CarrierNameAlreadyExistsException extends RuntimeException {
     public CarrierNameAlreadyExistsException(String name) {

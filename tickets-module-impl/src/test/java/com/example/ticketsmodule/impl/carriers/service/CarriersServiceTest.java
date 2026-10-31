@@ -5,8 +5,8 @@ import com.example.ticketsmodule.api.model.CarriersSearchRequest;
 import com.example.ticketsmodule.api.model.CreateCarrierRequest;
 import com.example.ticketsmodule.api.model.CreateCarrierResponse;
 import com.example.ticketsmodule.impl.carriers.conversion.CarrierMapper;
-import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
-import com.example.ticketsmodule.impl.carriers.repository.CarriersRepository;
+import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
+import com.example.ticketsmodule.impl.carriers.persistence.repository.CarrierSpringDataRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,24 +36,24 @@ import static org.mockito.Mockito.*;
 @DisplayName("CarriersService unit tests")
 class CarriersServiceTest {
 
-    @Mock private CarriersRepository carriersRepository;
+    @Mock private CarrierSpringDataRepository carrierSpringDataRepository;
     @Mock private CarrierMapper carrierMapper;
 
     @InjectMocks
     private CarriersService carriersService;
 
     private UUID carrierId;
-    private CarrierEntity carrierEntity;
+    private CarrierJpaEntity carrierJpaEntity;
     private CreateCarrierResponse expectedResponse;
 
     @BeforeEach
     void setUp() {
         carrierId = UUID.randomUUID();
 
-        carrierEntity = new CarrierEntity();
-        carrierEntity.setId(carrierId);
-        carrierEntity.setName("Acme Transport");
-        carrierEntity.setPhone("+7-999-000-00-00");
+        carrierJpaEntity = new CarrierJpaEntity();
+        carrierJpaEntity.setId(carrierId);
+        carrierJpaEntity.setName("Acme Transport");
+        carrierJpaEntity.setPhone("+7-999-000-00-00");
 
         expectedResponse = new CreateCarrierResponse();
     }
@@ -70,16 +70,16 @@ class CarriersServiceTest {
             CreateCarrierRequest request = new CreateCarrierRequest();
             request.setName("Acme Transport");
 
-            when(carrierMapper.toEntity(request)).thenReturn(carrierEntity);
-            when(carriersRepository.save(carrierEntity)).thenReturn(carrierEntity);
-            when(carrierMapper.toResponse(carrierEntity)).thenReturn(expectedResponse);
+            when(carrierMapper.toEntity(request)).thenReturn(carrierJpaEntity);
+            when(carrierSpringDataRepository.save(carrierJpaEntity)).thenReturn(carrierJpaEntity);
+            when(carrierMapper.toResponse(carrierJpaEntity)).thenReturn(expectedResponse);
 
             CreateCarrierResponse actual = carriersService.create(request);
 
             assertThat(actual).isSameAs(expectedResponse);
             verify(carrierMapper).toEntity(request);
-            verify(carriersRepository).save(carrierEntity);
-            verify(carrierMapper).toResponse(carrierEntity);
+            verify(carrierSpringDataRepository).save(carrierJpaEntity);
+            verify(carrierMapper).toResponse(carrierJpaEntity);
         }
 
         @Test
@@ -93,7 +93,7 @@ class CarriersServiceTest {
             assertThatThrownBy(() -> carriersService.create(request))
                     .isInstanceOf(IllegalStateException.class);
 
-            verify(carriersRepository, never()).save(any());
+            verify(carrierSpringDataRepository, never()).save(any());
         }
     }
 
@@ -106,8 +106,8 @@ class CarriersServiceTest {
         @Test
         @DisplayName("should return response when carrier exists")
         void shouldReturnResponseWhenFound() {
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.of(carrierEntity));
-            when(carrierMapper.toResponse(carrierEntity)).thenReturn(expectedResponse);
+            when(carrierSpringDataRepository.findById(carrierId)).thenReturn(Optional.of(carrierJpaEntity));
+            when(carrierMapper.toResponse(carrierJpaEntity)).thenReturn(expectedResponse);
 
             CreateCarrierResponse actual = carriersService.findOne(carrierId);
 
@@ -117,7 +117,7 @@ class CarriersServiceTest {
         @Test
         @DisplayName("should throw EntityNotFoundException when carrier does not exist")
         void shouldThrowWhenNotFound() {
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.empty());
+            when(carrierSpringDataRepository.findById(carrierId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> carriersService.findOne(carrierId))
                     .isInstanceOf(EntityNotFoundException.class)
@@ -136,17 +136,17 @@ class CarriersServiceTest {
         @Test
         @DisplayName("should return entity when carrier exists")
         void shouldReturnEntityWhenFound() {
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.of(carrierEntity));
+            when(carrierSpringDataRepository.findById(carrierId)).thenReturn(Optional.of(carrierJpaEntity));
 
-            CarrierEntity actual = carriersService.findOneById(carrierId);
+            CarrierJpaEntity actual = carriersService.findOneById(carrierId);
 
-            assertThat(actual).isSameAs(carrierEntity);
+            assertThat(actual).isSameAs(carrierJpaEntity);
         }
 
         @Test
         @DisplayName("should throw EntityNotFoundException when carrier does not exist")
         void shouldThrowWhenNotFound() {
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.empty());
+            when(carrierSpringDataRepository.findById(carrierId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> carriersService.findOneById(carrierId))
                     .isInstanceOf(EntityNotFoundException.class);
@@ -165,9 +165,9 @@ class CarriersServiceTest {
             CarriersSearchRequest search = new CarriersSearchRequest();
             Pageable pageable = PageRequest.of(0, 10);
 
-            when(carriersRepository.findAll(any(Specification.class), eq(pageable)))
-                    .thenReturn(new PageImpl<>(List.of(carrierEntity)));
-            when(carrierMapper.toResponse(carrierEntity)).thenReturn(expectedResponse);
+            when(carrierSpringDataRepository.findAll(any(Specification.class), eq(pageable)))
+                    .thenReturn(new PageImpl<>(List.of(carrierJpaEntity)));
+            when(carrierMapper.toResponse(carrierJpaEntity)).thenReturn(expectedResponse);
 
             Page<CreateCarrierResponse> actual = carriersService.findAll(search, pageable);
 
@@ -179,7 +179,7 @@ class CarriersServiceTest {
         @DisplayName("should return empty page when no carriers")
         void shouldReturnEmptyPage() {
             Pageable pageable = PageRequest.of(0, 10);
-            when(carriersRepository.findAll(any(Specification.class), eq(pageable)))
+            when(carrierSpringDataRepository.findAll(any(Specification.class), eq(pageable)))
                     .thenReturn(Page.empty());
 
             Page<CreateCarrierResponse> actual = carriersService.findAll(null, pageable);
@@ -201,16 +201,16 @@ class CarriersServiceTest {
             CarrierPatchRequest patch = new CarrierPatchRequest();
             patch.setName("New Name");
 
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.of(carrierEntity));
-            when(carriersRepository.save(any(CarrierEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(carrierMapper.toResponse(any(CarrierEntity.class))).thenReturn(expectedResponse);
+            when(carrierSpringDataRepository.findById(carrierId)).thenReturn(Optional.of(carrierJpaEntity));
+            when(carrierSpringDataRepository.save(any(CarrierJpaEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(carrierMapper.toResponse(any(CarrierJpaEntity.class))).thenReturn(expectedResponse);
 
             CreateCarrierResponse actual = carriersService.patch(carrierId, patch);
 
             assertThat(actual).isSameAs(expectedResponse);
-            assertThat(carrierEntity.getName()).isEqualTo("New Name");
-            assertThat(carrierEntity.getPhone()).isEqualTo("+7-999-000-00-00"); // не тронуто
-            assertThat(carrierEntity.getUpdatedAt()).isNotNull();
+            assertThat(carrierJpaEntity.getName()).isEqualTo("New Name");
+            assertThat(carrierJpaEntity.getPhone()).isEqualTo("+7-999-000-00-00"); // не тронуто
+            assertThat(carrierJpaEntity.getUpdatedAt()).isNotNull();
         }
 
         @Test
@@ -219,14 +219,14 @@ class CarriersServiceTest {
             CarrierPatchRequest patch = new CarrierPatchRequest();
             patch.setPhone("+7-111-222-33-33");
 
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.of(carrierEntity));
-            when(carriersRepository.save(any(CarrierEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(carrierMapper.toResponse(any(CarrierEntity.class))).thenReturn(expectedResponse);
+            when(carrierSpringDataRepository.findById(carrierId)).thenReturn(Optional.of(carrierJpaEntity));
+            when(carrierSpringDataRepository.save(any(CarrierJpaEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(carrierMapper.toResponse(any(CarrierJpaEntity.class))).thenReturn(expectedResponse);
 
             carriersService.patch(carrierId, patch);
 
-            assertThat(carrierEntity.getPhone()).isEqualTo("+7-111-222-33-33");
-            assertThat(carrierEntity.getName()).isEqualTo("Acme Transport"); // не тронуто
+            assertThat(carrierJpaEntity.getPhone()).isEqualTo("+7-111-222-33-33");
+            assertThat(carrierJpaEntity.getName()).isEqualTo("Acme Transport"); // не тронуто
         }
 
         @Test
@@ -234,26 +234,26 @@ class CarriersServiceTest {
         void shouldNotUpdateAnythingWhenPatchIsEmpty() {
             CarrierPatchRequest patch = new CarrierPatchRequest();
 
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.of(carrierEntity));
-            when(carriersRepository.save(any(CarrierEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(carrierMapper.toResponse(any(CarrierEntity.class))).thenReturn(expectedResponse);
+            when(carrierSpringDataRepository.findById(carrierId)).thenReturn(Optional.of(carrierJpaEntity));
+            when(carrierSpringDataRepository.save(any(CarrierJpaEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(carrierMapper.toResponse(any(CarrierJpaEntity.class))).thenReturn(expectedResponse);
 
             carriersService.patch(carrierId, patch);
 
-            assertThat(carrierEntity.getName()).isEqualTo("Acme Transport");
-            assertThat(carrierEntity.getPhone()).isEqualTo("+7-999-000-00-00");
+            assertThat(carrierJpaEntity.getName()).isEqualTo("Acme Transport");
+            assertThat(carrierJpaEntity.getPhone()).isEqualTo("+7-999-000-00-00");
         }
 
         @Test
         @DisplayName("should throw EntityNotFoundException when carrier does not exist")
         void shouldThrowWhenNotFound() {
             CarrierPatchRequest patch = new CarrierPatchRequest();
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.empty());
+            when(carrierSpringDataRepository.findById(carrierId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> carriersService.patch(carrierId, patch))
                     .isInstanceOf(EntityNotFoundException.class);
 
-            verify(carriersRepository, never()).save(any());
+            verify(carrierSpringDataRepository, never()).save(any());
         }
     }
 }
