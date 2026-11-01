@@ -15,18 +15,21 @@ Accepted
 только соглашением.
 
 ## Decision
-Используем **пять Maven-модулей** с явными зависимостями.
+Используем **шесть Maven-модулей** с явными зависимостями.
 
 | Модуль | Назначение | Java-код |
 |---|---|---|
+| `tickets-module-domain` | Чистый домен: модели, порты, исключения | ✅ |
 | `tickets-module-api` | Контракты REST API (DTO и интерфейсы, генерируются из OpenAPI) | ✅ |
-| `tickets-module-impl` | Бизнес-логика, репозитории, JPA-сущности, UNIT-тесты | ✅ |
+| `tickets-module-impl` | Сервисы (Use Cases), JPA-адаптеры, UNIT-тесты | ✅ |
 | `tickets-module-web` | Thymeleaf-шаблоны, MVC-контроллеры | ✅ |
 | `tickets-module-db` | Только Liquibase-миграции | ❌ |
 | `tickets-module-app` | Точка входа, интеграционные тесты, конфигурация | ✅ |
 
 Граф зависимостей (стрелка = «зависит от»):
 app → web → impl → api
+web → domain
+impl → domain
 app → db
 
 Модуль `impl` **не знает** про `web` и `app`. Модуль `web`
