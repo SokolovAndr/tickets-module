@@ -5,9 +5,9 @@ import com.example.ticketsmodule.api.model.UserPatchRequest;
 import com.example.ticketsmodule.api.model.UserResponse;
 import com.example.ticketsmodule.impl.common.web.rest.exceptions.ApiException;
 import com.example.ticketsmodule.impl.users.conversion.UserMapper;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
-import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
-import com.example.ticketsmodule.impl.users.repository.UserRepository;
+import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
+import com.example.ticketsmodule.domain.user.model.UserRoleEnum;
+import com.example.ticketsmodule.impl.users.persistence.repository.UserSpringDataRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
 class UsersServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserSpringDataRepository userSpringDataRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -44,13 +44,13 @@ class UsersServiceTest {
     private UsersService usersService;
 
     private UUID userId;
-    private UserEntity user;
+    private UserJpaEntity user;
 
     @BeforeEach
     void setUp() {
         userId = UUID.randomUUID();
 
-        user = UserEntity.builder()
+        user = UserJpaEntity.builder()
                 .id(userId)
                 .login("admin")
                 .password("hash-old")
@@ -70,20 +70,20 @@ class UsersServiceTest {
         @Test
         @DisplayName("should return user when found")
         void shouldReturnUser_whenFound() {
-            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+            when(userSpringDataRepository.findById(userId)).thenReturn(Optional.of(user));
 
-            UserEntity actual = usersService.findOneById(userId);
+            UserJpaEntity actual = usersService.findOneById(userId);
 
             assertThat(actual).isSameAs(user);
             assertThat(actual.getId()).isEqualTo(userId);
             assertThat(actual.getLogin()).isEqualTo("admin");
-            verify(userRepository).findById(userId);
+            verify(userSpringDataRepository).findById(userId);
         }
 
         @Test
         @DisplayName("should throw EntityNotFoundException when user not found")
         void shouldThrow_whenNotFound() {
-            when(userRepository.findById(userId)).thenReturn(Optional.empty());
+            when(userSpringDataRepository.findById(userId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> usersService.findOneById(userId))
                     .isInstanceOf(EntityNotFoundException.class)
@@ -91,14 +91,14 @@ class UsersServiceTest {
                     .hasMessageContaining(userId.toString())
                     .hasMessageContaining("not found");
 
-            verify(userRepository).findById(userId);
+            verify(userSpringDataRepository).findById(userId);
         }
 
         @Test
         @DisplayName("findOneById() should throw when id is null")
         void findOneById_shouldThrow_whenIdIsNull() {
             // findById(null) у Spring Data JPA бросает IllegalArgumentException
-            when(userRepository.findById(null))
+            when(userSpringDataRepository.findById(null))
                     .thenThrow(new IllegalArgumentException("The given id must not be null"));
 
             assertThatThrownBy(() -> usersService.findOneById(null))
@@ -132,7 +132,7 @@ class UsersServiceTest {
                     .extracting("userMessage")
                     .isEqualTo("Текущий пароль неверен");
 
-            verify(userRepository, never()).save(any());
+            verify(userSpringDataRepository, never()).save(any());
             verify(passwordEncoder, never()).encode(any());
         }
 
@@ -148,7 +148,7 @@ class UsersServiceTest {
                     .extracting("userMessage")
                     .isEqualTo("Новый пароль должен отличаться от текущего");
 
-            verify(userRepository, never()).save(any());
+            verify(userSpringDataRepository, never()).save(any());
         }
 
         @Test
@@ -162,7 +162,7 @@ class UsersServiceTest {
 
             assertThat(user.getPassword()).isEqualTo("hash-new");
             assertThat(user.getUpdatedAt()).isAfter(LocalDateTime.now().minusMinutes(1));
-            verify(userRepository).save(user);
+            verify(userSpringDataRepository).save(user);
             verify(passwordEncoder).encode("newPass");
         }
 
@@ -197,7 +197,7 @@ class UsersServiceTest {
             assertThat(user.getFullName()).isEqualTo("New FullName");
             assertThat(user.getUpdatedAt()).isAfter(LocalDateTime.now().minusMinutes(1));
             assertThat(actual).isSameAs(expected);
-            verify(userRepository).save(user);
+            verify(userSpringDataRepository).save(user);
         }
 
         @Test
@@ -211,7 +211,7 @@ class UsersServiceTest {
             usersService.patchCurrentUser(user, request);
 
             assertThat(user.getFullName()).isEqualTo("Admin Adminov");
-            verify(userRepository).save(user);
+            verify(userSpringDataRepository).save(user);
         }
     }
 

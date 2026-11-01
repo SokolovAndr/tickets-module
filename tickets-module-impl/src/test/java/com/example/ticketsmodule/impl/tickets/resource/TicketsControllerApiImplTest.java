@@ -7,10 +7,10 @@ import com.example.ticketsmodule.api.model.ReleaseTicketsBatchResponse;
 import com.example.ticketsmodule.api.model.TicketPatchRequest;
 import com.example.ticketsmodule.api.model.TicketsSearchRequest;
 import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
-import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
 import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
+import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -344,7 +344,7 @@ class TicketsControllerApiImplTest {
 
         @BeforeEach
         void setUp() {
-            UserEntity user = new UserEntity();
+            UserJpaEntity user = new UserJpaEntity();
             user.setId(userId);
 
             ticket = new TicketEntity();
@@ -382,7 +382,7 @@ class TicketsControllerApiImplTest {
         @DisplayName("should throw AccessDeniedException when ticket belongs to another user")
         void shouldThrowWhenDifferentUser() {
             // given
-            UserEntity otherUser = new UserEntity();
+            UserJpaEntity otherUser = new UserJpaEntity();
             otherUser.setId(UUID.randomUUID());
             ticket.setUser(otherUser);
 

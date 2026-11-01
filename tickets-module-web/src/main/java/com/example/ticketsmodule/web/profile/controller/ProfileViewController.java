@@ -3,7 +3,7 @@ package com.example.ticketsmodule.web.profile.controller;
 import com.example.ticketsmodule.api.model.ChangePasswordRequest;
 import com.example.ticketsmodule.api.model.UserPatchRequest;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
+import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
 import com.example.ticketsmodule.impl.users.service.UsersService;
 import com.example.ticketsmodule.web.profile.dto.ChangePasswordForm;
 import com.example.ticketsmodule.web.profile.dto.EditProfileForm;
@@ -30,7 +30,7 @@ public class ProfileViewController {
 
     @GetMapping
     public String showProfile(Model model) {
-        UserEntity user = currentUser();
+        UserJpaEntity user = currentUser();
 
         if (!model.containsAttribute("profileForm")) {
             EditProfileForm profileForm = new EditProfileForm();
@@ -100,7 +100,7 @@ public class ProfileViewController {
         return "redirect:/profile";
     }
 
-    private UserEntity currentUser() {
+    private UserJpaEntity currentUser() {
         return usersService.findOneById(sessionCurrentUserService.getCurrentUserId());
     }
 }

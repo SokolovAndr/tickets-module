@@ -9,10 +9,10 @@ import com.example.ticketsmodule.api.model.TicketsSearchRequest;
 import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.conversion.TicketMapper;
-import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
 import com.example.ticketsmodule.impl.tickets.exception.TicketAlreadyPurchasedException;
-import com.example.ticketsmodule.impl.tickets.repository.TicketRepository;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
+import com.example.ticketsmodule.impl.tickets.persistence.repository.TicketRepository;
+import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
 import com.example.ticketsmodule.impl.users.service.UsersService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,7 +60,7 @@ class TicketsServiceTest {
     private UUID userId;
     private TicketEntity ticket;
     private RouteJpaEntity route;
-    private UserEntity user;
+    private UserJpaEntity user;
     private CreateTicketResponse expectedResponse;
 
     @BeforeEach
@@ -73,7 +73,7 @@ class TicketsServiceTest {
         route.setId(routeId);
         route.setDepartureAt(LocalDateTime.now().plusDays(1));
 
-        user = new UserEntity();
+        user = new UserJpaEntity();
         user.setId(userId);
         user.setLogin("admin");
 
@@ -449,7 +449,7 @@ class TicketsServiceTest {
         @Test
         @DisplayName("should throw when ticket belongs to another user")
         void shouldThrowWhenDifferentUser() {
-            UserEntity otherUser = new UserEntity();
+            UserJpaEntity otherUser = new UserJpaEntity();
             otherUser.setId(UUID.randomUUID());
             ticket.setUser(otherUser);
             when(usersService.findOneById(userId)).thenReturn(user);

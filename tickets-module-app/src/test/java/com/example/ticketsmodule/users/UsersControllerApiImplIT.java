@@ -2,8 +2,8 @@ package com.example.ticketsmodule.users;
 
 import com.example.ticketsmodule.api.model.ChangePasswordRequest;
 import com.example.ticketsmodule.api.model.UserPatchRequest;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
-import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
+import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
+import com.example.ticketsmodule.domain.user.model.UserRoleEnum;
 import com.example.ticketsmodule.support.AbstractIntegrationTest;
 import com.example.ticketsmodule.support.JwtTestHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,7 +35,7 @@ class UsersControllerApiImplIT extends AbstractIntegrationTest {
     private static final String OLD_PASSWORD = "oldPass123";
     private static final String NEW_PASSWORD = "newPass456";
 
-    private UserEntity testUser;
+    private UserJpaEntity testUser;
 
     @BeforeEach
     void setUp() {
@@ -88,7 +88,7 @@ class UsersControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("GET /api/users/me with ADMIN role → 200")
         void getMe_shouldAllowAdminRole() throws Exception {
-            UserEntity admin = createUserInDb("admin", OLD_PASSWORD, "Admin", UserRoleEnum.ADMIN);
+            UserJpaEntity admin = createUserInDb("admin", OLD_PASSWORD, "Admin", UserRoleEnum.ADMIN);
 
             mockMvc.perform(get("/api/users/me")
                             .with(JwtTestHelper.withUser(admin.getId(), "ADMIN")))
@@ -147,14 +147,14 @@ class UsersControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(jsonPath("$.fullName").value("Updated Name"))
                     .andExpect(jsonPath("$.login").value("testuser"));
 
-            UserEntity updated = userRepository.findById(testUser.getId()).orElseThrow();
+            UserJpaEntity updated = userSpringDataRepository.findById(testUser.getId()).orElseThrow();
             assertThat(updated.getFullName()).isEqualTo("Updated Name");
         }
 
         @Test
         @DisplayName("should update updatedAt timestamp")
         void shouldUpdateUpdatedAt() throws Exception {
-            LocalDateTime before = userRepository.findById(testUser.getId())
+            LocalDateTime before = userSpringDataRepository.findById(testUser.getId())
                     .orElseThrow().getUpdatedAt();
 
             // Небольшая задержка, чтобы timestamp гарантированно отличался
@@ -169,7 +169,7 @@ class UsersControllerApiImplIT extends AbstractIntegrationTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            UserEntity updated = userRepository.findById(testUser.getId()).orElseThrow();
+            UserJpaEntity updated = userSpringDataRepository.findById(testUser.getId()).orElseThrow();
             assertThat(updated.getUpdatedAt()).isAfter(before);
         }
 
@@ -185,14 +185,14 @@ class UsersControllerApiImplIT extends AbstractIntegrationTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            UserEntity updated = userRepository.findById(testUser.getId()).orElseThrow();
+            UserJpaEntity updated = userSpringDataRepository.findById(testUser.getId()).orElseThrow();
             assertThat(updated.getFullName()).isEqualTo("Test User");
         }
 
         @Test
         @DisplayName("should not affect other users")
         void shouldNotAffectOtherUsers() throws Exception {
-            UserEntity other = createUserInDb("other", OLD_PASSWORD, "Other User", UserRoleEnum.USER);
+            UserJpaEntity other = createUserInDb("other", OLD_PASSWORD, "Other User", UserRoleEnum.USER);
 
             UserPatchRequest request = new UserPatchRequest();
             request.setFullName("Hacked");
@@ -203,7 +203,7 @@ class UsersControllerApiImplIT extends AbstractIntegrationTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            UserEntity untouched = userRepository.findById(other.getId()).orElseThrow();
+            UserJpaEntity untouched = userSpringDataRepository.findById(other.getId()).orElseThrow();
             assertThat(untouched.getFullName()).isEqualTo("Other User");
         }
     }
@@ -227,7 +227,7 @@ class UsersControllerApiImplIT extends AbstractIntegrationTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            UserEntity updated = userRepository.findById(testUser.getId()).orElseThrow();
+            UserJpaEntity updated = userSpringDataRepository.findById(testUser.getId()).orElseThrow();
             assertThat(passwordEncoder.matches(NEW_PASSWORD, updated.getPassword())).isTrue();
             assertThat(passwordEncoder.matches(OLD_PASSWORD, updated.getPassword())).isFalse();
         }
@@ -246,7 +246,7 @@ class UsersControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(status().isUnprocessableEntity())
                     .andExpect(jsonPath("$.userMessage").value("Текущий пароль неверен"));
 
-            UserEntity unchanged = userRepository.findById(testUser.getId()).orElseThrow();
+            UserJpaEntity unchanged = userSpringDataRepository.findById(testUser.getId()).orElseThrow();
             assertThat(passwordEncoder.matches(OLD_PASSWORD, unchanged.getPassword())).isTrue();
         }
 
@@ -269,7 +269,7 @@ class UsersControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should not change other user's password")
         void shouldNotAffectOtherUsers() throws Exception {
-            UserEntity other = createUserInDb("other", OLD_PASSWORD, "Other User", UserRoleEnum.USER);
+            UserJpaEntity other = createUserInDb("other", OLD_PASSWORD, "Other User", UserRoleEnum.USER);
 
             ChangePasswordRequest request = new ChangePasswordRequest();
             request.setOldPassword(OLD_PASSWORD);
@@ -281,7 +281,7 @@ class UsersControllerApiImplIT extends AbstractIntegrationTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isOk());
 
-            UserEntity untouched = userRepository.findById(other.getId()).orElseThrow();
+            UserJpaEntity untouched = userSpringDataRepository.findById(other.getId()).orElseThrow();
             assertThat(passwordEncoder.matches(OLD_PASSWORD, untouched.getPassword())).isTrue();
             assertThat(passwordEncoder.matches(NEW_PASSWORD, untouched.getPassword())).isFalse();
         }
@@ -305,9 +305,9 @@ class UsersControllerApiImplIT extends AbstractIntegrationTest {
 
     // ---------- HELPERS ----------
 
-    private UserEntity createUserInDb(String login, String rawPassword, String fullName, UserRoleEnum role) {
+    private UserJpaEntity createUserInDb(String login, String rawPassword, String fullName, UserRoleEnum role) {
         LocalDateTime now = LocalDateTime.now();
-        return userRepository.save(UserEntity.builder()
+        return userSpringDataRepository.save(UserJpaEntity.builder()
                 .login(login)
                 .password(passwordEncoder.encode(rawPassword))
                 .fullName(fullName)

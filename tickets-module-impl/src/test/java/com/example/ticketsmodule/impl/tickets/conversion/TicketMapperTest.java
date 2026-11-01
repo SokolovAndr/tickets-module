@@ -3,8 +3,8 @@ package com.example.ticketsmodule.impl.tickets.conversion;
 import com.example.ticketsmodule.api.model.CreateTicketRequest;
 import com.example.ticketsmodule.api.model.CreateTicketResponse;
 import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
-import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
+import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
+import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -25,7 +25,7 @@ class TicketMapperTest {
     private UUID routeId;
     private UUID userId;
     private RouteJpaEntity route;
-    private UserEntity user;
+    private UserJpaEntity user;
 
     @BeforeEach
     void setUp() {
@@ -38,7 +38,7 @@ class TicketMapperTest {
         route = new RouteJpaEntity();
         route.setId(routeId);
 
-        user = new UserEntity();
+        user = new UserJpaEntity();
         user.setId(userId);
         user.setLogin("admin");
     }
@@ -245,7 +245,7 @@ class TicketMapperTest {
         @DisplayName("should map user.id to purchasedById")
         void shouldMapPurchasedByIdFromNestedUser() {
             UUID customUserId = UUID.randomUUID();
-            UserEntity customUser = new UserEntity();
+            UserJpaEntity customUser = new UserJpaEntity();
             customUser.setId(customUserId);
 
             TicketEntity entity = TicketEntity.builder()

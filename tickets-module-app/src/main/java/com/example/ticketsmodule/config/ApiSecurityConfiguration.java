@@ -1,6 +1,6 @@
 package com.example.ticketsmodule.config;
 
-import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
+import com.example.ticketsmodule.domain.user.model.UserRoleEnum;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

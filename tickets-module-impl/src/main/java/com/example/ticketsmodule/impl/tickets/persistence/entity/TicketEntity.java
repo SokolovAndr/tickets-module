@@ -1,7 +1,7 @@
-package com.example.ticketsmodule.impl.tickets.domain;
+package com.example.ticketsmodule.impl.tickets.persistence.entity;
 
 import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
+import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -89,7 +89,7 @@ public class TicketEntity {
     @JoinColumn(name = "purchased_by")
     @ToString.Exclude
     @Comment("Идентификатор пользователя")
-    private UserEntity user;
+    private UserJpaEntity user;
 
     /**
      * Дата покупки

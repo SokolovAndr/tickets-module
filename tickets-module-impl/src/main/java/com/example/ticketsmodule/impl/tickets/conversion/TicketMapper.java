@@ -3,7 +3,7 @@ package com.example.ticketsmodule.impl.tickets.conversion;
 import com.example.ticketsmodule.api.model.CreateTicketRequest;
 import com.example.ticketsmodule.api.model.CreateTicketResponse;
 import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
-import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

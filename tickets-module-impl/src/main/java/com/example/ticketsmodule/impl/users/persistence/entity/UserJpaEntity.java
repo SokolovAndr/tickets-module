@@ -1,5 +1,6 @@
-package com.example.ticketsmodule.impl.users.domain;
+package com.example.ticketsmodule.impl.users.persistence.entity;
 
+import com.example.ticketsmodule.domain.user.model.UserRoleEnum;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -33,7 +34,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "users")
 @Comment("Сущность пользователя – субъект, осуществляющий покупку билетов")
-public class UserEntity {
+public class UserJpaEntity {
 
     /**
      * Идентификатор

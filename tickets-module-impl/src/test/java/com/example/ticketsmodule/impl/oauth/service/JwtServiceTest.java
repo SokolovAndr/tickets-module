@@ -2,8 +2,8 @@ package com.example.ticketsmodule.impl.oauth.service;
 
 import com.example.ticketsmodule.api.model.LoginResponse;
 import com.example.ticketsmodule.impl.config.JwtProperties;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
-import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
+import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
+import com.example.ticketsmodule.domain.user.model.UserRoleEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -39,7 +39,7 @@ class JwtServiceTest {
     private JwtService jwtService;
 
     private UUID userId;
-    private UserEntity user;
+    private UserJpaEntity user;
 
     private static final Duration ACCESS_TTL = Duration.ofHours(10);
     private static final Duration REFRESH_TTL = Duration.ofDays(7);
@@ -49,7 +49,7 @@ class JwtServiceTest {
     void setUp() {
         userId = UUID.randomUUID();
 
-        user = new UserEntity();
+        user = new UserJpaEntity();
         user.setId(userId);
         user.setLogin("admin");
         user.setRole(UserRoleEnum.ADMIN);

@@ -1,6 +1,6 @@
-package com.example.ticketsmodule.impl.tickets.repository;
+package com.example.ticketsmodule.impl.tickets.persistence.repository;
 
-import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;

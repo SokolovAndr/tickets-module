@@ -1,8 +1,8 @@
 package com.example.ticketsmodule.impl.users.conversion;
 
 import com.example.ticketsmodule.api.model.UserResponse;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
-import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
+import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
+import com.example.ticketsmodule.domain.user.model.UserRoleEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -36,7 +36,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should map login")
         void shouldMapLogin() {
-            UserEntity entity = baseUser().login("ivan_petrov").build();
+            UserJpaEntity entity = baseUser().login("ivan_petrov").build();
 
             UserResponse response = mapper.toResponse(entity);
 
@@ -46,7 +46,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should map fullName")
         void shouldMapFullName() {
-            UserEntity entity = baseUser().fullName("Иван Петров").build();
+            UserJpaEntity entity = baseUser().fullName("Иван Петров").build();
 
             UserResponse response = mapper.toResponse(entity);
 
@@ -56,7 +56,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should map createdAt")
         void shouldMapCreatedAt() {
-            UserEntity entity = baseUser().createdAt(CREATED).build();
+            UserJpaEntity entity = baseUser().createdAt(CREATED).build();
 
             UserResponse response = mapper.toResponse(entity);
 
@@ -66,7 +66,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should map updatedAt")
         void shouldMapUpdatedAt() {
-            UserEntity entity = baseUser().updatedAt(UPDATED).build();
+            UserJpaEntity entity = baseUser().updatedAt(UPDATED).build();
 
             UserResponse response = mapper.toResponse(entity);
 
@@ -76,7 +76,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should map all fields together")
         void shouldMapAllFields() {
-            UserEntity entity = baseUser()
+            UserJpaEntity entity = baseUser()
                     .login("admin")
                     .fullName("Admin Adminov")
                     .role(UserRoleEnum.ADMIN)
@@ -103,7 +103,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should map USER enum to \"USER\" string")
         void shouldMapUserRole() {
-            UserEntity entity = baseUser().role(UserRoleEnum.USER).build();
+            UserJpaEntity entity = baseUser().role(UserRoleEnum.USER).build();
 
             UserResponse response = mapper.toResponse(entity);
 
@@ -113,7 +113,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should map ADMIN enum to \"ADMIN\" string")
         void shouldMapAdminRole() {
-            UserEntity entity = baseUser().role(UserRoleEnum.ADMIN).build();
+            UserJpaEntity entity = baseUser().role(UserRoleEnum.ADMIN).build();
 
             UserResponse response = mapper.toResponse(entity);
 
@@ -123,7 +123,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should return null role when entity role is null")
         void shouldReturnNullRole_whenEntityRoleNull() {
-            UserEntity entity = baseUser().role(null).build();
+            UserJpaEntity entity = baseUser().role(null).build();
 
             UserResponse response = mapper.toResponse(entity);
 
@@ -140,7 +140,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should not expose password (target has no such field)")
         void shouldNotExposePassword() {
-            UserEntity entity = baseUser().password("$2a$10$secretHash").build();
+            UserJpaEntity entity = baseUser().password("$2a$10$secretHash").build();
 
             UserResponse response = mapper.toResponse(entity);
 
@@ -154,7 +154,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should not expose id (target has no such field)")
         void shouldNotExposeId() {
-            UserEntity entity = baseUser().id(UUID.randomUUID()).build();
+            UserJpaEntity entity = baseUser().id(UUID.randomUUID()).build();
 
             UserResponse response = mapper.toResponse(entity);
 
@@ -181,7 +181,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should preserve null strings")
         void shouldPreserveNullStrings() {
-            UserEntity entity = baseUser()
+            UserJpaEntity entity = baseUser()
                     .login(null)
                     .fullName(null)
                     .build();
@@ -196,7 +196,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should preserve null dates")
         void shouldPreserveNullDates() {
-            UserEntity entity = baseUser()
+            UserJpaEntity entity = baseUser()
                     .createdAt(null)
                     .updatedAt(null)
                     .build();
@@ -210,7 +210,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should handle empty strings")
         void shouldHandleEmptyStrings() {
-            UserEntity entity = baseUser()
+            UserJpaEntity entity = baseUser()
                     .login("")
                     .fullName("")
                     .build();
@@ -225,7 +225,7 @@ class UserMapperTest {
         @DisplayName("should preserve long fullName (255 chars)")
         void shouldPreserveLongFullName() {
             String longName = "A".repeat(255);
-            UserEntity entity = baseUser().fullName(longName).build();
+            UserJpaEntity entity = baseUser().fullName(longName).build();
 
             UserResponse response = mapper.toResponse(entity);
 
@@ -235,7 +235,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should preserve cyrillic characters")
         void shouldPreserveCyrillic() {
-            UserEntity entity = baseUser()
+            UserJpaEntity entity = baseUser()
                     .fullName("Иванов Иван Иванович")
                     .build();
 
@@ -254,7 +254,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should map UserEntity to UserResponse completely")
         void shouldMapComplete() {
-            UserEntity entity = UserEntity.builder()
+            UserJpaEntity entity = UserJpaEntity.builder()
                     .id(USER_ID)
                     .login("testuser")
                     .password("$2a$10$secretHash")
@@ -277,8 +277,8 @@ class UserMapperTest {
 
     // ---------- helper ----------
 
-    private UserEntity.UserEntityBuilder baseUser() {
-        return UserEntity.builder()
+    private UserJpaEntity.UserEntityBuilder baseUser() {
+        return UserJpaEntity.builder()
                 .id(USER_ID)
                 .login("testuser")
                 .password("hash")

@@ -1,7 +1,7 @@
 package com.example.ticketsmodule.impl.users.conversion;
 
 import com.example.ticketsmodule.api.model.RegisterRequest;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
+import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -33,7 +33,7 @@ class RegisterMapperTest {
             request.setPassword("secret");
             request.setFullName("New User");
 
-            UserEntity entity = mapper.toEntity(request);
+            UserJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity).isNotNull();
             assertThat(entity.getLogin()).isEqualTo("newuser");
@@ -47,7 +47,7 @@ class RegisterMapperTest {
             request.setPassword("secret");
             request.setFullName("Ivan Ivanov");
 
-            UserEntity entity = mapper.toEntity(request);
+            UserJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity.getFullName()).isEqualTo("Ivan Ivanov");
         }
@@ -60,7 +60,7 @@ class RegisterMapperTest {
             request.setPassword("secret");
             request.setFullName("Test User");
 
-            UserEntity entity = mapper.toEntity(request);
+            UserJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity.getLogin()).isEqualTo("testuser");
             assertThat(entity.getFullName()).isEqualTo("Test User");
@@ -81,7 +81,7 @@ class RegisterMapperTest {
             request.setPassword("secret");
             request.setFullName("New User");
 
-            UserEntity entity = mapper.toEntity(request);
+            UserJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity.getId()).isNull();
         }
@@ -94,7 +94,7 @@ class RegisterMapperTest {
             request.setPassword("raw-secret");
             request.setFullName("New User");
 
-            UserEntity entity = mapper.toEntity(request);
+            UserJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity.getPassword()).isNull();
         }
@@ -107,7 +107,7 @@ class RegisterMapperTest {
             request.setPassword("secret");
             request.setFullName("New User");
 
-            UserEntity entity = mapper.toEntity(request);
+            UserJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity.getRole()).isNull();
         }
@@ -120,7 +120,7 @@ class RegisterMapperTest {
             request.setPassword("secret");
             request.setFullName("New User");
 
-            UserEntity entity = mapper.toEntity(request);
+            UserJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity.getCreatedAt()).isNull();
         }
@@ -133,7 +133,7 @@ class RegisterMapperTest {
             request.setPassword("secret");
             request.setFullName("New User");
 
-            UserEntity entity = mapper.toEntity(request);
+            UserJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity.getUpdatedAt()).isNull();
         }
@@ -148,7 +148,7 @@ class RegisterMapperTest {
         @Test
         @DisplayName("should return null when source is null")
         void shouldReturnNullWhenSourceNull() {
-            UserEntity entity = mapper.toEntity(null);
+            UserJpaEntity entity = mapper.toEntity(null);
 
             assertThat(entity).isNull();
         }
@@ -161,7 +161,7 @@ class RegisterMapperTest {
             request.setPassword("secret");
             request.setFullName(null);
 
-            UserEntity entity = mapper.toEntity(request);
+            UserJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity).isNotNull();
             assertThat(entity.getLogin()).isNull();
@@ -176,7 +176,7 @@ class RegisterMapperTest {
             request.setPassword("");
             request.setFullName("");
 
-            UserEntity entity = mapper.toEntity(request);
+            UserJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity.getLogin()).isEmpty();
             assertThat(entity.getFullName()).isEmpty();
@@ -192,7 +192,7 @@ class RegisterMapperTest {
             request.setPassword("secret");
             request.setFullName(longName);
 
-            UserEntity entity = mapper.toEntity(request);
+            UserJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity.getFullName()).hasSize(255);
         }
@@ -212,7 +212,7 @@ class RegisterMapperTest {
             request.setPassword("raw-secret");
             request.setFullName("New User");
 
-            UserEntity entity = mapper.toEntity(request);
+            UserJpaEntity entity = mapper.toEntity(request);
 
             assertThat(entity).isNotNull();
 

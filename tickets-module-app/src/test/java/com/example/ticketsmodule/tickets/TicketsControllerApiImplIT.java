@@ -5,9 +5,9 @@ import com.example.ticketsmodule.api.model.ReleaseTicketsBatchRequest;
 import com.example.ticketsmodule.api.model.TicketPatchRequest;
 import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
 import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
-import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
-import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
+import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
+import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
+import com.example.ticketsmodule.domain.user.model.UserRoleEnum;
 import com.example.ticketsmodule.support.AbstractIntegrationTest;
 import com.example.ticketsmodule.support.JwtTestHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,7 +41,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
     @Autowired private PasswordEncoder passwordEncoder;
 
     private UUID routeId;
-    private UserEntity testUser;
+    private UserJpaEntity testUser;
 
     @BeforeEach
     void cleanDb() {
@@ -263,7 +263,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should return only tickets of current user")
         void shouldReturnOnlyCurrentUserTickets() throws Exception {
-            UserEntity otherUser = createUserInDb("otheruser");
+            UserJpaEntity otherUser = createUserInDb("otheruser");
 
             createTicketInDb(1, true, testUser);    // мой
             createTicketInDb(2, true, otherUser);   // чужой
@@ -278,7 +278,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should return empty list when current user has no tickets")
         void shouldReturnEmptyWhenNoTickets() throws Exception {
-            UserEntity otherUser = createUserInDb("otheruser");
+            UserJpaEntity otherUser = createUserInDb("otheruser");
             createTicketInDb(1, true, otherUser);
 
             mockMvc.perform(get("/api/tickets/my")
@@ -544,7 +544,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @DisplayName("should return 403 when downloading someone else's ticket")
         void shouldForbidDownloadingOthersTicket() throws Exception {
             // given: создаем билет для ДРУГОГО пользователя
-            UserEntity otherUser = createUserInDb("otheruser");
+            UserJpaEntity otherUser = createUserInDb("otheruser");
             TicketEntity saved = createTicketInDb(1, true, otherUser);
 
             // when & then: текущий пользователь (testUser) пытается скачать чужой билет
@@ -591,8 +591,8 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         return route.getId();
     }
 
-    private UserEntity createUserInDb(String login) {
-        return userRepository.save(UserEntity.builder()
+    private UserJpaEntity createUserInDb(String login) {
+        return userSpringDataRepository.save(UserJpaEntity.builder()
                 .login(login)
                 .password(passwordEncoder.encode("secret123"))
                 .fullName("Test User")
@@ -602,7 +602,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                 .build());
     }
 
-    private TicketEntity createTicketInDb(int seat, boolean purchased, UserEntity user) {
+    private TicketEntity createTicketInDb(int seat, boolean purchased, UserJpaEntity user) {
         RouteJpaEntity route = routeSpringDataRepository.findById(routeId).orElseThrow();
 
         return ticketRepository.save(TicketEntity.builder()

@@ -1,7 +1,7 @@
 package com.example.ticketsmodule.impl.oauth.service;
 
+import com.example.ticketsmodule.domain.user.model.User;
 import com.example.ticketsmodule.impl.config.JwtProperties;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -31,7 +31,7 @@ public class JwtService {
     private final JwtEncoder jwtEncoder;
     private final JwtProperties jwtProperties;
 
-    public LoginResponse createTokenPair(UserEntity user) {
+    public LoginResponse createTokenPair(User user) {
         Instant now = Instant.now();
         Duration accessTtl = jwtProperties.getAccessTokenTtl();
         Instant accessExpires = now.plus(accessTtl);
@@ -49,7 +49,7 @@ public class JwtService {
     }
 
     private String encodeToken(
-            UserEntity user,
+            User user,
             Instant issuedAt,
             Instant expiresAt,
             String tokenType,

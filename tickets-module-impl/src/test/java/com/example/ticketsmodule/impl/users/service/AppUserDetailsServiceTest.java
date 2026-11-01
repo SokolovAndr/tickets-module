@@ -1,8 +1,8 @@
 package com.example.ticketsmodule.impl.users.service;
 
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
-import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
-import com.example.ticketsmodule.impl.users.repository.UserRepository;
+import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
+import com.example.ticketsmodule.domain.user.model.UserRoleEnum;
+import com.example.ticketsmodule.impl.users.persistence.repository.UserSpringDataRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,21 +23,21 @@ import static org.mockito.Mockito.when;
 class AppUserDetailsServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserSpringDataRepository userSpringDataRepository;
 
     @InjectMocks
     private AppUserDetailsService appUserDetailsService;
 
     @Test
     void loadUserByUsername_ShouldReturnUserDetails_WhenUserExists() {
-        UserEntity user = UserEntity.builder()
+        UserJpaEntity user = UserJpaEntity.builder()
                 .id(UUID.randomUUID())
                 .login("testuser")
                 .password("encoded-password")
                 .role(UserRoleEnum.USER)
                 .build();
 
-        when(userRepository.findByLogin("testuser")).thenReturn(Optional.of(user));
+        when(userSpringDataRepository.findByLogin("testuser")).thenReturn(Optional.of(user));
 
         UserDetails result = appUserDetailsService.loadUserByUsername("testuser");
 
@@ -51,14 +51,14 @@ class AppUserDetailsServiceTest {
 
     @Test
     void loadUserByUsername_ShouldReturnAdminAuthority_WhenUserIsAdmin() {
-        UserEntity admin = UserEntity.builder()
+        UserJpaEntity admin = UserJpaEntity.builder()
                 .id(UUID.randomUUID())
                 .login("admin")
                 .password("encoded-password")
                 .role(UserRoleEnum.ADMIN)
                 .build();
 
-        when(userRepository.findByLogin("admin")).thenReturn(Optional.of(admin));
+        when(userSpringDataRepository.findByLogin("admin")).thenReturn(Optional.of(admin));
 
         UserDetails result = appUserDetailsService.loadUserByUsername("admin");
 
@@ -69,7 +69,7 @@ class AppUserDetailsServiceTest {
 
     @Test
     void loadUserByUsername_ShouldThrow_WhenUserNotFound() {
-        when(userRepository.findByLogin("unknown")).thenReturn(Optional.empty());
+        when(userSpringDataRepository.findByLogin("unknown")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> appUserDetailsService.loadUserByUsername("unknown"))
                 .isInstanceOf(UsernameNotFoundException.class)

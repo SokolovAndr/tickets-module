@@ -4,10 +4,10 @@ import com.example.ticketsmodule.api.model.CreateTicketResponse;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
 import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
-import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
 import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
+import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
 import com.example.ticketsmodule.web.tickets.controller.MyTicketsViewController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -119,7 +119,7 @@ class MyTicketsViewControllerTest {
     @DisplayName("GET /my-tickets/{id}/pdf returns PDF file")
     void downloadTicketPdfShouldReturnFile() throws Exception {
         //
-        UserEntity user = new UserEntity();
+        UserJpaEntity user = new UserJpaEntity();
         user.setId(userId);
 
         TicketEntity ticket = new TicketEntity();

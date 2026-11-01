@@ -3,10 +3,10 @@ package com.example.ticketsmodule.impl.tickets.service;
 import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.conversion.TicketMapper;
-import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
 import com.example.ticketsmodule.impl.tickets.exception.TicketAlreadyPurchasedException;
-import com.example.ticketsmodule.impl.tickets.repository.TicketRepository;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
+import com.example.ticketsmodule.impl.tickets.persistence.repository.TicketRepository;
+import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
 import com.example.ticketsmodule.impl.users.service.UsersService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.Predicate;
@@ -139,7 +139,7 @@ public class TicketsService {
                 entity.setPurchased(ticketPatchRequest.getIsPurchased());
             }
             if (ticketPatchRequest.getPurchasedById() != null) {
-                final UserEntity user = usersService.findOneById(ticketPatchRequest.getPurchasedById());
+                final UserJpaEntity user = usersService.findOneById(ticketPatchRequest.getPurchasedById());
                 entity.setUser(user);
                 entity.setPurchased(true);
                 entity.setPurchasedAt(ticketPatchRequest.getPurchasedAt() != null
@@ -161,7 +161,7 @@ public class TicketsService {
     @Transactional
     public CreateTicketResponse buyTicket(@NotNull UUID id, @NotNull UUID userId) {
 
-        final UserEntity currentUser = usersService.findOneById(userId);
+        final UserJpaEntity currentUser = usersService.findOneById(userId);
 
         final TicketEntity ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(String.format("ticket with id %s not found", id)));
@@ -187,7 +187,7 @@ public class TicketsService {
     @Transactional
     public CreateTicketResponse returnTicket(@NotNull UUID id, @NotNull UUID userId) {
 
-        final UserEntity currentUser = usersService.findOneById(userId);
+        final UserJpaEntity currentUser = usersService.findOneById(userId);
 
         final TicketEntity ticket = ticketRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(String.format("ticket with id %s not found", id)));
 

@@ -1,9 +1,9 @@
-package com.example.ticketsmodule.impl.users.domain;
+package com.example.ticketsmodule.domain.user.model;
 
-import com.example.ticketsmodule.impl.common.domain.enumeration.BaseEnum;
+import com.example.ticketsmodule.domain.common.enumeration.BaseEnum;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NonNull;
 
 import java.util.Arrays;
 import java.util.Map;
