@@ -12,7 +12,7 @@ public interface TicketMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "isPurchased", ignore = true)
+    @Mapping(target = "purchased", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "purchasedAt", ignore = true)
     @Mapping(target = "route", ignore = true)
@@ -20,5 +20,6 @@ public interface TicketMapper {
 
     @Mapping(source = "route.id", target = "routeId")
     @Mapping(source = "user.id", target = "purchasedById")
+    @Mapping(source = "purchased", target = "isPurchased")
     CreateTicketResponse toResponse(Ticket ticket);
 }

@@ -155,7 +155,7 @@ public class TicketsService {
                         .route(route)
                         .seatNumber(seat)
                         .price(request.getPrice())
-                        .isPurchased(false)
+                        .purchased(false)
                         .user(null)
                         .purchasedAt(null)
                         .createdAt(LocalDateTime.now())

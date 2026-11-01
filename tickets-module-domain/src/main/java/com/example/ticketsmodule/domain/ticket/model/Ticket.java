@@ -22,7 +22,7 @@ public class Ticket {
     private Route route;
     private int seatNumber;
     private BigDecimal price;
-    private boolean isPurchased;
+    private boolean purchased;
     private User user;
     private LocalDateTime purchasedAt;
     private LocalDateTime createdAt;

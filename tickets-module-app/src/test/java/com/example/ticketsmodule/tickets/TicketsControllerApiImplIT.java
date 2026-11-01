@@ -609,7 +609,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                 .route(route)
                 .seatNumber(seat)
                 .price(new BigDecimal("150.00"))
-                .isPurchased(purchased)
+                .purchased(purchased)
                 .user(user)
                 .purchasedAt(purchased ? LocalDateTime.now() : null)
                 .createdAt(LocalDateTime.now())

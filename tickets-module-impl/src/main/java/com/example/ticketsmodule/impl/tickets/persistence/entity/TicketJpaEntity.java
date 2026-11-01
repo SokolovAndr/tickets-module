@@ -79,7 +79,7 @@ public class TicketJpaEntity {
      */
     @Comment("Признак занятости")
     @Column(name = "is_purchased", nullable = false)
-    private boolean isPurchased;
+    private boolean purchased;
 
     /**
      * Идентификатор пользователя

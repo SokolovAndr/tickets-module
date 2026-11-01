@@ -200,7 +200,7 @@ class TicketMapperTest {
                     .route(route)
                     .seatNumber(15)
                     .price(BigDecimal.valueOf(250))
-                    .isPurchased(true)
+                    .purchased(true)
                     .user(user)
                     .purchasedAt(purchasedAt)
                     .createdAt(created)
@@ -233,7 +233,7 @@ class TicketMapperTest {
                     .route(customRoute)
                     .seatNumber(1)
                     .price(BigDecimal.ONE)
-                    .isPurchased(false)
+                    .purchased(false)
                     .build();
 
             CreateTicketResponse response = mapper.toResponse(entity);
@@ -253,7 +253,7 @@ class TicketMapperTest {
                     .route(route)
                     .seatNumber(1)
                     .price(BigDecimal.ONE)
-                    .isPurchased(true)
+                    .purchased(true)
                     .user(customUser)
                     .build();
 
@@ -270,7 +270,7 @@ class TicketMapperTest {
                     .route(route)
                     .seatNumber(1)
                     .price(BigDecimal.ONE)
-                    .isPurchased(false)
+                    .purchased(false)
                     .user(null)
                     .build();
 
@@ -287,7 +287,7 @@ class TicketMapperTest {
                     .route(route)
                     .seatNumber(1)
                     .price(BigDecimal.ONE)
-                    .isPurchased(true)
+                    .purchased(true)
                     .user(user)
                     .build();
 
@@ -304,7 +304,7 @@ class TicketMapperTest {
                     .route(route)
                     .seatNumber(1)
                     .price(BigDecimal.ONE)
-                    .isPurchased(false)
+                    .purchased(false)
                     .build();
 
             CreateTicketResponse response = mapper.toResponse(entity);
@@ -328,7 +328,7 @@ class TicketMapperTest {
                     .route(route)
                     .seatNumber(1)
                     .price(BigDecimal.ONE)
-                    .isPurchased(false)
+                    .purchased(false)
                     .purchasedAt(null)
                     .createdAt(null)
                     .updatedAt(null)
@@ -348,7 +348,7 @@ class TicketMapperTest {
                     .route(route)
                     .seatNumber(1)
                     .price(BigDecimal.ONE)
-                    .isPurchased(false)
+                    .purchased(false)
                     .build();
 
             CreateTicketResponse response = mapper.toResponse(entity);
