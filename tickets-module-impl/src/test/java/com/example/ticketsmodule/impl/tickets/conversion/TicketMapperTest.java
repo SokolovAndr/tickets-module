@@ -3,7 +3,7 @@ package com.example.ticketsmodule.impl.tickets.conversion;
 import com.example.ticketsmodule.api.model.CreateTicketRequest;
 import com.example.ticketsmodule.api.model.CreateTicketResponse;
 import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
-import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketJpaEntity;
 import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -56,7 +56,7 @@ class TicketMapperTest {
             request.setSeatNumber(15);
             request.setPrice(BigDecimal.valueOf(250));
 
-            TicketEntity entity = mapper.toEntity(request, route);
+            TicketJpaEntity entity = mapper.toEntity(request, route);
 
             assertThat(entity).isNotNull();
             assertThat(entity.getSeatNumber()).isEqualTo(15);
@@ -70,7 +70,7 @@ class TicketMapperTest {
             request.setSeatNumber(1);
             request.setPrice(BigDecimal.ONE);
 
-            TicketEntity entity = mapper.toEntity(request, route);
+            TicketJpaEntity entity = mapper.toEntity(request, route);
 
             assertThat(entity.getRoute()).isSameAs(route);
             assertThat(entity.getRoute().getId()).isEqualTo(routeId);
@@ -83,7 +83,7 @@ class TicketMapperTest {
             request.setSeatNumber(1);
             request.setPrice(BigDecimal.ONE);
 
-            TicketEntity entity = mapper.toEntity(request, route);
+            TicketJpaEntity entity = mapper.toEntity(request, route);
 
             assertThat(entity.getId()).isNull();
         }
@@ -95,7 +95,7 @@ class TicketMapperTest {
             request.setSeatNumber(1);
             request.setPrice(BigDecimal.ONE);
 
-            TicketEntity entity = mapper.toEntity(request, route);
+            TicketJpaEntity entity = mapper.toEntity(request, route);
 
             assertThat(entity.getCreatedAt()).isNull();
         }
@@ -107,7 +107,7 @@ class TicketMapperTest {
             request.setSeatNumber(1);
             request.setPrice(BigDecimal.ONE);
 
-            TicketEntity entity = mapper.toEntity(request, route);
+            TicketJpaEntity entity = mapper.toEntity(request, route);
 
             assertThat(entity.getUpdatedAt()).isNull();
         }
@@ -119,7 +119,7 @@ class TicketMapperTest {
             request.setSeatNumber(1);
             request.setPrice(BigDecimal.ONE);
 
-            TicketEntity entity = mapper.toEntity(request, route);
+            TicketJpaEntity entity = mapper.toEntity(request, route);
 
             assertThat(entity.isPurchased()).isFalse();
         }
@@ -131,7 +131,7 @@ class TicketMapperTest {
             request.setSeatNumber(1);
             request.setPrice(BigDecimal.ONE);
 
-            TicketEntity entity = mapper.toEntity(request, route);
+            TicketJpaEntity entity = mapper.toEntity(request, route);
 
             assertThat(entity.getUser()).isNull();
         }
@@ -143,7 +143,7 @@ class TicketMapperTest {
             request.setSeatNumber(1);
             request.setPrice(BigDecimal.ONE);
 
-            TicketEntity entity = mapper.toEntity(request, route);
+            TicketJpaEntity entity = mapper.toEntity(request, route);
 
             assertThat(entity.getPurchasedAt()).isNull();
         }
@@ -155,7 +155,7 @@ class TicketMapperTest {
             request.setSeatNumber(1);
             request.setPrice(BigDecimal.ONE);
 
-            TicketEntity entity = mapper.toEntity(request, null);
+            TicketJpaEntity entity = mapper.toEntity(request, null);
 
             assertThat(entity).isNotNull();
             assertThat(entity.getRoute()).isNull();
@@ -164,7 +164,7 @@ class TicketMapperTest {
         @Test
         @DisplayName("should return null when both sources are null")
         void shouldReturnNullWhenBothSourcesNull() {
-            TicketEntity entity = mapper.toEntity(null, null);
+            TicketJpaEntity entity = mapper.toEntity(null, null);
 
             assertThat(entity).isNull();
         }
@@ -176,7 +176,7 @@ class TicketMapperTest {
             request.setSeatNumber(null);
             request.setPrice(BigDecimal.ONE);
 
-            TicketEntity entity = mapper.toEntity(request, route);
+            TicketJpaEntity entity = mapper.toEntity(request, route);
 
             assertThat(entity.getSeatNumber()).isZero();
         }
@@ -195,7 +195,7 @@ class TicketMapperTest {
             LocalDateTime purchasedAt = now.minusHours(1);
             LocalDateTime created = now.minusDays(1);
 
-            TicketEntity entity = TicketEntity.builder()
+            TicketJpaEntity entity = TicketJpaEntity.builder()
                     .id(ticketId)
                     .route(route)
                     .seatNumber(15)
@@ -228,7 +228,7 @@ class TicketMapperTest {
             RouteJpaEntity customRoute = new RouteJpaEntity();
             customRoute.setId(customRouteId);
 
-            TicketEntity entity = TicketEntity.builder()
+            TicketJpaEntity entity = TicketJpaEntity.builder()
                     .id(ticketId)
                     .route(customRoute)
                     .seatNumber(1)
@@ -248,7 +248,7 @@ class TicketMapperTest {
             UserJpaEntity customUser = new UserJpaEntity();
             customUser.setId(customUserId);
 
-            TicketEntity entity = TicketEntity.builder()
+            TicketJpaEntity entity = TicketJpaEntity.builder()
                     .id(ticketId)
                     .route(route)
                     .seatNumber(1)
@@ -265,7 +265,7 @@ class TicketMapperTest {
         @Test
         @DisplayName("should set purchasedById=null when user is null")
         void shouldSetPurchasedByIdNull() {
-            TicketEntity entity = TicketEntity.builder()
+            TicketJpaEntity entity = TicketJpaEntity.builder()
                     .id(ticketId)
                     .route(route)
                     .seatNumber(1)
@@ -282,7 +282,7 @@ class TicketMapperTest {
         @Test
         @DisplayName("should map isPurchased=true")
         void shouldMapIsPurchasedTrue() {
-            TicketEntity entity = TicketEntity.builder()
+            TicketJpaEntity entity = TicketJpaEntity.builder()
                     .id(ticketId)
                     .route(route)
                     .seatNumber(1)
@@ -299,7 +299,7 @@ class TicketMapperTest {
         @Test
         @DisplayName("should map isPurchased=false")
         void shouldMapIsPurchasedFalse() {
-            TicketEntity entity = TicketEntity.builder()
+            TicketJpaEntity entity = TicketJpaEntity.builder()
                     .id(ticketId)
                     .route(route)
                     .seatNumber(1)
@@ -323,7 +323,7 @@ class TicketMapperTest {
         @Test
         @DisplayName("should preserve null timestamps")
         void shouldPreserveNullTimestamps() {
-            TicketEntity entity = TicketEntity.builder()
+            TicketJpaEntity entity = TicketJpaEntity.builder()
                     .id(ticketId)
                     .route(route)
                     .seatNumber(1)
@@ -344,7 +344,7 @@ class TicketMapperTest {
         @Test
         @DisplayName("should preserve null id")
         void shouldPreserveNullId() {
-            TicketEntity entity = TicketEntity.builder()
+            TicketJpaEntity entity = TicketJpaEntity.builder()
                     .route(route)
                     .seatNumber(1)
                     .price(BigDecimal.ONE)
@@ -370,7 +370,7 @@ class TicketMapperTest {
             request.setSeatNumber(15);
             request.setPrice(BigDecimal.valueOf(250));
 
-            TicketEntity entity = mapper.toEntity(request, route);
+            TicketJpaEntity entity = mapper.toEntity(request, route);
             entity.setId(ticketId);
             entity.setCreatedAt(LocalDateTime.now());
             entity.setUpdatedAt(LocalDateTime.now());

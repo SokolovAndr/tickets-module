@@ -1,50 +1,44 @@
 package com.example.ticketsmodule.impl.tickets.service;
 
-import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
-import com.example.ticketsmodule.impl.routes.service.RoutesService;
-import com.example.ticketsmodule.impl.tickets.conversion.TicketMapper;
-import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
-import com.example.ticketsmodule.impl.tickets.exception.TicketAlreadyPurchasedException;
-import com.example.ticketsmodule.impl.tickets.persistence.repository.TicketRepository;
-import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
-import com.example.ticketsmodule.impl.users.service.UsersService;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import com.example.ticketsmodule.api.model.CreateTicketRequest;
 import com.example.ticketsmodule.api.model.CreateTicketResponse;
 import com.example.ticketsmodule.api.model.ReleaseTicketsBatchRequest;
 import com.example.ticketsmodule.api.model.ReleaseTicketsBatchResponse;
 import com.example.ticketsmodule.api.model.TicketPatchRequest;
 import com.example.ticketsmodule.api.model.TicketsSearchRequest;
+import com.example.ticketsmodule.domain.common.PageRequest;
+import com.example.ticketsmodule.domain.common.PageResult;
+import com.example.ticketsmodule.domain.route.model.Route;
+import com.example.ticketsmodule.domain.ticket.exception.TicketAlreadyPurchasedException;
+import com.example.ticketsmodule.domain.ticket.exception.TicketNotFoundException;
+import com.example.ticketsmodule.domain.ticket.model.Ticket;
+import com.example.ticketsmodule.domain.ticket.model.TicketFilter;
+import com.example.ticketsmodule.domain.ticket.repository.TicketsRepositoryPort;
+import com.example.ticketsmodule.domain.user.model.User;
+import com.example.ticketsmodule.impl.routes.service.RoutesService;
+import com.example.ticketsmodule.impl.tickets.conversion.TicketMapper;
+import com.example.ticketsmodule.impl.users.service.UsersService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.IntStream;
-
-/**
- * Сервис для работы с билетами
- */
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TicketsService {
 
-    private final TicketRepository ticketRepository;
+    private final TicketsRepositoryPort ticketRepository;
     private final TicketMapper ticketMapper;
     private final RoutesService routesService;
     private final UsersService usersService;
@@ -53,183 +47,111 @@ public class TicketsService {
 
     @Transactional
     public CreateTicketResponse create(CreateTicketRequest createTicketRequest) {
-        final RouteJpaEntity route = routesService.findOneById(createTicketRequest.getRouteId());
-        final TicketEntity ticketEntity = ticketMapper.toEntity(createTicketRequest, route);
-        if (ticketEntity == null) {
-            throw new IllegalStateException("Failed to convert ticket entity");
-        }
-        ticketEntity.setCreatedAt(LocalDateTime.now());
-        ticketEntity.setUpdatedAt(LocalDateTime.now());
-        TicketEntity response = ticketRepository.save(ticketEntity);
-        return ticketMapper.toResponse(response);
+        final Route route = routesService.findOneById(createTicketRequest.getRouteId());
+        final Ticket ticket = ticketMapper.toDomain(createTicketRequest);
+        ticket.setRoute(route);
+        ticket.setCreatedAt(LocalDateTime.now());
+        ticket.setUpdatedAt(LocalDateTime.now());
+        return ticketMapper.toResponse(ticketRepository.save(ticket));
     }
 
     @Transactional(readOnly = true)
-    public Page<CreateTicketResponse> findAll(@Valid TicketsSearchRequest searchParam, @Valid Pageable pageable) {
-        Specification<TicketEntity> spec = buildSpecification(searchParam);
-        return ticketRepository.findAll(spec, pageable).map(ticketMapper::toResponse);
-    }
+    public PageResult<CreateTicketResponse> findAll(@Valid TicketsSearchRequest req, PageRequest page) {
+        TicketFilter filter = toFilter(req);
+        PageResult<Ticket> result = ticketRepository.findAll(filter, page);
 
-    private Specification<TicketEntity> buildSpecification(TicketsSearchRequest searchParam) {
-        return (root, query, cb) -> {
-            final List<Predicate> predicates = new ArrayList<>();
+        List<CreateTicketResponse> content = result.getContent().stream().map(ticketMapper::toResponse).toList();
 
-            query.orderBy(cb.desc(root.get("createdAt")));
-
-            if (searchParam != null) {
-
-                if (searchParam.getRouteId() != null) {
-                    predicates.add(cb.equal(root.get("route").get("id"), searchParam.getRouteId()));
-                }
-
-                if (searchParam.getPriceFrom() != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(root.get("price"), searchParam.getPriceFrom()));
-                }
-
-                if (searchParam.getPriceTo() != null) {
-                    predicates.add(cb.lessThanOrEqualTo(root.get("price"), searchParam.getPriceTo()));
-                }
-
-                if (searchParam.getIsPurchased() != null) {
-                    predicates.add(cb.equal(root.get("isPurchased"), searchParam.getIsPurchased()));
-                }
-
-                if (searchParam.getCreatedDateFrom() != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), searchParam.getCreatedDateFrom()));
-                }
-
-                if (searchParam.getCreatedDateTo() != null) {
-                    predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), searchParam.getCreatedDateTo()));
-                }
-            }
-
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
+        return PageResult.<CreateTicketResponse>builder()
+                .content(content)
+                .totalElements(result.getTotalElements())
+                .totalPages(result.getTotalPages())
+                .pageNumber(result.getPageNumber())
+                .pageSize(result.getPageSize())
+                .build();
     }
 
     @Transactional(readOnly = true)
     public CreateTicketResponse findOne(@NotNull UUID id) {
-        TicketEntity response = ticketRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(String.format("Ticket with id %s not found", id)));
-        return ticketMapper.toResponse(response);
+        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new TicketNotFoundException(id));
+        return ticketMapper.toResponse(ticket);
     }
 
     @Transactional(readOnly = true)
-    public TicketEntity findById(@NotNull UUID id) {
-        return ticketRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(String.format("Ticket with id %s not found", id)));
+    public Ticket findById(@NotNull UUID id) {
+        return ticketRepository.findById(id).orElseThrow(() -> new TicketNotFoundException(id));
     }
 
     @Transactional
-    public CreateTicketResponse patch(@NotNull UUID id, @Valid TicketPatchRequest ticketPatchRequest) {
+    public CreateTicketResponse patch(@NotNull UUID id, @Valid TicketPatchRequest req) {
+        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new TicketNotFoundException(id));
 
-        var result = ticketRepository.findById(id).map(entity -> {
+        if (req.getRouteId() != null) ticket.setRoute(routesService.findOneById(req.getRouteId()));
+        if (req.getSeatNumber() != null) ticket.setSeatNumber(req.getSeatNumber());
+        if (req.getPrice() != null) ticket.setPrice(req.getPrice());
+        if (req.getIsPurchased() != null) ticket.setPurchased(req.getIsPurchased());
 
-            if (ticketPatchRequest.getRouteId() != null) {
-                final RouteJpaEntity route = routesService.findOneById(ticketPatchRequest.getRouteId());
-                entity.setRoute(route);
-            }
-            if (ticketPatchRequest.getSeatNumber() != null) {
-                entity.setSeatNumber(ticketPatchRequest.getSeatNumber());
-            }
-            if (ticketPatchRequest.getPrice() != null) {
-                entity.setPrice(ticketPatchRequest.getPrice());
-            }
-            if (ticketPatchRequest.getIsPurchased() != null) {
-                entity.setPurchased(ticketPatchRequest.getIsPurchased());
-            }
-            if (ticketPatchRequest.getPurchasedById() != null) {
-                final UserJpaEntity user = usersService.findOneById(ticketPatchRequest.getPurchasedById());
-                entity.setUser(user);
-                entity.setPurchased(true);
-                entity.setPurchasedAt(ticketPatchRequest.getPurchasedAt() != null
-                        ? ticketPatchRequest.getPurchasedAt()
-                        : LocalDateTime.now());
-            } else if (ticketPatchRequest.getPurchasedAt() != null) {
-                entity.setPurchasedAt(ticketPatchRequest.getPurchasedAt());
-            }
+        if (req.getPurchasedById() != null) {
+            User user = usersService.findOneById(req.getPurchasedById());
+            ticket.setUser(user);
+            ticket.setPurchased(true);
+            ticket.setPurchasedAt(req.getPurchasedAt() != null ? req.getPurchasedAt() : LocalDateTime.now());
+        } else if (req.getPurchasedAt() != null) {
+            ticket.setPurchasedAt(req.getPurchasedAt());
+        }
 
-            entity.setUpdatedAt(LocalDateTime.now());
-
-            return ticketRepository.save(entity);
-        }).orElseThrow(() -> new EntityNotFoundException(String.format("Ticket with id %s not found", id)));
-
-        return ticketMapper.toResponse(result);
+        ticket.setUpdatedAt(LocalDateTime.now());
+        return ticketMapper.toResponse(ticketRepository.save(ticket));
     }
 
     @CacheEvict(value = USER_TICKETS_CACHE, key = "#userId")
     @Transactional
     public CreateTicketResponse buyTicket(@NotNull UUID id, @NotNull UUID userId) {
+        User currentUser = usersService.findOneById(userId);
+        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new TicketNotFoundException(id));
 
-        final UserJpaEntity currentUser = usersService.findOneById(userId);
-
-        final TicketEntity ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(String.format("ticket with id %s not found", id)));
-
-        if (ticket.isPurchased()) {
-            throw new TicketAlreadyPurchasedException(id);
-        }
-
-        if (ticket.getRoute().getDepartureAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("Cannot buy ticket for past departure");
-        }
+        if (ticket.isPurchased()) throw new TicketAlreadyPurchasedException(id);
+        if (ticket.getRoute().getDepartureAt().isBefore(LocalDateTime.now())) throw new IllegalStateException("Cannot buy ticket for past departure");
 
         ticket.setUser(currentUser);
         ticket.setPurchasedAt(LocalDateTime.now());
         ticket.setUpdatedAt(LocalDateTime.now());
         ticket.setPurchased(true);
 
-        final TicketEntity savedTicket = ticketRepository.save(ticket);
-        return ticketMapper.toResponse(savedTicket);
+        return ticketMapper.toResponse(ticketRepository.save(ticket));
     }
 
     @CacheEvict(value = USER_TICKETS_CACHE, key = "#userId")
     @Transactional
     public CreateTicketResponse returnTicket(@NotNull UUID id, @NotNull UUID userId) {
+        User currentUser = usersService.findOneById(userId);
+        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new TicketNotFoundException(id));
 
-        final UserJpaEntity currentUser = usersService.findOneById(userId);
-
-        final TicketEntity ticket = ticketRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(String.format("ticket with id %s not found", id)));
-
-        if (!ticket.isPurchased()) {
-            throw new IllegalStateException("Ticket is not purchased");
-        }
-
-        if (ticket.getRoute().getDepartureAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("Cannot return ticket after departure");
-        }
-
-        if (!currentUser.getId().equals(ticket.getUser().getId())) {
-            throw new IllegalStateException("Users are different");
-        }
+        if (!ticket.isPurchased()) throw new IllegalStateException("Ticket is not purchased");
+        if (ticket.getRoute().getDepartureAt().isBefore(LocalDateTime.now())) throw new IllegalStateException("Cannot return ticket after departure");
+        if (!currentUser.getId().equals(ticket.getUser().getId())) throw new IllegalStateException("Users are different");
 
         ticket.setUser(null);
         ticket.setPurchasedAt(null);
         ticket.setPurchased(false);
         ticket.setUpdatedAt(LocalDateTime.now());
 
-        final TicketEntity savedTicket = ticketRepository.save(ticket);
-        return ticketMapper.toResponse(savedTicket);
+        return ticketMapper.toResponse(ticketRepository.save(ticket));
     }
 
     @Transactional
     public ReleaseTicketsBatchResponse releaseTicketsBatch(@Valid ReleaseTicketsBatchRequest request) {
-
-        log.info("Запрос на выпуск билетов: маршрут={}, кол-во мест={}, цена={}",
-                request.getRouteId(), request.getSeatCount(), request.getPrice());
-
-        final RouteJpaEntity route = routesService.findOneById(request.getRouteId());
+        final Route route = routesService.findOneById(request.getRouteId());
 
         if (route.getDepartureAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException(
-                    String.format("Невозможно выпустить билеты для маршрута id %s с датой отправки в прошлом", route.getId()));
+            throw new IllegalStateException(String.format("Невозможно выпустить билеты для маршрута id %s с датой отправки в прошлом", route.getId()));
         }
 
         Set<Integer> occupiedSeats = ticketRepository.findSeatNumbersByRouteId(route.getId());
 
-        List<TicketEntity> ticketsToSave = IntStream.rangeClosed(1, request.getSeatCount())
+        List<Ticket> ticketsToSave = IntStream.rangeClosed(1, request.getSeatCount())
                 .filter(seat -> !occupiedSeats.contains(seat))
-                .mapToObj(seat -> TicketEntity.builder()
+                .mapToObj(seat -> Ticket.builder()
                         .route(route)
                         .seatNumber(seat)
                         .price(request.getPrice())
@@ -242,43 +164,42 @@ public class TicketsService {
                 .toList();
 
         if (ticketsToSave.isEmpty()) {
-            throw new IllegalStateException(
-                    String.format("Нет свободных мест для маршрута %s. Все %d мест/а заняты",
-                            route.getId(), request.getSeatCount()));
+            throw new IllegalStateException(String.format("Нет свободных мест для маршрута %s", route.getId()));
         }
 
-        List<TicketEntity> savedTickets = ticketRepository.saveAll(ticketsToSave);
-
-        log.info("Released {} of {} requested tickets for route {}",
-                savedTickets.size(), request.getSeatCount(), route.getId());
+        List<Ticket> savedTickets = ticketRepository.saveAll(ticketsToSave);
 
         return new ReleaseTicketsBatchResponse()
-                .ticketsIds(savedTickets.stream()
-                        .map(TicketEntity::getId)
-                        .toList())
+                .ticketsIds(savedTickets.stream().map(Ticket::getId).toList())
                 .price(request.getPrice())
                 .createdCount(savedTickets.size())
                 .routeId(request.getRouteId());
     }
 
-    /**
-     * Метод возвращающий все билеты купленные текущим пользователем
-     */
-
     @Cacheable(value = USER_TICKETS_CACHE, key = "#userId")
     @Transactional(readOnly = true)
     public List<CreateTicketResponse> findAllMyTickets(UUID userId) {
-
-        return ticketRepository.findPurchasedByUserId(userId).stream()
-                .map(ticketMapper::toResponse)
-                .collect(java.util.stream.Collectors.toList());
+        return ticketRepository.findPurchasedByUserId(userId).stream().map(ticketMapper::toResponse).toList();
     }
 
     @Transactional(readOnly = true)
     public List<CreateTicketResponse> findAvailableByRoute(UUID routeId) {
         routesService.findOneById(routeId);
-        return ticketRepository.findAvailableByRouteId(routeId).stream()
-                .map(ticketMapper::toResponse)
-                .toList();
+        return ticketRepository.findAvailableByRouteId(routeId).stream().map(ticketMapper::toResponse).toList();
+    }
+
+    private TicketFilter toFilter(TicketsSearchRequest req) {
+        if (req == null) return TicketFilter.builder().build();
+        return TicketFilter.builder()
+                .query(req.getQuery())
+                .routeId(req.getRouteId())
+                .seatNumber(req.getSeatNumber())
+                .priceFrom(req.getPriceFrom())
+                .priceTo(req.getPriceTo())
+                .isPurchased(req.getIsPurchased())
+                .purchasedById(req.getPurchasedById())
+                .createdDateFrom(req.getCreatedDateFrom())
+                .createdDateTo(req.getCreatedDateTo())
+                .build();
     }
 }

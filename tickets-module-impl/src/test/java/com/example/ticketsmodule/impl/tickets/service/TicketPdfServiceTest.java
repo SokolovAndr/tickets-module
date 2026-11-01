@@ -1,6 +1,6 @@
 package com.example.ticketsmodule.impl.tickets.service;
 
-import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketJpaEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,11 +29,11 @@ class TicketPdfServiceTest {
     @InjectMocks
     private TicketPdfService ticketPdfService;
 
-    private TicketEntity testTicket;
+    private TicketJpaEntity testTicket;
 
     @BeforeEach
     void setUp() {
-        testTicket = TicketEntity.builder()
+        testTicket = TicketJpaEntity.builder()
                 .id(UUID.randomUUID())
                 .seatNumber(1)
                 .build();

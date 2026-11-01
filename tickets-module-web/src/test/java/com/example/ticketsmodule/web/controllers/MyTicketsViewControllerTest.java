@@ -4,7 +4,7 @@ import com.example.ticketsmodule.api.model.CreateTicketResponse;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
 import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
-import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketJpaEntity;
 import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
 import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
@@ -122,7 +122,7 @@ class MyTicketsViewControllerTest {
         UserJpaEntity user = new UserJpaEntity();
         user.setId(userId);
 
-        TicketEntity ticket = new TicketEntity();
+        TicketJpaEntity ticket = new TicketJpaEntity();
         ticket.setId(ticketId);
         ticket.setUser(user);
 

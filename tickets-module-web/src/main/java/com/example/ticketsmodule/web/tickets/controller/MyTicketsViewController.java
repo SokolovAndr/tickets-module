@@ -1,10 +1,11 @@
 package com.example.ticketsmodule.web.tickets.controller;
 
 import com.example.ticketsmodule.api.model.CreateTicketResponse;
+import com.example.ticketsmodule.domain.route.model.Route;
+import com.example.ticketsmodule.domain.ticket.model.Ticket;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
-import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
+
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
-import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
 import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
 import com.example.ticketsmodule.web.tickets.dto.MyTicketView;
@@ -50,11 +51,11 @@ public class MyTicketsViewController {
                 .map(CreateTicketResponse::getRouteId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        Map<UUID, RouteJpaEntity> routes = routesService.findAllByIds(routeIds);
+        Map<UUID, Route> routes = routesService.findAllByIds(routeIds);
 
         List<MyTicketView> views = tickets.stream()
                 .map(t -> {
-                    RouteJpaEntity r = routes.get(t.getRouteId());
+                    Route r = routes.get(t.getRouteId());
                     return MyTicketView.builder()
                             .id(t.getId())
                             .seatNumber(t.getSeatNumber())
@@ -89,7 +90,7 @@ public class MyTicketsViewController {
     public ResponseEntity<Resource> downloadTicketPdf(@PathVariable UUID id) {
         UUID currentUserId = sessionCurrentUserService.getCurrentUserId();
 
-        TicketEntity ticket = ticketsService.findById(id);
+        Ticket ticket = ticketsService.findById(id);
 
         if (ticket.getUser() == null || !ticket.getUser().getId().equals(currentUserId)) {
             throw new AccessDeniedException("Это не ваш билет");

@@ -7,7 +7,7 @@ import com.example.ticketsmodule.api.model.ReleaseTicketsBatchResponse;
 import com.example.ticketsmodule.api.model.TicketPatchRequest;
 import com.example.ticketsmodule.api.model.TicketsSearchRequest;
 import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
-import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketJpaEntity;
 import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
 import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
@@ -339,7 +339,7 @@ class TicketsControllerApiImplTest {
     @DisplayName("downloadTicketPdf()")
     class DownloadTicketPdfTests {
 
-        private TicketEntity ticket;
+        private TicketJpaEntity ticket;
         private byte[] pdfBytes;
 
         @BeforeEach
@@ -347,7 +347,7 @@ class TicketsControllerApiImplTest {
             UserJpaEntity user = new UserJpaEntity();
             user.setId(userId);
 
-            ticket = new TicketEntity();
+            ticket = new TicketJpaEntity();
             ticket.setId(ticketId);
             ticket.setUser(user);
 

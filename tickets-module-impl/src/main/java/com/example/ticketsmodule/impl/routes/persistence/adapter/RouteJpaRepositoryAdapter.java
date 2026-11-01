@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -41,6 +42,12 @@ public class RouteJpaRepositoryAdapter implements RoutesRepositoryPort {
     @Override
     public Optional<Route> findById(UUID id) {
         return springRepo.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Route> findAllByIds(Collection<UUID> ids) {
+        if (ids == null || ids.isEmpty()) return List.of();
+        return mapper.toDomainList(springRepo.findAllById(ids));
     }
 
     @Override

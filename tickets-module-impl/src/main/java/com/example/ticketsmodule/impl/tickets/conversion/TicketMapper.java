@@ -2,8 +2,7 @@ package com.example.ticketsmodule.impl.tickets.conversion;
 
 import com.example.ticketsmodule.api.model.CreateTicketRequest;
 import com.example.ticketsmodule.api.model.CreateTicketResponse;
-import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
-import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
+import com.example.ticketsmodule.domain.ticket.model.Ticket;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -16,10 +15,10 @@ public interface TicketMapper {
     @Mapping(target = "isPurchased", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "purchasedAt", ignore = true)
-    TicketEntity toEntity (CreateTicketRequest request, RouteJpaEntity route);
+    @Mapping(target = "route", ignore = true)
+    Ticket toDomain(CreateTicketRequest request);
 
     @Mapping(source = "route.id", target = "routeId")
     @Mapping(source = "user.id", target = "purchasedById")
-    @Mapping(source = "purchased", target = "isPurchased")
-    CreateTicketResponse toResponse (TicketEntity entity);
+    CreateTicketResponse toResponse(Ticket ticket);
 }

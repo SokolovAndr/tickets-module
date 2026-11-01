@@ -1,7 +1,10 @@
 package com.example.ticketsmodule.impl.tickets.resource;
 
+import com.example.ticketsmodule.domain.common.PageRequest;
+import com.example.ticketsmodule.domain.common.PageResult;
+import com.example.ticketsmodule.domain.ticket.model.Ticket;
 import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
-import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketJpaEntity;
 import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
 import jakarta.validation.Valid;
@@ -11,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -52,8 +56,19 @@ public class TicketsControllerApiImpl implements TicketsControllerApi {
 
     @Override
     public ResponseEntity<Page> getAllTickets(@Valid Pageable pageable, @Valid TicketsSearchRequest searchParam) {
-        Page<CreateTicketResponse> result = ticketsService.findAll(searchParam, pageable);
-        return ResponseEntity.ok(result);
+        PageRequest domainPage = PageRequest.builder()
+                .page(pageable.getPageNumber())
+                .size(pageable.getPageSize())
+                .build();
+
+        PageResult<CreateTicketResponse> result = ticketsService.findAll(searchParam, domainPage);
+
+        Page<CreateTicketResponse> springPage = new PageImpl<>(
+                result.getContent(),
+                pageable,
+                result.getTotalElements()
+        );
+        return ResponseEntity.ok(springPage);
     }
 
     @Override
@@ -92,7 +107,7 @@ public class TicketsControllerApiImpl implements TicketsControllerApi {
     public ResponseEntity<Resource> downloadTicketPdf(UUID id) {
         UUID userId = jwtCurrentUserService.getCurrentUserId();
 
-        TicketEntity ticket = ticketsService.findById(id);
+        Ticket ticket = ticketsService.findById(id);
         if (ticket.getUser() == null || !ticket.getUser().getId().equals(userId)) {
             throw new org.springframework.security.access.AccessDeniedException("Это не ваш билет");
         }

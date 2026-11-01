@@ -1,6 +1,6 @@
 package com.example.ticketsmodule.exceptions;
 
-import com.example.ticketsmodule.impl.carriers.exception.CarrierNameAlreadyExistsException;
+import com.example.ticketsmodule.domain.carrier.exception.CarrierNameAlreadyExistsException;
 import com.example.ticketsmodule.impl.common.web.rest.exceptions.ApiException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;

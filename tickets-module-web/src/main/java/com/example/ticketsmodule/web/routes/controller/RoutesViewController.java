@@ -6,10 +6,13 @@ import com.example.ticketsmodule.api.model.RoutesSearchRequest;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
+import com.example.ticketsmodule.domain.common.PageRequest;
+import com.example.ticketsmodule.domain.common.PageResult;
+import com.example.ticketsmodule.domain.common.SortDirection;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -58,9 +61,26 @@ public class RoutesViewController {
             search.setDestinationTo(destinationDate);
         }
 
-        Pageable pageable = PageRequest.of(Math.max(page, 0), PAGE_SIZE,
-                Sort.by(Sort.Direction.ASC, "departureAt"));
-        Page<CreateRouteResponse> routesPage = routesService.findAll(search, pageable);
+        PageRequest domainPage = PageRequest.builder()
+                .page(Math.max(page, 0))
+                .size(PAGE_SIZE)
+                .sortField("departureAt")
+                .direction(SortDirection.ASC)
+                .build();
+
+        PageResult<CreateRouteResponse> result = routesService.findAll(search, domainPage);
+
+        Pageable springPageable = org.springframework.data.domain.PageRequest.of(
+                domainPage.getPage(),
+                domainPage.getSize(),
+                Sort.by(Sort.Direction.ASC, "departureAt")
+        );
+
+        Page<CreateRouteResponse> routesPage = new PageImpl<>(
+                result.getContent(),
+                springPageable,
+                result.getTotalElements()
+        );
 
         model.addAttribute("page", routesPage);
         model.addAttribute("departurePoint", departurePoint);

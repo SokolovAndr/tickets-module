@@ -24,8 +24,11 @@ import com.example.ticketsmodule.api.model.RoutesSearchRequest;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Сервис для работы с маршрутами
@@ -70,6 +73,15 @@ public class RoutesService {
     @Transactional(readOnly = true)
     public Route findOneById(UUID id) {
         return routesRepositoryPort.findById(id).orElseThrow(() -> new RouteNotFoundException(id));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, Route> findAllByIds(Collection<UUID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Map.of();
+        }
+        return routesRepositoryPort.findAllByIds(ids).stream()
+                .collect(Collectors.toMap(Route::getId, r -> r));
     }
 
     @Transactional

@@ -39,7 +39,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "tickets")
 @Comment("Сущность билета – право проезда по определенному маршруту в определенную дату и место в транспортном средстве.")
-public class TicketEntity {
+public class TicketJpaEntity {
 
     /**
      * Идентификатор

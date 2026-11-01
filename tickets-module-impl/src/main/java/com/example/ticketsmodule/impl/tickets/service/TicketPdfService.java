@@ -1,6 +1,6 @@
 package com.example.ticketsmodule.impl.tickets.service;
 
-import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
+import com.example.ticketsmodule.domain.ticket.model.Ticket;
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import com.openhtmltopdf.util.XRLog;
@@ -31,7 +31,7 @@ public class TicketPdfService {
         XRLog.setLoggingEnabled(false);
     }
 
-    public byte[] generatePdf(TicketEntity ticket) {
+    public byte[] generatePdf(Ticket ticket) {
         try {
             Context context = new Context();
             context.setVariable("ticket", ticket);

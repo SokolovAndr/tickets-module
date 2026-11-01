@@ -9,9 +9,9 @@ import com.example.ticketsmodule.api.model.TicketsSearchRequest;
 import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.conversion.TicketMapper;
-import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketEntity;
+import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketJpaEntity;
 import com.example.ticketsmodule.impl.tickets.exception.TicketAlreadyPurchasedException;
-import com.example.ticketsmodule.impl.tickets.persistence.repository.TicketRepository;
+import com.example.ticketsmodule.impl.tickets.persistence.repository.TicketSpringDataRepository;
 import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
 import com.example.ticketsmodule.impl.users.service.UsersService;
 import jakarta.persistence.EntityNotFoundException;
@@ -47,7 +47,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("TicketsService unit tests")
 class TicketsServiceTest {
 
-    @Mock private TicketRepository ticketRepository;
+    @Mock private TicketSpringDataRepository ticketSpringDataRepository;
     @Mock private TicketMapper ticketMapper;
     @Mock private RoutesService routesService;
     @Mock private UsersService usersService;
@@ -58,7 +58,7 @@ class TicketsServiceTest {
     private UUID ticketId;
     private UUID routeId;
     private UUID userId;
-    private TicketEntity ticket;
+    private TicketJpaEntity ticket;
     private RouteJpaEntity route;
     private UserJpaEntity user;
     private CreateTicketResponse expectedResponse;
@@ -77,7 +77,7 @@ class TicketsServiceTest {
         user.setId(userId);
         user.setLogin("admin");
 
-        ticket = new TicketEntity();
+        ticket = new TicketJpaEntity();
         ticket.setId(ticketId);
         ticket.setRoute(route);
         ticket.setSeatNumber(1);
@@ -101,14 +101,14 @@ class TicketsServiceTest {
 
             when(routesService.findOneById(routeId)).thenReturn(route);
             when(ticketMapper.toEntity(request, route)).thenReturn(ticket);
-            when(ticketRepository.save(ticket)).thenReturn(ticket);
+            when(ticketSpringDataRepository.save(ticket)).thenReturn(ticket);
             when(ticketMapper.toResponse(ticket)).thenReturn(expectedResponse);
 
             CreateTicketResponse actual = ticketsService.create(request);
 
             assertThat(actual).isSameAs(expectedResponse);
             verify(routesService).findOneById(routeId);
-            verify(ticketRepository).save(ticket);
+            verify(ticketSpringDataRepository).save(ticket);
         }
 
         @Test
@@ -124,7 +124,7 @@ class TicketsServiceTest {
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Failed to convert ticket entity");
 
-            verify(ticketRepository, never()).save(any());
+            verify(ticketSpringDataRepository, never()).save(any());
         }
 
         @Test
@@ -139,7 +139,7 @@ class TicketsServiceTest {
             assertThatThrownBy(() -> ticketsService.create(request))
                     .isInstanceOf(EntityNotFoundException.class);
 
-            verifyNoInteractions(ticketRepository, ticketMapper);
+            verifyNoInteractions(ticketSpringDataRepository, ticketMapper);
         }
     }
 
@@ -155,7 +155,7 @@ class TicketsServiceTest {
             TicketsSearchRequest search = new TicketsSearchRequest();
             Pageable pageable = PageRequest.of(0, 10);
 
-            when(ticketRepository.findAll(any(Specification.class), eq(pageable)))
+            when(ticketSpringDataRepository.findAll(any(Specification.class), eq(pageable)))
                     .thenReturn(new PageImpl<>(List.of(ticket)));
             when(ticketMapper.toResponse(ticket)).thenReturn(expectedResponse);
 
@@ -169,7 +169,7 @@ class TicketsServiceTest {
         @DisplayName("should return empty page")
         void shouldReturnEmptyPage() {
             Pageable pageable = PageRequest.of(0, 10);
-            when(ticketRepository.findAll(any(Specification.class), eq(pageable)))
+            when(ticketSpringDataRepository.findAll(any(Specification.class), eq(pageable)))
                     .thenReturn(Page.empty());
 
             Page<CreateTicketResponse> actual = ticketsService.findAll(null, pageable);
@@ -186,20 +186,20 @@ class TicketsServiceTest {
         @Test
         @DisplayName("should return mapped list of current user's tickets")
         void shouldReturnMappedList() {
-            when(ticketRepository.findPurchasedByUserId(userId)).thenReturn(List.of(ticket));
+            when(ticketSpringDataRepository.findPurchasedByUserId(userId)).thenReturn(List.of(ticket));
             when(ticketMapper.toResponse(ticket)).thenReturn(expectedResponse);
 
             List<CreateTicketResponse> actual = ticketsService.findAllMyTickets(userId);
 
             assertThat(actual).containsExactly(expectedResponse);
-            verify(ticketRepository).findPurchasedByUserId(userId);
+            verify(ticketSpringDataRepository).findPurchasedByUserId(userId);
             verify(ticketMapper).toResponse(ticket);
         }
 
         @Test
         @DisplayName("should return empty list when user has no tickets")
         void shouldReturnEmptyList() {
-            when(ticketRepository.findPurchasedByUserId(userId)).thenReturn(List.of());
+            when(ticketSpringDataRepository.findPurchasedByUserId(userId)).thenReturn(List.of());
 
             List<CreateTicketResponse> actual = ticketsService.findAllMyTickets(userId);
 
@@ -217,7 +217,7 @@ class TicketsServiceTest {
         @Test
         @DisplayName("should return response when ticket exists")
         void shouldReturnResponseWhenFound() {
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
             when(ticketMapper.toResponse(ticket)).thenReturn(expectedResponse);
 
             CreateTicketResponse actual = ticketsService.findOne(ticketId);
@@ -228,7 +228,7 @@ class TicketsServiceTest {
         @Test
         @DisplayName("should throw EntityNotFoundException when not found")
         void shouldThrowWhenNotFound() {
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.empty());
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> ticketsService.findOne(ticketId))
                     .isInstanceOf(EntityNotFoundException.class)
@@ -249,9 +249,9 @@ class TicketsServiceTest {
             patch.setSeatNumber(42);
             patch.setPrice(BigDecimal.valueOf(250));
 
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-            when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(ticketMapper.toResponse(any(TicketEntity.class))).thenReturn(expectedResponse);
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+            when(ticketSpringDataRepository.save(any(TicketJpaEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(ticketMapper.toResponse(any(TicketJpaEntity.class))).thenReturn(expectedResponse);
 
             CreateTicketResponse actual = ticketsService.patch(ticketId, patch);
 
@@ -272,10 +272,10 @@ class TicketsServiceTest {
             TicketPatchRequest patch = new TicketPatchRequest();
             patch.setRouteId(newRouteId);
 
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
             when(routesService.findOneById(newRouteId)).thenReturn(newRoute);
-            when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(ticketMapper.toResponse(any(TicketEntity.class))).thenReturn(expectedResponse);
+            when(ticketSpringDataRepository.save(any(TicketJpaEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(ticketMapper.toResponse(any(TicketJpaEntity.class))).thenReturn(expectedResponse);
 
             ticketsService.patch(ticketId, patch);
 
@@ -289,10 +289,10 @@ class TicketsServiceTest {
             TicketPatchRequest patch = new TicketPatchRequest();
             patch.setPurchasedById(userId);
 
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
             when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(ticketMapper.toResponse(any(TicketEntity.class))).thenReturn(expectedResponse);
+            when(ticketSpringDataRepository.save(any(TicketJpaEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(ticketMapper.toResponse(any(TicketJpaEntity.class))).thenReturn(expectedResponse);
 
             ticketsService.patch(ticketId, patch);
 
@@ -308,9 +308,9 @@ class TicketsServiceTest {
             TicketPatchRequest patch = new TicketPatchRequest();
             patch.setPurchasedAt(purchasedAt);
 
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-            when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(ticketMapper.toResponse(any(TicketEntity.class))).thenReturn(expectedResponse);
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+            when(ticketSpringDataRepository.save(any(TicketJpaEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(ticketMapper.toResponse(any(TicketJpaEntity.class))).thenReturn(expectedResponse);
 
             ticketsService.patch(ticketId, patch);
 
@@ -322,12 +322,12 @@ class TicketsServiceTest {
         @Test
         @DisplayName("should throw EntityNotFoundException when not found")
         void shouldThrowWhenNotFound() {
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.empty());
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> ticketsService.patch(ticketId, new TicketPatchRequest()))
                     .isInstanceOf(EntityNotFoundException.class);
 
-            verify(ticketRepository, never()).save(any());
+            verify(ticketSpringDataRepository, never()).save(any());
         }
     }
 
@@ -341,9 +341,9 @@ class TicketsServiceTest {
         @DisplayName("should mark ticket as purchased for current user")
         void shouldBuyTicketSuccessfully() {
             when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-            when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(ticketMapper.toResponse(any(TicketEntity.class))).thenReturn(expectedResponse);
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+            when(ticketSpringDataRepository.save(any(TicketJpaEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(ticketMapper.toResponse(any(TicketJpaEntity.class))).thenReturn(expectedResponse);
 
             CreateTicketResponse actual = ticketsService.buyTicket(ticketId, userId);
 
@@ -359,13 +359,13 @@ class TicketsServiceTest {
             ticket.setPurchased(true);
 
             when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
             assertThatThrownBy(() -> ticketsService.buyTicket(ticketId, userId))
                     .isInstanceOf(TicketAlreadyPurchasedException.class)
                     .hasMessageContaining("already purchased");
 
-            verify(ticketRepository, never()).save(any());
+            verify(ticketSpringDataRepository, never()).save(any());
         }
 
         @Test
@@ -373,20 +373,20 @@ class TicketsServiceTest {
         void shouldThrowWhenDepartureInPast() {
             route.setDepartureAt(LocalDateTime.now().minusDays(1));
             when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
             assertThatThrownBy(() -> ticketsService.buyTicket(ticketId, userId))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("past departure");
 
-            verify(ticketRepository, never()).save(any());
+            verify(ticketSpringDataRepository, never()).save(any());
         }
 
         @Test
         @DisplayName("should throw when ticket not found")
         void shouldThrowWhenNotFound() {
             when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.empty());
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> ticketsService.buyTicket(ticketId, userId))
                     .isInstanceOf(EntityNotFoundException.class);
@@ -410,9 +410,9 @@ class TicketsServiceTest {
         @DisplayName("should return ticket successfully")
         void shouldReturnTicketSuccessfully() {
             when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-            when(ticketRepository.save(any(TicketEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(ticketMapper.toResponse(any(TicketEntity.class))).thenReturn(expectedResponse);
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+            when(ticketSpringDataRepository.save(any(TicketJpaEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(ticketMapper.toResponse(any(TicketJpaEntity.class))).thenReturn(expectedResponse);
 
             CreateTicketResponse actual = ticketsService.returnTicket(ticketId, userId);
 
@@ -427,7 +427,7 @@ class TicketsServiceTest {
         void shouldThrowWhenNotPurchased() {
             ticket.setPurchased(false);
             when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
             assertThatThrownBy(() -> ticketsService.returnTicket(ticketId, userId))
                     .isInstanceOf(IllegalStateException.class)
@@ -439,7 +439,7 @@ class TicketsServiceTest {
         void shouldThrowWhenDepartureInPast() {
             route.setDepartureAt(LocalDateTime.now().minusDays(1));
             when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
             assertThatThrownBy(() -> ticketsService.returnTicket(ticketId, userId))
                     .isInstanceOf(IllegalStateException.class)
@@ -453,7 +453,7 @@ class TicketsServiceTest {
             otherUser.setId(UUID.randomUUID());
             ticket.setUser(otherUser);
             when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
             assertThatThrownBy(() -> ticketsService.returnTicket(ticketId, userId))
                     .isInstanceOf(IllegalStateException.class)
@@ -476,9 +476,9 @@ class TicketsServiceTest {
             request.setPrice(BigDecimal.valueOf(150));
 
             when(routesService.findOneById(routeId)).thenReturn(route);
-            when(ticketRepository.findSeatNumbersByRouteId(routeId)).thenReturn(Set.of(1, 2));
-            when(ticketRepository.saveAll(anyList())).thenAnswer(inv -> {
-                List<TicketEntity> arg = inv.getArgument(0);
+            when(ticketSpringDataRepository.findSeatNumbersByRouteId(routeId)).thenReturn(Set.of(1, 2));
+            when(ticketSpringDataRepository.saveAll(anyList())).thenAnswer(inv -> {
+                List<TicketJpaEntity> arg = inv.getArgument(0);
                 arg.forEach(t -> t.setId(UUID.randomUUID()));
                 return arg;
             });
@@ -490,10 +490,10 @@ class TicketsServiceTest {
             assertThat(response.getRouteId()).isEqualTo(routeId);
             assertThat(response.getTicketsIds()).hasSize(3);
 
-            ArgumentCaptor<List<TicketEntity>> captor = ArgumentCaptor.forClass(List.class);
-            verify(ticketRepository).saveAll(captor.capture());
+            ArgumentCaptor<List<TicketJpaEntity>> captor = ArgumentCaptor.forClass(List.class);
+            verify(ticketSpringDataRepository).saveAll(captor.capture());
             assertThat(captor.getValue())
-                    .extracting(TicketEntity::getSeatNumber)
+                    .extracting(TicketJpaEntity::getSeatNumber)
                     .containsExactlyInAnyOrder(3, 4, 5);
         }
 
@@ -513,7 +513,7 @@ class TicketsServiceTest {
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("в прошлом");
 
-            verify(ticketRepository, never()).saveAll(any());
+            verify(ticketSpringDataRepository, never()).saveAll(any());
         }
 
         @Test
@@ -525,13 +525,13 @@ class TicketsServiceTest {
             request.setPrice(BigDecimal.valueOf(150));
 
             when(routesService.findOneById(routeId)).thenReturn(route);
-            when(ticketRepository.findSeatNumbersByRouteId(routeId)).thenReturn(Set.of(1, 2, 3));
+            when(ticketSpringDataRepository.findSeatNumbersByRouteId(routeId)).thenReturn(Set.of(1, 2, 3));
 
             assertThatThrownBy(() -> ticketsService.releaseTicketsBatch(request))
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Нет свободных мест");
 
-            verify(ticketRepository, never()).saveAll(any());
+            verify(ticketSpringDataRepository, never()).saveAll(any());
         }
     }
 
@@ -543,14 +543,14 @@ class TicketsServiceTest {
         @DisplayName("should return mapped available tickets")
         void shouldReturnMappedAvailableTickets() {
             when(routesService.findOneById(routeId)).thenReturn(route);
-            when(ticketRepository.findAvailableByRouteId(routeId)).thenReturn(List.of(ticket));
+            when(ticketSpringDataRepository.findAvailableByRouteId(routeId)).thenReturn(List.of(ticket));
             when(ticketMapper.toResponse(ticket)).thenReturn(expectedResponse);
 
             List<CreateTicketResponse> actual = ticketsService.findAvailableByRoute(routeId);
 
             assertThat(actual).containsExactly(expectedResponse);
             verify(routesService).findOneById(routeId);
-            verify(ticketRepository).findAvailableByRouteId(routeId);
+            verify(ticketSpringDataRepository).findAvailableByRouteId(routeId);
         }
 
         @Test
@@ -562,7 +562,7 @@ class TicketsServiceTest {
             assertThatThrownBy(() -> ticketsService.findAvailableByRoute(routeId))
                     .isInstanceOf(EntityNotFoundException.class);
 
-            verifyNoInteractions(ticketRepository, ticketMapper);
+            verifyNoInteractions(ticketSpringDataRepository, ticketMapper);
         }
     }
 
@@ -575,19 +575,19 @@ class TicketsServiceTest {
         @Test
         @DisplayName("should return TicketEntity when ticket exists")
         void shouldReturnEntityWhenFound() {
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
 
-            TicketEntity actual = ticketsService.findById(ticketId);
+            TicketJpaEntity actual = ticketsService.findById(ticketId);
 
             assertThat(actual).isSameAs(ticket);
             assertThat(actual.getId()).isEqualTo(ticketId);
-            verify(ticketRepository).findById(ticketId);
+            verify(ticketSpringDataRepository).findById(ticketId);
         }
 
         @Test
         @DisplayName("should throw EntityNotFoundException when ticket not found")
         void shouldThrowWhenNotFound() {
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.empty());
+            when(ticketSpringDataRepository.findById(ticketId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> ticketsService.findById(ticketId))
                     .isInstanceOf(EntityNotFoundException.class)
@@ -595,7 +595,7 @@ class TicketsServiceTest {
                     .hasMessageContaining(ticketId.toString())
                     .hasMessageContaining("not found");
 
-            verify(ticketRepository).findById(ticketId);
+            verify(ticketSpringDataRepository).findById(ticketId);
         }
     }
 }
