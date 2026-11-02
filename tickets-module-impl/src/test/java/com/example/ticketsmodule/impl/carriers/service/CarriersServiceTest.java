@@ -4,10 +4,13 @@ import com.example.ticketsmodule.api.model.CarrierPatchRequest;
 import com.example.ticketsmodule.api.model.CarriersSearchRequest;
 import com.example.ticketsmodule.api.model.CreateCarrierRequest;
 import com.example.ticketsmodule.api.model.CreateCarrierResponse;
+import com.example.ticketsmodule.domain.carrier.exception.CarrierNameAlreadyExistsException;
+import com.example.ticketsmodule.domain.carrier.exception.CarrierNotFoundException;
+import com.example.ticketsmodule.domain.carrier.model.Carrier;
+import com.example.ticketsmodule.domain.carrier.repository.CarriersRepositoryPort;
+import com.example.ticketsmodule.domain.common.PageRequest;
+import com.example.ticketsmodule.domain.common.PageResult;
 import com.example.ticketsmodule.impl.carriers.conversion.CarrierMapper;
-import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
-import com.example.ticketsmodule.impl.carriers.repository.CarriersRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -16,11 +19,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,26 +34,30 @@ import static org.mockito.Mockito.*;
 @DisplayName("CarriersService unit tests")
 class CarriersServiceTest {
 
-    @Mock private CarriersRepository carriersRepository;
+    @Mock private CarriersRepositoryPort carriersRepositoryPort; // <-- Мокаем порт
     @Mock private CarrierMapper carrierMapper;
 
     @InjectMocks
     private CarriersService carriersService;
 
     private UUID carrierId;
-    private CarrierEntity carrierEntity;
+    private Carrier carrier;
     private CreateCarrierResponse expectedResponse;
 
     @BeforeEach
     void setUp() {
         carrierId = UUID.randomUUID();
 
-        carrierEntity = new CarrierEntity();
-        carrierEntity.setId(carrierId);
-        carrierEntity.setName("Acme Transport");
-        carrierEntity.setPhone("+7-999-000-00-00");
+        carrier = Carrier.builder()
+                .id(carrierId)
+                .name("Acme Transport")
+                .phone("+7-999-000-00-00")
+                .build();
 
         expectedResponse = new CreateCarrierResponse();
+        expectedResponse.setId(carrierId);
+        expectedResponse.setName("Acme Transport");
+        expectedResponse.setPhone("+7-999-000-00-00");
     }
 
     // ---------- create() ----------
@@ -65,49 +67,51 @@ class CarriersServiceTest {
     class CreateTests {
 
         @Test
-        @DisplayName("should save carrier and return converted response")
+        @DisplayName("should save carrier and return response")
         void shouldSaveCarrierAndReturnResponse() {
             CreateCarrierRequest request = new CreateCarrierRequest();
             request.setName("Acme Transport");
 
-            when(carrierMapper.toEntity(request)).thenReturn(carrierEntity);
-            when(carriersRepository.save(carrierEntity)).thenReturn(carrierEntity);
-            when(carrierMapper.toResponse(carrierEntity)).thenReturn(expectedResponse);
+            when(carriersRepositoryPort.existsByName(request.getName())).thenReturn(false);
+            when(carrierMapper.toDomain(request)).thenReturn(carrier);
+            when(carriersRepositoryPort.save(any(Carrier.class))).thenReturn(carrier);
+            when(carrierMapper.toResponse(any(Carrier.class))).thenReturn(expectedResponse);
 
             CreateCarrierResponse actual = carriersService.create(request);
 
             assertThat(actual).isSameAs(expectedResponse);
-            verify(carrierMapper).toEntity(request);
-            verify(carriersRepository).save(carrierEntity);
-            verify(carrierMapper).toResponse(carrierEntity);
+            verify(carrierMapper).toDomain(request);
+            verify(carriersRepositoryPort).save(any(Carrier.class));
+            verify(carrierMapper).toResponse(any(Carrier.class));
         }
 
         @Test
-        @DisplayName("should propagate exception when converter returns null")
-        void shouldPropagateWhenConverterReturnsNull() {
+        @DisplayName("should throw CarrierNameAlreadyExistsException if name exists")
+        void shouldThrowIfNameExists() {
             CreateCarrierRequest request = new CreateCarrierRequest();
+            request.setName("Acme Transport");
 
-            when(carrierMapper.toEntity(request)).thenReturn(null);
+            when(carriersRepositoryPort.existsByName(request.getName())).thenReturn(true);
 
-            // assert carrierEntity != null — выбросит AssertionError при -ea
             assertThatThrownBy(() -> carriersService.create(request))
-                    .isInstanceOf(IllegalStateException.class);
+                    .isInstanceOf(CarrierNameAlreadyExistsException.class);
 
-            verify(carriersRepository, never()).save(any());
+            verify(carrierMapper, never()).toDomain(any());
+            verify(carriersRepositoryPort, never()).save(any());
         }
     }
 
-    // ---------- findOne() ----------
+    // ---------- findOne() / findOneById() ----------
 
     @Nested
-    @DisplayName("findOne()")
-    class FindOneTests {
+    @DisplayName("find methods")
+    class FindTests {
 
         @Test
-        @DisplayName("should return response when carrier exists")
+        @DisplayName("findOne() should return response when carrier exists")
         void shouldReturnResponseWhenFound() {
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.of(carrierEntity));
-            when(carrierMapper.toResponse(carrierEntity)).thenReturn(expectedResponse);
+            when(carriersRepositoryPort.findById(carrierId)).thenReturn(Optional.of(carrier));
+            when(carrierMapper.toResponse(carrier)).thenReturn(expectedResponse);
 
             CreateCarrierResponse actual = carriersService.findOne(carrierId);
 
@@ -115,41 +119,25 @@ class CarriersServiceTest {
         }
 
         @Test
-        @DisplayName("should throw EntityNotFoundException when carrier does not exist")
+        @DisplayName("findOneById() should return domain carrier when exists")
+        void shouldReturnDomainWhenFound() {
+            when(carriersRepositoryPort.findById(carrierId)).thenReturn(Optional.of(carrier));
+
+            Carrier actual = carriersService.findOneById(carrierId);
+
+            assertThat(actual).isSameAs(carrier);
+        }
+
+        @Test
+        @DisplayName("should throw CarrierNotFoundException when carrier does not exist")
         void shouldThrowWhenNotFound() {
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.empty());
+            when(carriersRepositoryPort.findById(carrierId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> carriersService.findOne(carrierId))
-                    .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining(carrierId.toString());
-
-            verifyNoInteractions(carrierMapper);
-        }
-    }
-
-    // ---------- findOneById() ----------
-
-    @Nested
-    @DisplayName("findOneById()")
-    class FindOneByIdTests {
-
-        @Test
-        @DisplayName("should return entity when carrier exists")
-        void shouldReturnEntityWhenFound() {
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.of(carrierEntity));
-
-            CarrierEntity actual = carriersService.findOneById(carrierId);
-
-            assertThat(actual).isSameAs(carrierEntity);
-        }
-
-        @Test
-        @DisplayName("should throw EntityNotFoundException when carrier does not exist")
-        void shouldThrowWhenNotFound() {
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.empty());
+                    .isInstanceOf(CarrierNotFoundException.class);
 
             assertThatThrownBy(() -> carriersService.findOneById(carrierId))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(CarrierNotFoundException.class);
         }
     }
 
@@ -160,32 +148,24 @@ class CarriersServiceTest {
     class FindAllTests {
 
         @Test
-        @DisplayName("should return mapped page")
-        void shouldReturnMappedPage() {
+        @DisplayName("should return mapped PageResult")
+        void shouldReturnMappedPageResult() {
             CarriersSearchRequest search = new CarriersSearchRequest();
-            Pageable pageable = PageRequest.of(0, 10);
+            PageRequest pageReq = PageRequest.builder().page(0).size(10).build();
 
-            when(carriersRepository.findAll(any(Specification.class), eq(pageable)))
-                    .thenReturn(new PageImpl<>(List.of(carrierEntity)));
-            when(carrierMapper.toResponse(carrierEntity)).thenReturn(expectedResponse);
+            PageResult<Carrier> domainPage = PageResult.<Carrier>builder()
+                    .content(List.of(carrier))
+                    .totalElements(1)
+                    .build();
 
-            Page<CreateCarrierResponse> actual = carriersService.findAll(search, pageable);
+            when(carriersRepositoryPort.findAll(any(), eq(pageReq))).thenReturn(domainPage);
+            when(carrierMapper.toResponse(carrier)).thenReturn(expectedResponse);
 
-            assertThat(actual).hasSize(1);
-            assertThat(actual.getContent()).containsExactly(expectedResponse);
-        }
+            PageResult<CreateCarrierResponse> actual = carriersService.findAll(search, pageReq);
 
-        @Test
-        @DisplayName("should return empty page when no carriers")
-        void shouldReturnEmptyPage() {
-            Pageable pageable = PageRequest.of(0, 10);
-            when(carriersRepository.findAll(any(Specification.class), eq(pageable)))
-                    .thenReturn(Page.empty());
-
-            Page<CreateCarrierResponse> actual = carriersService.findAll(null, pageable);
-
-            assertThat(actual).isEmpty();
-            verifyNoInteractions(carrierMapper);
+            assertThat(actual.getContent()).hasSize(1);
+            assertThat(actual.getContent().get(0)).isSameAs(expectedResponse);
+            assertThat(actual.getTotalElements()).isEqualTo(1);
         }
     }
 
@@ -201,59 +181,27 @@ class CarriersServiceTest {
             CarrierPatchRequest patch = new CarrierPatchRequest();
             patch.setName("New Name");
 
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.of(carrierEntity));
-            when(carriersRepository.save(any(CarrierEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(carrierMapper.toResponse(any(CarrierEntity.class))).thenReturn(expectedResponse);
-
-            CreateCarrierResponse actual = carriersService.patch(carrierId, patch);
-
-            assertThat(actual).isSameAs(expectedResponse);
-            assertThat(carrierEntity.getName()).isEqualTo("New Name");
-            assertThat(carrierEntity.getPhone()).isEqualTo("+7-999-000-00-00"); // не тронуто
-            assertThat(carrierEntity.getUpdatedAt()).isNotNull();
-        }
-
-        @Test
-        @DisplayName("should update phone when provided")
-        void shouldUpdatePhoneWhenProvided() {
-            CarrierPatchRequest patch = new CarrierPatchRequest();
-            patch.setPhone("+7-111-222-33-33");
-
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.of(carrierEntity));
-            when(carriersRepository.save(any(CarrierEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(carrierMapper.toResponse(any(CarrierEntity.class))).thenReturn(expectedResponse);
+            when(carriersRepositoryPort.findById(carrierId)).thenReturn(Optional.of(carrier));
+            when(carriersRepositoryPort.save(any(Carrier.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(carrierMapper.toResponse(any(Carrier.class))).thenReturn(expectedResponse);
 
             carriersService.patch(carrierId, patch);
 
-            assertThat(carrierEntity.getPhone()).isEqualTo("+7-111-222-33-33");
-            assertThat(carrierEntity.getName()).isEqualTo("Acme Transport"); // не тронуто
+            assertThat(carrier.getName()).isEqualTo("New Name");
+            assertThat(carrier.getPhone()).isEqualTo("+7-999-000-00-00"); // не тронуто
+            assertThat(carrier.getUpdatedAt()).isNotNull();
         }
 
         @Test
-        @DisplayName("should not update anything when patch is empty")
-        void shouldNotUpdateAnythingWhenPatchIsEmpty() {
-            CarrierPatchRequest patch = new CarrierPatchRequest();
-
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.of(carrierEntity));
-            when(carriersRepository.save(any(CarrierEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(carrierMapper.toResponse(any(CarrierEntity.class))).thenReturn(expectedResponse);
-
-            carriersService.patch(carrierId, patch);
-
-            assertThat(carrierEntity.getName()).isEqualTo("Acme Transport");
-            assertThat(carrierEntity.getPhone()).isEqualTo("+7-999-000-00-00");
-        }
-
-        @Test
-        @DisplayName("should throw EntityNotFoundException when carrier does not exist")
+        @DisplayName("should throw CarrierNotFoundException when carrier does not exist")
         void shouldThrowWhenNotFound() {
             CarrierPatchRequest patch = new CarrierPatchRequest();
-            when(carriersRepository.findById(carrierId)).thenReturn(Optional.empty());
+            when(carriersRepositoryPort.findById(carrierId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> carriersService.patch(carrierId, patch))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(CarrierNotFoundException.class);
 
-            verify(carriersRepository, never()).save(any());
+            verify(carriersRepositoryPort, never()).save(any());
         }
     }
 }

@@ -1,6 +1,12 @@
 package com.example.ticketsmodule.exceptions;
 
-import com.example.ticketsmodule.impl.carriers.exception.CarrierNameAlreadyExistsException;
+import com.example.ticketsmodule.api.model.ErrorResponse;
+import com.example.ticketsmodule.domain.carrier.exception.CarrierNameAlreadyExistsException;
+import com.example.ticketsmodule.domain.carrier.exception.CarrierNotFoundException;
+import com.example.ticketsmodule.domain.route.exception.RouteNotFoundException;
+import com.example.ticketsmodule.domain.ticket.exception.TicketAlreadyPurchasedException;
+import com.example.ticketsmodule.domain.ticket.exception.TicketNotFoundException;
+import com.example.ticketsmodule.domain.user.exception.UserNotFoundException;
 import com.example.ticketsmodule.impl.common.web.rest.exceptions.ApiException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,7 +16,6 @@ import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -30,7 +35,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
-import com.example.ticketsmodule.api.model.ErrorResponse;
 
 @Slf4j
 @RestControllerAdvice(annotations = RestController.class)
@@ -45,32 +49,41 @@ public class ApiExceptionHandler {
         return response;
     }
 
-    @ExceptionHandler(Exception.class)
-    @ResponseBody
-    public ErrorResponse handleMethodArgumentNotValidException(
-            HttpServletRequest request, HttpServletResponse response, Exception exception) {
-        log.error(exception.getMessage(), exception);
-
-        request.setAttribute("exception", exception);
-        response.setStatus(getStatus(exception).value());
-
-        ErrorResponse responseDto = new ErrorResponse();
-        responseDto.setMessage(exception.getMessage());
-        if (exception instanceof ApiException) {
-            responseDto.setUserMessage(((ApiException) exception).getUserMessage());
-        }
-        return responseDto;
-    }
-
-    @ExceptionHandler(EntityNotFoundException.class)
+    @ExceptionHandler({
+            EntityNotFoundException.class,
+            CarrierNotFoundException.class,
+            RouteNotFoundException.class,
+            TicketNotFoundException.class,
+            UserNotFoundException.class
+    })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
-    public ErrorResponse handleEntityNotFound(EntityNotFoundException ex) {
+    public ErrorResponse handleNotFound(Exception ex) {
         log.error(ex.getMessage(), ex);
         ErrorResponse response = new ErrorResponse();
         response.setMessage(ex.getMessage());
         response.setUserMessage("Ресурс не найден");
         return response;
+    }
+
+    @ExceptionHandler(TicketAlreadyPurchasedException.class)
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    @ResponseBody
+    public ErrorResponse handleTicketAlreadyPurchased(TicketAlreadyPurchasedException ex) {
+        ErrorResponse body = new ErrorResponse();
+        body.setMessage(ex.getMessage());
+        body.setUserMessage("Билет уже куплен");
+        return body;
+    }
+
+    @ExceptionHandler(CarrierNameAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ErrorResponse handleDuplicateCarrier(CarrierNameAlreadyExistsException ex) {
+        ErrorResponse body = new ErrorResponse();
+        body.setMessage(ex.getMessage());
+        body.setUserMessage("Перевозчик с таким названием уже существует");
+        return body;
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -84,17 +97,24 @@ public class ApiExceptionHandler {
         return response;
     }
 
-    @ExceptionHandler(CarrierNameAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateCarrier(
-            CarrierNameAlreadyExistsException ex) {
-        ErrorResponse body = new ErrorResponse();
-        body.setMessage(ex.getMessage());
-        body.setUserMessage("Перевозчик с таким названием уже существует");
-        return ResponseEntity.badRequest().body(body);
+    @ExceptionHandler(Exception.class)
+    @ResponseBody
+    public ErrorResponse handleMethodArgumentNotValidException(
+            HttpServletRequest request, HttpServletResponse response, Exception exception) {
+        log.error(exception.getMessage(), exception);
+
+        request.setAttribute("exception", exception);
+        response.setStatus(getStatus(exception).value());
+
+        ErrorResponse responseDto = new ErrorResponse();
+        responseDto.setMessage(exception.getMessage());
+        if (exception instanceof ApiException apiEx) {
+            responseDto.setUserMessage(apiEx.getUserMessage());
+        }
+        return responseDto;
     }
 
     private HttpStatus getStatus(Exception exception) {
-
         if (exception instanceof ApiException) {
             return HttpStatus.UNPROCESSABLE_ENTITY;
         }

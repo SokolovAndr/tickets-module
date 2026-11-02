@@ -63,17 +63,21 @@
 |--------|-----------|
 | `tickets-module-app` | Точка входа, конфигурация, интеграционные тесты |
 | `tickets-module-web` | Web-слой: HTML-формы, Spring MVC-контроллеры |
-| `tickets-module-impl` | Реализация бизнес-логики, UNIT тесты |
+| `tickets-module-impl` | Реализация: Сервисы (Use Cases), JPA-адаптеры, UNIT тесты |
+| `tickets-module-domain` | Чистые доменные модели, интерфейсы (Порты) и бизнес-исключения. Не зависит от Spring и JPA. |
 | `tickets-module-api` | Контракты REST API: DTO и интерфейсы контроллеров (генерируются из OpenAPI) |
 | `tickets-module-db` | Только Liquibase-миграции (XML). Java-кода нет |
 
 ### Зависимости между модулями
+
 ```mermaid
 graph TD
     APP[tickets-module-app] --> WEB[tickets-module-web]
     APP --> DB[tickets-module-db]
     WEB --> IMPL[tickets-module-impl]
+    WEB --> DOMAIN[tickets-module-domain]
     IMPL --> API[tickets-module-api]
+    IMPL --> DOMAIN[tickets-module-domain]
 ```
 
 ## 🛠 Технологии
@@ -92,7 +96,7 @@ graph TD
 | 📦 Testcontainers              | Подъём PostgreSQL для интеграционных тестов |
 | 📄 OpenAPI Generator           | Генерация DTO и интерфейсов контроллеров    |
 | 🏗 Dockerfile                  | Сборка образа для деплоя на Railway         |
-| 🔄 MapStruct 1.5.5             | Генерация мапперов Entity ↔ DTO             |
+| 🔄 MapStruct 1.5.5             | Генерация мапперов Domain ↔ DTO и JPA Entity ↔ Domain |
 | 🔴 Redis 7                    | Кэш купленных билетов пользователя          |
 
 
@@ -284,6 +288,7 @@ SonarCloud использует агрегированный отчёт чере
 - [0003 — Две цепочки Security: session + JWT](docs/adr/0003-jwt-and-sessions.md)
 - [0004 — Redis для кэша купленных билетов](docs/adr/0004-caching-strategy.md)
 - [0005 — Отклонение от правила web → impl](docs/adr/0005-web-impl-coupling.md)
+- [0006 — Выделение чистого домена (Hexagonal Architecture)](docs/adr/0006-hexagonal-architecture.md)
 
 ## 👤 Автор
 

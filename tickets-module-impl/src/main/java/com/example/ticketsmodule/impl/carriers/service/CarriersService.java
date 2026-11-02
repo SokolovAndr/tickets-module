@@ -1,28 +1,26 @@
 package com.example.ticketsmodule.impl.carriers.service;
 
+import com.example.ticketsmodule.domain.carrier.exception.CarrierNameAlreadyExistsException;
+import com.example.ticketsmodule.domain.carrier.exception.CarrierNotFoundException;
+import com.example.ticketsmodule.domain.carrier.model.Carrier;
+import com.example.ticketsmodule.domain.carrier.model.CarrierFilter;
+import com.example.ticketsmodule.domain.carrier.repository.CarriersRepositoryPort;
+import com.example.ticketsmodule.domain.common.PageRequest;
+import com.example.ticketsmodule.domain.common.PageResult;
 import com.example.ticketsmodule.impl.carriers.conversion.CarrierMapper;
-import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
-import com.example.ticketsmodule.impl.carriers.exception.CarrierNameAlreadyExistsException;
-import com.example.ticketsmodule.impl.carriers.repository.CarriersRepository;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.criteria.Predicate;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import com.example.ticketsmodule.api.model.CarrierPatchRequest;
 import com.example.ticketsmodule.api.model.CarriersSearchRequest;
 import com.example.ticketsmodule.api.model.CreateCarrierRequest;
 import com.example.ticketsmodule.api.model.CreateCarrierResponse;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,95 +33,78 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CarriersService {
 
-    private final CarriersRepository carriersRepository;
+    private final CarriersRepositoryPort carriersRepositoryPort;
     private final CarrierMapper carrierMapper;
 
     @Transactional
     public CreateCarrierResponse create(CreateCarrierRequest createCarrierRequest) {
-        if (carriersRepository.existsByName(createCarrierRequest.getName())) {
+        if (carriersRepositoryPort.existsByName(createCarrierRequest.getName())) {
             throw new CarrierNameAlreadyExistsException(createCarrierRequest.getName());
         }
-        final CarrierEntity carrierEntity = carrierMapper.toEntity(createCarrierRequest);
-        if (carrierEntity == null) {
+        final Carrier carrier = carrierMapper.toDomain(createCarrierRequest);
+        if (carrier == null) {
             throw new IllegalStateException("Failed to convert carrier entity");
         }
-        carrierEntity.setCreatedAt(LocalDateTime.now());
-        carrierEntity.setUpdatedAt(LocalDateTime.now());
-        CarrierEntity response = carriersRepository.save(carrierEntity);
-        return carrierMapper.toResponse(response);
+        carrier.setCreatedAt(LocalDateTime.now());
+        carrier.setUpdatedAt(LocalDateTime.now());
+        return carrierMapper.toResponse(carriersRepositoryPort.save(carrier));
     }
 
     @Transactional(readOnly = true)
     public CreateCarrierResponse findOne(UUID id) {
-        CarrierEntity response = carriersRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Carrier with id " + id + " not found"));
-        return carrierMapper.toResponse(response);
+        Carrier carrier = carriersRepositoryPort.findById(id).orElseThrow(() -> new CarrierNotFoundException(id));
+        return carrierMapper.toResponse(carrier);
     }
 
     @Transactional(readOnly = true)
-    public CarrierEntity findOneById(UUID id) {
-        return carriersRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Carrier with id " + id + " not found"));
+    public Carrier findOneById(UUID id) {
+        return carriersRepositoryPort.findById(id).orElseThrow(() ->new CarrierNotFoundException(id));
     }
 
     @Transactional(readOnly = true)
-    public Page<CreateCarrierResponse> findAll(CarriersSearchRequest searchParam, Pageable pageable) {
-        Specification<CarrierEntity> spec = buildSpecification(searchParam);
-        return carriersRepository.findAll(spec, pageable).map(carrierMapper::toResponse);
+    public PageResult<CreateCarrierResponse> findAll(CarriersSearchRequest req, PageRequest page) {
+        CarrierFilter filter = toFilter(req);
+        PageResult<Carrier> result = carriersRepositoryPort.findAll(filter, page);
+
+        List<CreateCarrierResponse> dtos = result.getContent().stream()
+                .map(carrierMapper::toResponse)
+                .toList();
+
+        return PageResult.<CreateCarrierResponse>builder()
+                .content(dtos)
+                .totalElements(result.getTotalElements())
+                .totalPages(result.getTotalPages())
+                .pageNumber(result.getPageNumber())
+                .pageSize(result.getPageSize())
+                .build();
     }
 
-    private Specification<CarrierEntity> buildSpecification(CarriersSearchRequest searchParam) {
-        return (root, query, cb) -> {
-            final List<Predicate> predicates = new ArrayList<>();
-
-            query.orderBy(cb.desc(root.get("createdAt")));
-
-            if (searchParam != null) {
-
-                if (StringUtils.hasText(searchParam.getQuery())) {
-                    var pattern = "%" + searchParam.getQuery().toLowerCase() + "%";
-                    predicates.add(cb.or(
-                            cb.like(cb.lower(root.get("name")), pattern),
-                            cb.like(cb.lower(root.get("phone")), pattern)
-                    ));
-                }
-
-                if (StringUtils.hasText(searchParam.getName())) {
-                    var pattern = "%" + searchParam.getName().toLowerCase() + "%";
-                    predicates.add(cb.like(cb.lower(root.get("name")), pattern));
-                }
-
-                if (StringUtils.hasText(searchParam.getPhone())) {
-                    var pattern = "%" + searchParam.getPhone().toLowerCase() + "%";
-                    predicates.add(cb.like(cb.lower(root.get("phone")), pattern));
-                }
-
-
-                if (searchParam.getCreateDateFrom() != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), searchParam.getCreateDateFrom()));
-                }
-
-                if (searchParam.getCreateDateTo() != null) {
-                    predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), searchParam.getCreateDateTo()));
-                }
-            }
-
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
-    }
-
+    @Transactional
     public CreateCarrierResponse patch(@NotNull UUID id, @Valid CarrierPatchRequest carrierPatchRequest) {
 
-        var result = carriersRepository.findById(id).map(entity -> {
+        var result = carriersRepositoryPort.findById(id).map(carrier -> {
             if (carrierPatchRequest.getName() != null) {
-                entity.setName(carrierPatchRequest.getName());
+                carrier.setName(carrierPatchRequest.getName());
             }
             if (carrierPatchRequest.getPhone() != null) {
-                entity.setPhone(carrierPatchRequest.getPhone());
+                carrier.setPhone(carrierPatchRequest.getPhone());
             }
-            entity.setUpdatedAt(LocalDateTime.now());
+            carrier.setUpdatedAt(LocalDateTime.now());
 
-            return carriersRepository.save(entity);
-        }).orElseThrow(() -> new EntityNotFoundException(String.format("Carrier with id %s not found", id)));
+            return carriersRepositoryPort.save(carrier);
+        }).orElseThrow(() -> new CarrierNotFoundException(id));
 
         return carrierMapper.toResponse(result);
+    }
+
+    private CarrierFilter toFilter(CarriersSearchRequest req) {
+        if (req == null) return CarrierFilter.builder().build();
+        return CarrierFilter.builder()
+                .query(req.getQuery())
+                .name(req.getName())
+                .phone(req.getPhone())
+                .createDateFrom(req.getCreateDateFrom() != null ? req.getCreateDateFrom().atStartOfDay() : null)
+                .createDateTo(req.getCreateDateTo() != null ? req.getCreateDateTo().atTime(23, 59, 59) : null)
+                .build();
     }
 }

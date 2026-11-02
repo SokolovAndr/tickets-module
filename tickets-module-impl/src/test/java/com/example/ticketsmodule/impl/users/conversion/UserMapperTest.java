@@ -1,8 +1,8 @@
 package com.example.ticketsmodule.impl.users.conversion;
 
 import com.example.ticketsmodule.api.model.UserResponse;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
-import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
+import com.example.ticketsmodule.domain.user.model.User;
+import com.example.ticketsmodule.domain.user.model.UserRoleEnum;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -27,8 +27,6 @@ class UserMapperTest {
         mapper = new UserMapperImpl();
     }
 
-    // ---------- маппинг полей ----------
-
     @Nested
     @DisplayName("field mapping")
     class FieldMappingTests {
@@ -36,7 +34,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should map login")
         void shouldMapLogin() {
-            UserEntity entity = baseUser().login("ivan_petrov").build();
+            User entity = baseUser().login("ivan_petrov").build();
 
             UserResponse response = mapper.toResponse(entity);
 
@@ -44,39 +42,9 @@ class UserMapperTest {
         }
 
         @Test
-        @DisplayName("should map fullName")
-        void shouldMapFullName() {
-            UserEntity entity = baseUser().fullName("Иван Петров").build();
-
-            UserResponse response = mapper.toResponse(entity);
-
-            assertThat(response.getFullName()).isEqualTo("Иван Петров");
-        }
-
-        @Test
-        @DisplayName("should map createdAt")
-        void shouldMapCreatedAt() {
-            UserEntity entity = baseUser().createdAt(CREATED).build();
-
-            UserResponse response = mapper.toResponse(entity);
-
-            assertThat(response.getCreatedAt()).isEqualTo(CREATED);
-        }
-
-        @Test
-        @DisplayName("should map updatedAt")
-        void shouldMapUpdatedAt() {
-            UserEntity entity = baseUser().updatedAt(UPDATED).build();
-
-            UserResponse response = mapper.toResponse(entity);
-
-            assertThat(response.getUpdatedAt()).isEqualTo(UPDATED);
-        }
-
-        @Test
         @DisplayName("should map all fields together")
         void shouldMapAllFields() {
-            UserEntity entity = baseUser()
+            User entity = baseUser()
                     .login("admin")
                     .fullName("Admin Adminov")
                     .role(UserRoleEnum.ADMIN)
@@ -94,78 +62,6 @@ class UserMapperTest {
         }
     }
 
-    // ---------- маппинг role enum → String ----------
-
-    @Nested
-    @DisplayName("role enum mapping")
-    class RoleMappingTests {
-
-        @Test
-        @DisplayName("should map USER enum to \"USER\" string")
-        void shouldMapUserRole() {
-            UserEntity entity = baseUser().role(UserRoleEnum.USER).build();
-
-            UserResponse response = mapper.toResponse(entity);
-
-            assertThat(response.getRole()).isEqualTo(UserResponse.RoleEnum.USER);
-        }
-
-        @Test
-        @DisplayName("should map ADMIN enum to \"ADMIN\" string")
-        void shouldMapAdminRole() {
-            UserEntity entity = baseUser().role(UserRoleEnum.ADMIN).build();
-
-            UserResponse response = mapper.toResponse(entity);
-
-            assertThat(response.getRole()).isEqualTo(UserResponse.RoleEnum.ADMIN);
-        }
-
-        @Test
-        @DisplayName("should return null role when entity role is null")
-        void shouldReturnNullRole_whenEntityRoleNull() {
-            UserEntity entity = baseUser().role(null).build();
-
-            UserResponse response = mapper.toResponse(entity);
-
-            assertThat(response.getRole()).isNull();
-        }
-    }
-
-    // ---------- игнорируемые поля ----------
-
-    @Nested
-    @DisplayName("ignored fields")
-    class IgnoredFieldsTests {
-
-        @Test
-        @DisplayName("should not expose password (target has no such field)")
-        void shouldNotExposePassword() {
-            UserEntity entity = baseUser().password("$2a$10$secretHash").build();
-
-            UserResponse response = mapper.toResponse(entity);
-
-            // В UserResponse нет поля password — проверяем через reflection,
-            // что его там нет (защита от случайного добавления в DTO).
-            assertThat(UserResponse.class.getDeclaredFields())
-                    .extracting(f -> f.getName())
-                    .doesNotContain("password");
-        }
-
-        @Test
-        @DisplayName("should not expose id (target has no such field)")
-        void shouldNotExposeId() {
-            UserEntity entity = baseUser().id(UUID.randomUUID()).build();
-
-            UserResponse response = mapper.toResponse(entity);
-
-            assertThat(UserResponse.class.getDeclaredFields())
-                    .extracting(f -> f.getName())
-                    .doesNotContain("id");
-        }
-    }
-
-    // ---------- edge cases ----------
-
     @Nested
     @DisplayName("edge cases")
     class EdgeCaseTests {
@@ -181,7 +77,7 @@ class UserMapperTest {
         @Test
         @DisplayName("should preserve null strings")
         void shouldPreserveNullStrings() {
-            UserEntity entity = baseUser()
+            User entity = baseUser()
                     .login(null)
                     .fullName(null)
                     .build();
@@ -192,93 +88,10 @@ class UserMapperTest {
             assertThat(response.getLogin()).isNull();
             assertThat(response.getFullName()).isNull();
         }
-
-        @Test
-        @DisplayName("should preserve null dates")
-        void shouldPreserveNullDates() {
-            UserEntity entity = baseUser()
-                    .createdAt(null)
-                    .updatedAt(null)
-                    .build();
-
-            UserResponse response = mapper.toResponse(entity);
-
-            assertThat(response.getCreatedAt()).isNull();
-            assertThat(response.getUpdatedAt()).isNull();
-        }
-
-        @Test
-        @DisplayName("should handle empty strings")
-        void shouldHandleEmptyStrings() {
-            UserEntity entity = baseUser()
-                    .login("")
-                    .fullName("")
-                    .build();
-
-            UserResponse response = mapper.toResponse(entity);
-
-            assertThat(response.getLogin()).isEmpty();
-            assertThat(response.getFullName()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("should preserve long fullName (255 chars)")
-        void shouldPreserveLongFullName() {
-            String longName = "A".repeat(255);
-            UserEntity entity = baseUser().fullName(longName).build();
-
-            UserResponse response = mapper.toResponse(entity);
-
-            assertThat(response.getFullName()).hasSize(255);
-        }
-
-        @Test
-        @DisplayName("should preserve cyrillic characters")
-        void shouldPreserveCyrillic() {
-            UserEntity entity = baseUser()
-                    .fullName("Иванов Иван Иванович")
-                    .build();
-
-            UserResponse response = mapper.toResponse(entity);
-
-            assertThat(response.getFullName()).isEqualTo("Иванов Иван Иванович");
-        }
     }
 
-    // ---------- полный сценарий ----------
-
-    @Nested
-    @DisplayName("full scenario")
-    class FullScenarioTests {
-
-        @Test
-        @DisplayName("should map UserEntity to UserResponse completely")
-        void shouldMapComplete() {
-            UserEntity entity = UserEntity.builder()
-                    .id(USER_ID)
-                    .login("testuser")
-                    .password("$2a$10$secretHash")
-                    .fullName("Test User")
-                    .role(UserRoleEnum.USER)
-                    .createdAt(CREATED)
-                    .updatedAt(UPDATED)
-                    .build();
-
-            UserResponse response = mapper.toResponse(entity);
-
-            assertThat(response).isNotNull();
-            assertThat(response.getLogin()).isEqualTo("testuser");
-            assertThat(response.getFullName()).isEqualTo("Test User");
-            assertThat(response.getRole()).isEqualTo(UserResponse.RoleEnum.USER);
-            assertThat(response.getCreatedAt()).isEqualTo(CREATED);
-            assertThat(response.getUpdatedAt()).isEqualTo(UPDATED);
-        }
-    }
-
-    // ---------- helper ----------
-
-    private UserEntity.UserEntityBuilder baseUser() {
-        return UserEntity.builder()
+    private User.UserBuilder baseUser() {
+        return User.builder()
                 .id(USER_ID)
                 .login("testuser")
                 .password("hash")

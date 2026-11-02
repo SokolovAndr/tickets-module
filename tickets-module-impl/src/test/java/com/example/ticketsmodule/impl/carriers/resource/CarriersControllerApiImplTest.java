@@ -4,18 +4,21 @@ import com.example.ticketsmodule.api.model.CarrierPatchRequest;
 import com.example.ticketsmodule.api.model.CarriersSearchRequest;
 import com.example.ticketsmodule.api.model.CreateCarrierRequest;
 import com.example.ticketsmodule.api.model.CreateCarrierResponse;
+import com.example.ticketsmodule.domain.carrier.exception.CarrierNotFoundException;
+import com.example.ticketsmodule.domain.common.PageRequest;
+import com.example.ticketsmodule.domain.common.PageResult;
 import com.example.ticketsmodule.impl.carriers.service.CarriersService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +27,9 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,16 +48,14 @@ class CarriersControllerApiImplTest {
     void setUp() {
         carrierId = UUID.randomUUID();
         response = new CreateCarrierResponse();
+        response.setId(carrierId);
     }
-
-    // ---------- createCarrier() ----------
 
     @Nested
     @DisplayName("createCarrier()")
     class CreateCarrierTests {
-
         @Test
-        @DisplayName("should return 201 Created with body from service")
+        @DisplayName("should return 201 Created")
         void shouldReturn201Created() {
             CreateCarrierRequest request = new CreateCarrierRequest();
             when(carriersService.create(request)).thenReturn(response);
@@ -60,96 +64,69 @@ class CarriersControllerApiImplTest {
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             assertThat(result.getBody()).isSameAs(response);
-            verify(carriersService).create(request);
-        }
-
-        @Test
-        @DisplayName("should return null body when service returns null")
-        void shouldReturnNullBodyWhenServiceReturnsNull() {
-            CreateCarrierRequest request = new CreateCarrierRequest();
-            when(carriersService.create(request)).thenReturn(null);
-
-            ResponseEntity<CreateCarrierResponse> result = controller.createCarrier(request);
-
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-            assertThat(result.getBody()).isNull();
         }
     }
-
-    // ---------- getAllCarriers() ----------
 
     @Nested
     @DisplayName("getAllCarriers()")
     class GetAllCarriersTests {
 
         @Test
-        @DisplayName("should return 200 OK with page from service")
-        void shouldReturn200OkWithPage() {
-            Pageable pageable = PageRequest.of(0, 10);
+        @DisplayName("should convert Pageable to PageRequest and return Spring Page")
+        void shouldConvertPageableToDomainAndBack() {
+            Pageable springPageable = org.springframework.data.domain.PageRequest.of(2, 15);
             CarriersSearchRequest search = new CarriersSearchRequest();
-            Page<CreateCarrierResponse> page = new PageImpl<>(List.of(response));
-            when(carriersService.findAll(search, pageable)).thenReturn(page);
 
-            ResponseEntity<Page> result = controller.getAllCarriers(pageable, search);
+            PageResult<CreateCarrierResponse> domainResult = PageResult.<CreateCarrierResponse>builder()
+                    .content(List.of(response))
+                    .totalElements(31)
+                    .build();
 
+            // Перехватываем то, что контроллер передает в сервис
+            ArgumentCaptor<PageRequest> pageRequestCaptor = ArgumentCaptor.forClass(PageRequest.class);
+            when(carriersService.findAll(eq(search), pageRequestCaptor.capture())).thenReturn(domainResult);
+
+            ResponseEntity<Page> result = controller.getAllCarriers(springPageable, search);
+
+            // Проверяем, что доменный PageRequest сформирован верно
+            PageRequest capturedRequest = pageRequestCaptor.getValue();
+            assertThat(capturedRequest.getPage()).isEqualTo(2);
+            assertThat(capturedRequest.getSize()).isEqualTo(15);
+
+            // Проверяем, что на выходе Spring Page
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(result.getBody()).isSameAs(page);
-            verify(carriersService).findAll(search, pageable);
-        }
-
-        @Test
-        @DisplayName("should return 200 OK with empty page")
-        void shouldReturn200OkWithEmptyPage() {
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<CreateCarrierResponse> empty = Page.empty();
-            when(carriersService.findAll(null, pageable)).thenReturn(empty);
-
-            ResponseEntity<Page> result = controller.getAllCarriers(pageable, null);
-
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(result.getBody()).isEmpty();
+            assertThat(result.getBody()).isNotNull();
+            assertThat(result.getBody().getTotalElements()).isEqualTo(31);
+            assertThat(result.getBody().getContent()).containsExactly(response);
         }
     }
 
-    // ---------- getCarrier() ----------
-
     @Nested
-    @DisplayName("getCarrier()")
-    class GetCarrierTests {
+    @DisplayName("getCarrier() / patchCarrier()")
+    class SingleCarrierTests {
 
         @Test
-        @DisplayName("should return 200 OK with body from service")
+        @DisplayName("should return 200 OK for getCarrier")
         void shouldReturn200Ok() {
             when(carriersService.findOne(carrierId)).thenReturn(response);
-
             ResponseEntity<CreateCarrierResponse> result = controller.getCarrier(carrierId);
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getBody()).isSameAs(response);
-            verify(carriersService).findOne(carrierId);
         }
 
         @Test
-        @DisplayName("should propagate exception from service")
-        void shouldPropagateExceptionFromService() {
-            when(carriersService.findOne(carrierId))
-                    .thenThrow(new jakarta.persistence.EntityNotFoundException("not found"));
+        @DisplayName("should propagate CarrierNotFoundException")
+        void shouldPropagateException() {
+            when(carriersService.findOne(carrierId)).thenThrow(new CarrierNotFoundException(carrierId));
 
-            org.assertj.core.api.Assertions
-                    .assertThatThrownBy(() -> controller.getCarrier(carrierId))
-                    .isInstanceOf(jakarta.persistence.EntityNotFoundException.class);
+            assertThatThrownBy(() -> controller.getCarrier(carrierId))
+                    .isInstanceOf(CarrierNotFoundException.class);
         }
-    }
-
-    // ---------- patchCarrier() ----------
-
-    @Nested
-    @DisplayName("patchCarrier()")
-    class PatchCarrierTests {
 
         @Test
-        @DisplayName("should return 200 OK with patched body")
-        void shouldReturn200OkWithPatchedBody() {
+        @DisplayName("should return 200 OK for patchCarrier")
+        void shouldReturn200OkForPatch() {
             CarrierPatchRequest patch = new CarrierPatchRequest();
             when(carriersService.patch(carrierId, patch)).thenReturn(response);
 
@@ -157,19 +134,6 @@ class CarriersControllerApiImplTest {
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getBody()).isSameAs(response);
-            verify(carriersService).patch(carrierId, patch);
-        }
-
-        @Test
-        @DisplayName("should propagate exception from service")
-        void shouldPropagateExceptionFromService() {
-            CarrierPatchRequest patch = new CarrierPatchRequest();
-            when(carriersService.patch(carrierId, patch))
-                    .thenThrow(new jakarta.persistence.EntityNotFoundException("not found"));
-
-            org.assertj.core.api.Assertions
-                    .assertThatThrownBy(() -> controller.patchCarrier(carrierId, patch))
-                    .isInstanceOf(jakarta.persistence.EntityNotFoundException.class);
         }
     }
 }

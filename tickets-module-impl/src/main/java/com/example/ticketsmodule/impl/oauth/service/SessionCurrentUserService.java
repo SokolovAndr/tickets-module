@@ -1,7 +1,7 @@
 package com.example.ticketsmodule.impl.oauth.service;
 
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
-import com.example.ticketsmodule.impl.users.repository.UserRepository;
+import com.example.ticketsmodule.domain.user.model.User;
+import com.example.ticketsmodule.domain.user.repository.UsersRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,10 +18,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SessionCurrentUserService {
 
-    private final UserRepository userRepository;
+    private final UsersRepositoryPort usersRepositoryPort;
 
-    public UserEntity getCurrentUser() {
-        return userRepository.findByLogin(getCurrentLogin())
+    public User getCurrentUser() {
+        return usersRepositoryPort.findByLogin(getCurrentLogin())
                 .orElseThrow(() -> new IllegalStateException("Current user not found"));
     }
 

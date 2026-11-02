@@ -23,6 +23,35 @@ class ArchitectureTest {
                     .because("API-контракты не знают про web-слой");
 
     @ArchTest
+    static final ArchRule api_should_not_depend_on_domain =
+            noClasses().that().resideInAPackage("com.example.ticketsmodule.api..")
+                    .should().dependOnClassesThat().resideInAPackage("com.example.ticketsmodule.domain..")
+                    .because("API-контракты не должны быть связаны с доменными моделями");
+
+    @ArchTest
+    static final ArchRule domain_should_not_depend_on_outer_layers =
+            noClasses().that().resideInAPackage("com.example.ticketsmodule.domain..")
+                    .should().dependOnClassesThat().resideInAnyPackage(
+                            "com.example.ticketsmodule.impl..",
+                            "com.example.ticketsmodule.web..",
+                            "com.example.ticketsmodule.api..",
+                            "com.example.ticketsmodule.app..",
+                            "com.example.ticketsmodule.db.."
+                    )
+                    .because("Домен не должен зависеть от внешних слоев (Инверсия зависимостей)");
+
+    @ArchTest
+    static final ArchRule domain_should_be_clean_of_frameworks =
+            noClasses().that().resideInAPackage("com.example.ticketsmodule.domain..")
+                    .should().dependOnClassesThat().resideInAnyPackage(
+                            "org.springframework..",
+                            "jakarta.persistence..",
+                            "org.hibernate..",
+                            "com.fasterxml.jackson.."
+                    )
+                    .because("Домен должен быть чистым POJO без привязки к Spring, JPA, Hibernate и Jackson");
+
+    @ArchTest
     static final ArchRule impl_should_not_depend_on_web =
             noClasses().that().resideInAPackage("com.example.ticketsmodule.impl..")
                     .should().dependOnClassesThat().resideInAPackage("com.example.ticketsmodule.web..")

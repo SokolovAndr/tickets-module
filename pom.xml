@@ -16,6 +16,7 @@
     <name>tickets-module</name>
 
     <modules>
+        <module>tickets-module-domain</module>
         <module>tickets-module-db</module>
         <module>tickets-module-api</module>
         <module>tickets-module-impl</module>

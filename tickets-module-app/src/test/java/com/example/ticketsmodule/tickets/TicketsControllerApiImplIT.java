@@ -3,11 +3,17 @@ package com.example.ticketsmodule.tickets;
 import com.example.ticketsmodule.api.model.CreateTicketRequest;
 import com.example.ticketsmodule.api.model.ReleaseTicketsBatchRequest;
 import com.example.ticketsmodule.api.model.TicketPatchRequest;
-import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
-import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
-import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
-import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
+import com.example.ticketsmodule.domain.carrier.model.Carrier;
+import com.example.ticketsmodule.domain.carrier.repository.CarriersRepositoryPort;
+import com.example.ticketsmodule.domain.common.PageRequest;
+import com.example.ticketsmodule.domain.route.model.Route;
+import com.example.ticketsmodule.domain.route.repository.RoutesRepositoryPort;
+import com.example.ticketsmodule.domain.ticket.model.Ticket;
+import com.example.ticketsmodule.domain.ticket.model.TicketFilter;
+import com.example.ticketsmodule.domain.ticket.repository.TicketsRepositoryPort;
+import com.example.ticketsmodule.domain.user.model.User;
+import com.example.ticketsmodule.domain.user.model.UserRoleEnum;
+import com.example.ticketsmodule.domain.user.repository.UsersRepositoryPort;
 import com.example.ticketsmodule.support.AbstractIntegrationTest;
 import com.example.ticketsmodule.support.JwtTestHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,10 +22,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
@@ -39,9 +45,13 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private PasswordEncoder passwordEncoder;
+    @Autowired private CarriersRepositoryPort carriersRepositoryPort;
+    @Autowired private RoutesRepositoryPort routesRepositoryPort;
+    @Autowired private TicketsRepositoryPort ticketsRepositoryPort;
+    @Autowired private UsersRepositoryPort usersRepositoryPort;
 
     private UUID routeId;
-    private UserEntity testUser;
+    private User testUser;
 
     @BeforeEach
     void cleanDb() {
@@ -87,7 +97,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("PATCH /api/tickets/{id} with USER role → 403")
         void shouldForbidUserToPatchTicket() throws Exception {
-            TicketEntity saved = createTicketInDb(1, false, null);
+            Ticket saved = createTicketInDb(1, false, null);
 
             TicketPatchRequest patch = new TicketPatchRequest();
             patch.setPrice(new BigDecimal("100"));
@@ -122,7 +132,11 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(jsonPath("$.id").exists())
                     .andExpect(jsonPath("$.createdAt").exists());
 
-            assertThat(ticketRepository.findAll()).hasSize(1);
+            var result = ticketsRepositoryPort.findAll(
+                    TicketFilter.builder().build(),
+                    PageRequest.builder().page(0).size(10).build()
+            );
+            assertThat(result.getContent()).hasSize(1);
         }
 
         @Test
@@ -137,7 +151,11 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
 
-            assertThat(ticketRepository.findAll()).isEmpty();
+            var result = ticketsRepositoryPort.findAll(
+                    TicketFilter.builder().build(),
+                    PageRequest.builder().page(0).size(10).build()
+            );
+            assertThat(result.getContent()).isEmpty();
         }
 
         @Test
@@ -163,7 +181,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should return 200 with ticket")
         void shouldReturnTicket() throws Exception {
-            TicketEntity saved = createTicketInDb(1, false, null);
+            Ticket saved = createTicketInDb(1, false, null);
 
             mockMvc.perform(get("/api/tickets/{id}", saved.getId())
                             .with(JwtTestHelper.withRole("USER")))
@@ -238,9 +256,10 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should filter by price range")
         void shouldFilterByPriceRange() throws Exception {
-            TicketEntity saved = createTicketInDb(1, false, null);
+            Ticket saved = createTicketInDb(1, false, null);
             saved.setPrice(new BigDecimal("300.00"));
-            ticketRepository.save(saved);
+            ticketsRepositoryPort.save(saved);
+
             createTicketInDb(2, false, null); // цена 150.00
 
             mockMvc.perform(get("/api/tickets")
@@ -263,7 +282,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should return only tickets of current user")
         void shouldReturnOnlyCurrentUserTickets() throws Exception {
-            UserEntity otherUser = createUserInDb("otheruser");
+            User otherUser = createUserInDb("otheruser");
 
             createTicketInDb(1, true, testUser);    // мой
             createTicketInDb(2, true, otherUser);   // чужой
@@ -278,7 +297,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should return empty list when current user has no tickets")
         void shouldReturnEmptyWhenNoTickets() throws Exception {
-            UserEntity otherUser = createUserInDb("otheruser");
+            User otherUser = createUserInDb("otheruser");
             createTicketInDb(1, true, otherUser);
 
             mockMvc.perform(get("/api/tickets/my")
@@ -304,7 +323,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should patch price and return 200")
         void shouldPatchPrice() throws Exception {
-            TicketEntity saved = createTicketInDb(1, false, null);
+            Ticket saved = createTicketInDb(1, false, null);
 
             TicketPatchRequest patch = new TicketPatchRequest();
             patch.setPrice(new BigDecimal("999.99"));
@@ -316,7 +335,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.price").value(999.99));
 
-            TicketEntity updated = ticketRepository.findById(saved.getId()).orElseThrow();
+            Ticket updated = ticketsRepositoryPort.findById(saved.getId()).orElseThrow();
             assertThat(updated.getPrice()).isEqualByComparingTo("999.99");
         }
 
@@ -343,7 +362,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should buy ticket and return 200")
         void shouldBuyTicket() throws Exception {
-            TicketEntity saved = createTicketInDb(1, false, null);
+            Ticket saved = createTicketInDb(1, false, null);
 
             mockMvc.perform(post("/api/tickets/{id}/buy", saved.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -351,7 +370,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(jsonPath("$.isPurchased").value(true))
                     .andExpect(jsonPath("$.purchasedById").value(testUser.getId().toString()));
 
-            TicketEntity updated = ticketRepository.findById(saved.getId()).orElseThrow();
+            Ticket updated = ticketsRepositoryPort.findById(saved.getId()).orElseThrow();
             assertThat(updated.isPurchased()).isTrue();
             assertThat(updated.getUser().getId()).isEqualTo(testUser.getId());
         }
@@ -359,7 +378,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should reject already purchased ticket")
         void shouldRejectAlreadyPurchased() throws Exception {
-            TicketEntity saved = createTicketInDb(1, true, testUser);
+            Ticket saved = createTicketInDb(1, true, testUser);
 
             mockMvc.perform(post("/api/tickets/{id}/buy", saved.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -378,17 +397,17 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should reject buy for past departure")
         void shouldRejectBuyForPastDeparture() throws Exception {
-            RouteEntity route = routesRepository.findById(routeId).orElseThrow();
+            Route route = routesRepositoryPort.findById(routeId).orElseThrow();
             route.setDepartureAt(LocalDateTime.now().minusDays(1));
-            routesRepository.save(route);
+            routesRepositoryPort.save(route);
 
-            TicketEntity saved = createTicketInDb(1, false, null);
+            Ticket saved = createTicketInDb(1, false, null);
 
             mockMvc.perform(post("/api/tickets/{id}/buy", saved.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
                     .andExpect(status().isInternalServerError());
 
-            TicketEntity updated = ticketRepository.findById(saved.getId()).orElseThrow();
+            Ticket updated = ticketsRepositoryPort.findById(saved.getId()).orElseThrow();
             assertThat(updated.isPurchased()).isFalse();
         }
     }
@@ -402,7 +421,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should return ticket and return 200")
         void shouldReturnTicket() throws Exception {
-            TicketEntity saved = createTicketInDb(1, true, testUser);
+            Ticket saved = createTicketInDb(1, true, testUser);
 
             mockMvc.perform(post("/api/tickets/{id}/return", saved.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -410,7 +429,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(jsonPath("$.isPurchased").value(false))
                     .andExpect(jsonPath("$.purchasedById").doesNotExist());
 
-            TicketEntity updated = ticketRepository.findById(saved.getId()).orElseThrow();
+            Ticket updated = ticketsRepositoryPort.findById(saved.getId()).orElseThrow();
             assertThat(updated.isPurchased()).isFalse();
             assertThat(updated.getUser()).isNull();
         }
@@ -418,7 +437,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should reject return of not purchased ticket")
         void shouldRejectReturnNotPurchased() throws Exception {
-            TicketEntity saved = createTicketInDb(1, false, null);
+            Ticket saved = createTicketInDb(1, false, null);
 
             mockMvc.perform(post("/api/tickets/{id}/return", saved.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -449,7 +468,11 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(jsonPath("$.routeId").value(routeId.toString()))
                     .andExpect(jsonPath("$.ticketsIds", hasSize(5)));
 
-            assertThat(ticketRepository.findAll()).hasSize(5);
+            var result = ticketsRepositoryPort.findAll(
+                    TicketFilter.builder().build(),
+                    PageRequest.builder().page(0).size(10).build()
+            );
+            assertThat(result.getContent()).hasSize(5);
         }
 
         @Test
@@ -470,7 +493,11 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.createdCount").value(3));
 
-            assertThat(ticketRepository.findAll()).hasSize(5);
+            var result = ticketsRepositoryPort.findAll(
+                    TicketFilter.builder().build(),
+                    PageRequest.builder().page(0).size(10).build()
+            );
+            assertThat(result.getContent()).hasSize(5);
         }
 
         @Test
@@ -491,9 +518,9 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should reject release for past departure")
         void shouldRejectReleaseForPastDeparture() throws Exception {
-            RouteEntity route = routesRepository.findById(routeId).orElseThrow();
+            Route route = routesRepositoryPort.findById(routeId).orElseThrow();
             route.setDepartureAt(LocalDateTime.now().minusDays(1));
-            routesRepository.save(route);
+            routesRepositoryPort.save(route);
 
             ReleaseTicketsBatchRequest request = new ReleaseTicketsBatchRequest();
             request.setRouteId(routeId);
@@ -506,7 +533,11 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isInternalServerError());
 
-            assertThat(ticketRepository.findAll()).isEmpty();
+            var result = ticketsRepositoryPort.findAll(
+                    TicketFilter.builder().build(),
+                    PageRequest.builder().page(0).size(10).build()
+            );
+            assertThat(result.getContent()).isEmpty();
         }
     }
 
@@ -519,10 +550,8 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should download PDF for owned ticket and return 200")
         void shouldDownloadPdf() throws Exception {
-            // given: создаем купленный билет для текущего пользователя
-            TicketEntity saved = createTicketInDb(1, true, testUser);
+            Ticket saved = createTicketInDb(1, true, testUser);
 
-            // when & then
             MvcResult result = mockMvc.perform(get("/api/tickets/{id}/pdf", saved.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
                     .andExpect(status().isOk())
@@ -531,11 +560,8 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                             "attachment; filename=\"ticket-" + saved.getId() + ".pdf\""))
                     .andReturn();
 
-            // Проверяем, что вернулся непустой массив байт и это реально PDF
             byte[] content = result.getResponse().getContentAsByteArray();
             assertThat(content).isNotEmpty();
-
-            // Первые 4 байта любого PDF-файла — это "%PDF"
             String pdfHeader = new String(content, 0, 4);
             assertThat(pdfHeader).isEqualTo("%PDF");
         }
@@ -543,14 +569,12 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should return 403 when downloading someone else's ticket")
         void shouldForbidDownloadingOthersTicket() throws Exception {
-            // given: создаем билет для ДРУГОГО пользователя
-            UserEntity otherUser = createUserInDb("otheruser");
-            TicketEntity saved = createTicketInDb(1, true, otherUser);
+            User otherUser = createUserInDb("otheruser");
+            Ticket saved = createTicketInDb(1, true, otherUser);
 
-            // when & then: текущий пользователь (testUser) пытается скачать чужой билет
             mockMvc.perform(get("/api/tickets/{id}/pdf", saved.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
-                    .andExpect(status().isForbidden()); // Ожидаем 403 из-за AccessDeniedException
+                    .andExpect(status().isForbidden());
         }
 
         @Test
@@ -572,14 +596,14 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
     // ---------- HELPERS ----------
 
     private UUID createRouteInDb() {
-        CarrierEntity carrier = carriersRepository.save(
-                CarrierEntity.builder()
+        Carrier carrier = carriersRepositoryPort.save(
+                Carrier.builder()
                         .name("Acme-" + UUID.randomUUID())
                         .phone("+7-999")
                         .build());
 
-        RouteEntity route = routesRepository.save(
-                RouteEntity.builder()
+        Route route = routesRepositoryPort.save(
+                Route.builder()
                         .departurePoint("Moscow")
                         .destinationPoint("SPb")
                         .carrier(carrier)
@@ -591,8 +615,8 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         return route.getId();
     }
 
-    private UserEntity createUserInDb(String login) {
-        return userRepository.save(UserEntity.builder()
+    private User createUserInDb(String login) {
+        return usersRepositoryPort.save(User.builder()
                 .login(login)
                 .password(passwordEncoder.encode("secret123"))
                 .fullName("Test User")
@@ -602,14 +626,14 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                 .build());
     }
 
-    private TicketEntity createTicketInDb(int seat, boolean purchased, UserEntity user) {
-        RouteEntity route = routesRepository.findById(routeId).orElseThrow();
+    private Ticket createTicketInDb(int seat, boolean purchased, User user) {
+        Route route = routesRepositoryPort.findById(routeId).orElseThrow();
 
-        return ticketRepository.save(TicketEntity.builder()
+        return ticketsRepositoryPort.save(Ticket.builder()
                 .route(route)
                 .seatNumber(seat)
                 .price(new BigDecimal("150.00"))
-                .isPurchased(purchased)
+                .purchased(purchased)
                 .user(user)
                 .purchasedAt(purchased ? LocalDateTime.now() : null)
                 .createdAt(LocalDateTime.now())

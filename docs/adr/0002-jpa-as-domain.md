@@ -1,7 +1,7 @@
 # 2. JPA-сущности как доменные модели
 
 ## Status
-Accepted
+**Superseded by [ADR 0006](0006-hexagonal-architecture.md)**
 
 ## Context
 Проект — многомодульное Spring Boot приложение с бизнес-логикой

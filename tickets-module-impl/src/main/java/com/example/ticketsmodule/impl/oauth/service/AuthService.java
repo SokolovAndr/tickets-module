@@ -1,9 +1,9 @@
 package com.example.ticketsmodule.impl.oauth.service;
 
+import com.example.ticketsmodule.domain.user.model.User;
+import com.example.ticketsmodule.domain.user.repository.UsersRepositoryPort;
 import com.example.ticketsmodule.impl.users.conversion.RegisterMapper;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
-import com.example.ticketsmodule.impl.users.domain.UserRoleEnum;
-import com.example.ticketsmodule.impl.users.repository.UserRepository;
+import com.example.ticketsmodule.domain.user.model.UserRoleEnum;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,14 +30,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository userRepository;
+    private final UsersRepositoryPort usersRepositoryPort;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final @Qualifier("refreshTokenJwtDecoder") JwtDecoder refreshTokenJwtDecoder;
     private final RegisterMapper registerMapper;
 
     public LoginResponse login(@Valid LoginRequest request) {
-        UserEntity user = userRepository.findByLogin(request.getLogin())
+        User user = usersRepositoryPort.findByLogin(request.getLogin())
                 .filter(u -> passwordEncoder.matches(request.getPassword(), u.getPassword()))
                 .orElseThrow(() -> new BadCredentialsException("Invalid login or password"));
         return jwtService.createTokenPair(user);
@@ -48,18 +48,18 @@ public class AuthService {
             throw new BadCredentialsException("Invalid refresh token");
         }
         UUID userId = UUID.fromString(jwt.getSubject());
-        UserEntity user = userRepository.findById(userId)
+        User user = usersRepositoryPort.findById(userId)
                 .orElseThrow(() -> new BadCredentialsException("User not found"));
         return jwtService.createTokenPair(user);
     }
 
     public LoginResponse register(@Valid RegisterRequest registerRequest) {
 
-        if (userRepository.findByLogin(registerRequest.getLogin()).isPresent()) {
+        if (usersRepositoryPort.findByLogin(registerRequest.getLogin()).isPresent()) {
             throw new BadCredentialsException("Login is already occupied");
         }
 
-        final UserEntity newUser = registerMapper.toEntity(registerRequest);
+        final User newUser = registerMapper.toDomain(registerRequest);
         final String passwordEncrypted = passwordEncoder.encode(registerRequest.getPassword());
 
         newUser.setPassword(passwordEncrypted);
@@ -67,7 +67,7 @@ public class AuthService {
         newUser.setCreatedAt(LocalDateTime.now());
         newUser.setUpdatedAt(LocalDateTime.now());
 
-        userRepository.save(newUser);
+        usersRepositoryPort.save(newUser);
 
         return jwtService.createTokenPair(newUser);
     }

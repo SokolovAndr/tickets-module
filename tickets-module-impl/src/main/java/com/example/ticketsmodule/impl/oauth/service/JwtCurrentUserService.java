@@ -1,7 +1,7 @@
 package com.example.ticketsmodule.impl.oauth.service;
 
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
-import com.example.ticketsmodule.impl.users.repository.UserRepository;
+import com.example.ticketsmodule.domain.user.model.User;
+import com.example.ticketsmodule.domain.user.repository.UsersRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -20,11 +20,11 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class JwtCurrentUserService {
-    private final UserRepository userRepository;
+    private final UsersRepositoryPort usersRepositoryPort;
 
-    public UserEntity getCurrentUser() {
+    public User getCurrentUser() {
         UUID userId = getCurrentUserId();
-        return userRepository.findById(userId).orElseThrow(()
+        return usersRepositoryPort.findById(userId).orElseThrow(()
                 -> new IllegalStateException("Current user not found in database"));
     }
 

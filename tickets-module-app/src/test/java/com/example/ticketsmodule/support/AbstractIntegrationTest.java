@@ -1,9 +1,9 @@
 package com.example.ticketsmodule.support;
 
-import com.example.ticketsmodule.impl.carriers.repository.CarriersRepository;
-import com.example.ticketsmodule.impl.routes.repository.RoutesRepository;
-import com.example.ticketsmodule.impl.tickets.repository.TicketRepository;
-import com.example.ticketsmodule.impl.users.repository.UserRepository;
+import com.example.ticketsmodule.impl.carriers.persistence.repository.CarrierSpringDataRepository;
+import com.example.ticketsmodule.impl.routes.persistence.repository.RouteSpringDataRepository;
+import com.example.ticketsmodule.impl.tickets.persistence.repository.TicketSpringDataRepository;
+import com.example.ticketsmodule.impl.users.persistence.repository.UserSpringDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -34,15 +34,15 @@ public abstract class AbstractIntegrationTest {
         Runtime.getRuntime().addShutdownHook(new Thread(POSTGRES::stop));
     }
 
-    @Autowired protected TicketRepository ticketRepository;
-    @Autowired protected RoutesRepository routesRepository;
-    @Autowired protected CarriersRepository carriersRepository;
-    @Autowired protected UserRepository userRepository;
+    @Autowired protected TicketSpringDataRepository ticketSpringDataRepository;
+    @Autowired protected RouteSpringDataRepository routeSpringDataRepository;
+    @Autowired protected CarrierSpringDataRepository carrierSpringDataRepository;
+    @Autowired protected UserSpringDataRepository userSpringDataRepository;
 
     protected void cleanDatabase() {
-        ticketRepository.deleteAll();
-        routesRepository.deleteAll();
-        carriersRepository.deleteAll();
-        userRepository.deleteAll();
+        ticketSpringDataRepository.deleteAll();
+        routeSpringDataRepository.deleteAll();
+        carrierSpringDataRepository.deleteAll();
+        userSpringDataRepository.deleteAll();
     }
 }

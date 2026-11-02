@@ -1,22 +1,22 @@
 package com.example.ticketsmodule.impl.routes.service;
 
-import com.example.ticketsmodule.impl.carriers.domain.CarrierEntity;
-import com.example.ticketsmodule.impl.carriers.service.CarriersService;
+import com.example.ticketsmodule.domain.carrier.exception.CarrierNotFoundException;
+import com.example.ticketsmodule.domain.carrier.model.Carrier;
+import com.example.ticketsmodule.domain.carrier.repository.CarriersRepositoryPort;
+import com.example.ticketsmodule.domain.common.PageRequest;
+import com.example.ticketsmodule.domain.common.PageResult;
+import com.example.ticketsmodule.domain.route.exception.RouteNotFoundException;
+import com.example.ticketsmodule.domain.route.model.Route;
+import com.example.ticketsmodule.domain.route.model.RouteFilter;
+import com.example.ticketsmodule.domain.route.repository.RoutesRepositoryPort;
 import com.example.ticketsmodule.impl.routes.conversion.RouteMapper;
-import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
-import com.example.ticketsmodule.impl.routes.repository.RoutesRepository;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.criteria.Predicate;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import com.example.ticketsmodule.api.model.CreateRouteRequest;
 import com.example.ticketsmodule.api.model.CreateRouteResponse;
 import com.example.ticketsmodule.api.model.RoutePatchRequest;
@@ -24,7 +24,6 @@ import com.example.ticketsmodule.api.model.RoutesSearchRequest;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -40,130 +39,72 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RoutesService {
 
-    private final RoutesRepository routesRepository;
+    private final RoutesRepositoryPort routesRepositoryPort;
+    private final CarriersRepositoryPort carriersRepositoryPort;
     private final RouteMapper routeMapper;
-    private final CarriersService carriersService;
 
     @Transactional
     public CreateRouteResponse create(CreateRouteRequest createRouteRequest) {
-        final CarrierEntity carrier = carriersService.findOneById(createRouteRequest.getCarrierId());
-        final RouteEntity routeEntity = routeMapper.toEntity(createRouteRequest, carrier);
-        if (routeEntity == null) {
-            throw new IllegalStateException("Failed to convert route entity");
-        }
-        routeEntity.setCreatedAt(LocalDateTime.now());
-        routeEntity.setUpdatedAt(LocalDateTime.now());
-        RouteEntity response = routesRepository.save(routeEntity);
-        return routeMapper.toResponse(response);
+        Carrier carrier = carriersRepositoryPort.findById(createRouteRequest.getCarrierId()).orElseThrow(() -> new CarrierNotFoundException(createRouteRequest.getCarrierId()));
+
+        Route route = routeMapper.toDomain(createRouteRequest);
+        route.setCarrier(carrier);
+        route.setCreatedAt(LocalDateTime.now());
+        route.setUpdatedAt(LocalDateTime.now());
+        return routeMapper.toResponse(routesRepositoryPort.save(route));
     }
 
     @Transactional(readOnly = true)
-    public Page<CreateRouteResponse> findAll(@Valid RoutesSearchRequest searchParam, @Valid Pageable pageable) {
-        Specification<RouteEntity> spec = buildSpecification(searchParam);
-        return routesRepository.findAll(spec, pageable).map(routeMapper::toResponse);
-    }
+    public PageResult<CreateRouteResponse> findAll(RoutesSearchRequest req, PageRequest page) {
+        RouteFilter filter = toFilter(req);
+        PageResult<Route> result = routesRepositoryPort.findAll(filter, page);
 
-    private Specification<RouteEntity> buildSpecification(RoutesSearchRequest searchParam) {
-        return (root, query, cb) -> {
-            final List<Predicate> predicates = new ArrayList<>();
+        List<CreateRouteResponse> content = result.getContent().stream().map(routeMapper::toResponse).toList();
 
-            query.orderBy(cb.desc(root.get("createdAt")));
-
-            if (searchParam != null) {
-                if (StringUtils.hasText(searchParam.getDeparturePoint())) {
-                    var pattern = "%" + searchParam.getDeparturePoint().toLowerCase() + "%";
-                    predicates.add(cb.like(cb.lower(root.get("departurePoint")), pattern));
-                }
-
-                if (StringUtils.hasText(searchParam.getDestinationPoint())) {
-                    var pattern = "%" + searchParam.getDestinationPoint().toLowerCase() + "%";
-                    predicates.add(cb.like(cb.lower(root.get("destinationPoint")), pattern));
-                }
-
-                if (searchParam.getDepartureFrom() != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(
-                            root.get("departureAt"),
-                            searchParam.getDepartureFrom().atStartOfDay()));
-                }
-
-                if (searchParam.getDepartureTo() != null) {
-                    predicates.add(cb.lessThanOrEqualTo(
-                            root.get("departureAt"),
-                            searchParam.getDepartureTo().atTime(LocalTime.MAX)));
-                }
-
-                if (searchParam.getDestinationFrom() != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(
-                            root.get("destinationAt"),
-                            searchParam.getDestinationFrom().atStartOfDay()));
-                }
-
-                if (searchParam.getDestinationTo() != null) {
-                    predicates.add(cb.lessThanOrEqualTo(
-                            root.get("destinationAt"),
-                            searchParam.getDestinationTo().atTime(LocalTime.MAX)));
-                }
-
-                if (searchParam.getCreateDateFrom() != null) {
-                    predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), searchParam.getCreateDateFrom()));
-                }
-
-                if (searchParam.getCreateDateTo() != null) {
-                    predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), searchParam.getCreateDateTo()));
-                }
-            }
-
-            return cb.and(predicates.toArray(new Predicate[0]));
-        };
+        return PageResult.<CreateRouteResponse>builder().content(content).totalElements(result.getTotalElements()).totalPages(result.getTotalPages()).pageNumber(result.getPageNumber()).pageSize(result.getPageSize()).build();
     }
 
     @Transactional(readOnly = true)
     public CreateRouteResponse findOne(@NotNull UUID id) {
-        RouteEntity response = routesRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Route with id " + id + " not found"));
-        return routeMapper.toResponse(response);
+        Route route = routesRepositoryPort.findById(id).orElseThrow(() -> new RouteNotFoundException(id));
+        return routeMapper.toResponse(route);
     }
 
     @Transactional(readOnly = true)
-    public RouteEntity findOneById(UUID id) {
-        return routesRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Route with id " + id + " not found"));
-    }
-
-    @Transactional
-    public CreateRouteResponse patch(@NotNull UUID id, @Valid RoutePatchRequest routePatchRequest) {
-        var result = routesRepository.findById(id).map(entity -> {
-            if (routePatchRequest.getDeparturePoint() != null) {
-                entity.setDeparturePoint(routePatchRequest.getDeparturePoint());
-            }
-            if (routePatchRequest.getDestinationPoint() != null) {
-                entity.setDestinationPoint(routePatchRequest.getDestinationPoint());
-            }
-            if (routePatchRequest.getDepartureAt() != null) {
-                entity.setDepartureAt(routePatchRequest.getDepartureAt());
-            }
-            if (routePatchRequest.getDestinationAt() != null) {
-                entity.setDestinationAt(routePatchRequest.getDestinationAt());
-            }
-            if (routePatchRequest.getCarrierId() != null) {
-                final CarrierEntity carrier = carriersService.findOneById(routePatchRequest.getCarrierId());
-                entity.setCarrier(carrier);
-            }
-            if (routePatchRequest.getDurationMinutes() != null) {
-                entity.setDurationMinutes(routePatchRequest.getDurationMinutes());
-            }
-            entity.setUpdatedAt(LocalDateTime.now());
-
-            return routesRepository.save(entity);
-        }).orElseThrow(() -> new EntityNotFoundException(String.format("Route with id %s not found", routePatchRequest)));
-
-        return routeMapper.toResponse(result);
+    public Route findOneById(UUID id) {
+        return routesRepositoryPort.findById(id).orElseThrow(() -> new RouteNotFoundException(id));
     }
 
     @Transactional(readOnly = true)
-    public Map<UUID, RouteEntity> findAllByIds(Collection<UUID> ids) {
+    public Map<UUID, Route> findAllByIds(Collection<UUID> ids) {
         if (ids == null || ids.isEmpty()) {
             return Map.of();
         }
-        return routesRepository.findAllById(ids).stream()
-                .collect(Collectors.toMap(RouteEntity::getId, r -> r));
+        return routesRepositoryPort.findAllByIds(ids).stream()
+                .collect(Collectors.toMap(Route::getId, r -> r));
+    }
+
+    @Transactional
+    public CreateRouteResponse patch(@NotNull UUID id, @Valid RoutePatchRequest req) {
+        Route route = routesRepositoryPort.findById(id).orElseThrow(() -> new RouteNotFoundException(id));
+
+        if (req.getDeparturePoint() != null) route.setDeparturePoint(req.getDeparturePoint());
+        if (req.getDestinationPoint() != null) route.setDestinationPoint(req.getDestinationPoint());
+        if (req.getDepartureAt() != null) route.setDepartureAt(req.getDepartureAt());
+        if (req.getDestinationAt() != null) route.setDestinationAt(req.getDestinationAt());
+        if (req.getDurationMinutes() != null) route.setDurationMinutes(req.getDurationMinutes());
+
+        if (req.getCarrierId() != null) {
+            Carrier carrier = carriersRepositoryPort.findById(req.getCarrierId()).orElseThrow(() -> new CarrierNotFoundException(req.getCarrierId()));
+            route.setCarrier(carrier);
+        }
+
+        route.setUpdatedAt(LocalDateTime.now());
+        return routeMapper.toResponse(routesRepositoryPort.save(route));
+    }
+
+    private RouteFilter toFilter(RoutesSearchRequest req) {
+        if (req == null) return RouteFilter.builder().build();
+        return RouteFilter.builder().query(req.getQuery()).departurePoint(req.getDeparturePoint()).destinationPoint(req.getDestinationPoint()).departureFrom(req.getDepartureFrom() != null ? req.getDepartureFrom().atStartOfDay() : null).departureTo(req.getDepartureTo() != null ? req.getDepartureTo().atTime(LocalTime.MAX) : null).destinationFrom(req.getDestinationFrom() != null ? req.getDestinationFrom().atStartOfDay() : null).destinationTo(req.getDestinationTo() != null ? req.getDestinationTo().atTime(LocalTime.MAX) : null).createDateFrom(req.getCreateDateFrom() != null ? req.getCreateDateFrom().atStartOfDay() : null).createDateTo(req.getCreateDateTo() != null ? req.getCreateDateTo().atTime(LocalTime.MAX) : null).emptySits(req.getEmptySits()).build();
     }
 }

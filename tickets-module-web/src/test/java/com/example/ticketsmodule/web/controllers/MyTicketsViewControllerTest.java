@@ -1,13 +1,13 @@
 package com.example.ticketsmodule.web.controllers;
 
 import com.example.ticketsmodule.api.model.CreateTicketResponse;
+import com.example.ticketsmodule.domain.route.model.Route;
+import com.example.ticketsmodule.domain.ticket.model.Ticket;
+import com.example.ticketsmodule.domain.user.model.User;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
-import com.example.ticketsmodule.impl.routes.domain.RouteEntity;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
-import com.example.ticketsmodule.impl.tickets.domain.TicketEntity;
 import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
-import com.example.ticketsmodule.impl.users.domain.UserEntity;
 import com.example.ticketsmodule.web.tickets.controller.MyTicketsViewController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -73,7 +73,7 @@ class MyTicketsViewControllerTest {
         ticket.setPrice(BigDecimal.TEN);
         ticket.setPurchasedAt(LocalDateTime.now());
 
-        RouteEntity route = new RouteEntity();
+        Route route = new Route();
         route.setId(routeId);
         route.setDeparturePoint("Moscow");
         route.setDestinationPoint("SPb");
@@ -119,10 +119,10 @@ class MyTicketsViewControllerTest {
     @DisplayName("GET /my-tickets/{id}/pdf returns PDF file")
     void downloadTicketPdfShouldReturnFile() throws Exception {
         //
-        UserEntity user = new UserEntity();
+        User user = new User();
         user.setId(userId);
 
-        TicketEntity ticket = new TicketEntity();
+        Ticket ticket = new Ticket();
         ticket.setId(ticketId);
         ticket.setUser(user);
 
