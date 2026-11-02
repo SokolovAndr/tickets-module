@@ -2,8 +2,12 @@ package com.example.ticketsmodule.routes;
 
 import com.example.ticketsmodule.api.model.CreateRouteRequest;
 import com.example.ticketsmodule.api.model.RoutePatchRequest;
-import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
-import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
+import com.example.ticketsmodule.domain.carrier.model.Carrier;
+import com.example.ticketsmodule.domain.carrier.repository.CarriersRepositoryPort;
+import com.example.ticketsmodule.domain.common.PageRequest;
+import com.example.ticketsmodule.domain.route.model.Route;
+import com.example.ticketsmodule.domain.route.model.RouteFilter;
+import com.example.ticketsmodule.domain.route.repository.RoutesRepositoryPort;
 import com.example.ticketsmodule.support.AbstractIntegrationTest;
 import com.example.ticketsmodule.support.JwtTestHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,6 +33,8 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
+    @Autowired private CarriersRepositoryPort carriersRepositoryPort;
+    @Autowired private RoutesRepositoryPort routesRepositoryPort;
 
     private UUID carrierId;
 
@@ -75,7 +81,7 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("PATCH /api/routes/{id} with USER role → 403")
         void shouldForbidUserToPatchRoute() throws Exception {
-            RouteJpaEntity saved = createRouteInDb();
+            Route saved = createRouteInDb(); // <-- Доменный Route
 
             RoutePatchRequest patch = new RoutePatchRequest();
             patch.setDeparturePoint("Kazan");
@@ -112,7 +118,12 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(jsonPath("$.createdAt").exists())
                     .andExpect(jsonPath("$.updatedAt").exists());
 
-            assertThat(routeSpringDataRepository.findAll()).hasSize(1);
+            // ИЗМЕНЕНИЕ: Проверяем через порт
+            var result = routesRepositoryPort.findAll(
+                    RouteFilter.builder().build(),
+                    PageRequest.builder().page(0).size(10).build()
+            );
+            assertThat(result.getContent()).hasSize(1);
         }
 
         @Test
@@ -127,7 +138,11 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isNotFound());
 
-            assertThat(routeSpringDataRepository.findAll()).isEmpty();
+            var result = routesRepositoryPort.findAll(
+                    RouteFilter.builder().build(),
+                    PageRequest.builder().page(0).size(10).build()
+            );
+            assertThat(result.getContent()).isEmpty();
         }
 
         @Test
@@ -153,7 +168,7 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should return 200 with route")
         void shouldReturnRoute() throws Exception {
-            RouteJpaEntity saved = createRouteInDb();
+            Route saved = createRouteInDb(); // <-- Доменный Route
 
             mockMvc.perform(get("/api/routes/{id}", saved.getId())
                             .with(JwtTestHelper.withRole("USER")))
@@ -253,7 +268,7 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should patch departurePoint and return 200")
         void shouldPatchDeparturePoint() throws Exception {
-            RouteJpaEntity saved = createRouteInDb();
+            Route saved = createRouteInDb(); // <-- Доменный Route
 
             RoutePatchRequest patch = new RoutePatchRequest();
             patch.setDeparturePoint("Kazan");
@@ -266,7 +281,7 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(jsonPath("$.departurePoint").value("Kazan"))
                     .andExpect(jsonPath("$.destinationPoint").value("SPb"));
 
-            RouteJpaEntity updated = routeSpringDataRepository.findById(saved.getId()).orElseThrow();
+            Route updated = routesRepositoryPort.findById(saved.getId()).orElseThrow();
             assertThat(updated.getDeparturePoint()).isEqualTo("Kazan");
         }
 
@@ -287,21 +302,21 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
     // ---------- helpers ----------
 
     private UUID createCarrierInDb() {
-        CarrierJpaEntity carrier = CarrierJpaEntity.builder()
+        Carrier carrier = Carrier.builder() // <-- Доменный Carrier
                 .name("Acme-" + UUID.randomUUID())
                 .phone("+7-999")
                 .build();
-        return carrierSpringDataRepository.save(carrier).getId();
+        return carriersRepositoryPort.save(carrier).getId();
     }
 
-    private RouteJpaEntity createRouteInDb() {
-        CarrierJpaEntity carrier = carrierSpringDataRepository.save(
-                CarrierJpaEntity.builder()
+    private Route createRouteInDb() {
+        Carrier carrier = carriersRepositoryPort.save(
+                Carrier.builder() // <-- Доменный Carrier
                         .name("Acme-" + UUID.randomUUID())
                         .phone("+7-999")
                         .build());
 
-        RouteJpaEntity route = RouteJpaEntity.builder()
+        Route route = Route.builder() // <-- Доменный Route
                 .departurePoint("Moscow")
                 .destinationPoint("SPb")
                 .carrier(carrier)
@@ -309,8 +324,7 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
                 .departureAt(LocalDateTime.now().plusDays(1))
                 .destinationAt(LocalDateTime.now().plusDays(1).plusHours(2))
                 .build();
-        return routeSpringDataRepository.save(route);
-
+        return routesRepositoryPort.save(route);
     }
 
     private CreateRouteRequest validRouteRequest() {

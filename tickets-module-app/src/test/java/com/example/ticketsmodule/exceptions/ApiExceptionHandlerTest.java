@@ -2,6 +2,8 @@ package com.example.ticketsmodule.exceptions;
 
 import com.example.ticketsmodule.api.model.ErrorResponse;
 import com.example.ticketsmodule.domain.carrier.exception.CarrierNameAlreadyExistsException;
+import com.example.ticketsmodule.domain.carrier.exception.CarrierNotFoundException;
+import com.example.ticketsmodule.domain.ticket.exception.TicketAlreadyPurchasedException;
 import com.example.ticketsmodule.impl.common.web.rest.exceptions.ApiException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,9 +15,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,10 +42,13 @@ class ApiExceptionHandlerTest {
     }
 
     @Test
-    void handleEntityNotFound_ShouldReturnNotFound() {
-        ErrorResponse result = handler.handleEntityNotFound(new EntityNotFoundException("not found"));
-        assertEquals("not found", result.getMessage());
-        assertEquals("Ресурс не найден", result.getUserMessage());
+    void handleNotFound_ShouldReturnNotFound() {
+        ErrorResponse result1 = handler.handleNotFound(new EntityNotFoundException("not found"));
+        assertEquals("not found", result1.getMessage());
+        assertEquals("Ресурс не найден", result1.getUserMessage());
+
+        ErrorResponse result2 = handler.handleNotFound(new CarrierNotFoundException(UUID.randomUUID()));
+        assertEquals("Ресурс не найден", result2.getUserMessage());
     }
 
     @Test
@@ -55,9 +60,14 @@ class ApiExceptionHandlerTest {
 
     @Test
     void handleDuplicateCarrier_ShouldReturnBadRequest() {
-        ResponseEntity<ErrorResponse> result = handler.handleDuplicateCarrier(new CarrierNameAlreadyExistsException("Test"));
-        assertEquals(HttpStatus.BAD_REQUEST, result.getStatusCode());
-        assertEquals("Перевозчик с таким названием уже существует", result.getBody().getUserMessage());
+        ErrorResponse result = handler.handleDuplicateCarrier(new CarrierNameAlreadyExistsException("Test"));
+        assertEquals("Перевозчик с таким названием уже существует", result.getUserMessage());
+    }
+
+    @Test
+    void handleTicketAlreadyPurchased_ShouldReturnUnprocessableEntity() {
+        ErrorResponse result = handler.handleTicketAlreadyPurchased(new TicketAlreadyPurchasedException(UUID.randomUUID()));
+        assertEquals("Билет уже куплен", result.getUserMessage());
     }
 
     @Test

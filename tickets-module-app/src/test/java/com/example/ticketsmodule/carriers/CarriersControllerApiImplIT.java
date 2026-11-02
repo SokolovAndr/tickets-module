@@ -2,7 +2,10 @@ package com.example.ticketsmodule.carriers;
 
 import com.example.ticketsmodule.api.model.CarrierPatchRequest;
 import com.example.ticketsmodule.api.model.CreateCarrierRequest;
-import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
+import com.example.ticketsmodule.domain.carrier.model.Carrier;
+import com.example.ticketsmodule.domain.carrier.model.CarrierFilter;
+import com.example.ticketsmodule.domain.carrier.repository.CarriersRepositoryPort;
+import com.example.ticketsmodule.domain.common.PageRequest;
 import com.example.ticketsmodule.support.AbstractIntegrationTest;
 import com.example.ticketsmodule.support.JwtTestHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,6 +31,7 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
+    @Autowired private CarriersRepositoryPort carriersRepositoryPort;
 
     @BeforeEach
     void cleanDb() {
@@ -72,8 +76,9 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("PATCH /api/carriers/{id} with USER role → 403")
         void shouldForbidUserToPatchCarrier() throws Exception {
-            CarrierJpaEntity saved = carrierSpringDataRepository.save(
-                    CarrierJpaEntity.builder().name("Acme").phone("+7-111").build());
+            // ИЗМЕНЕНИЕ: Создаем доменный Carrier через Порт
+            Carrier saved = carriersRepositoryPort.save(
+                    Carrier.builder().name("Acme").phone("+7-111").build());
 
             CarrierPatchRequest patch = new CarrierPatchRequest();
             patch.setName("New");
@@ -111,7 +116,12 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(jsonPath("$.createdAt").exists())
                     .andExpect(jsonPath("$.updatedAt").exists());
 
-            assertThat(carrierSpringDataRepository.findAll()).hasSize(1);
+            // ИЗМЕНЕНИЕ: Проверяем через доменный порт
+            var allCarriers = carriersRepositoryPort.findAll(
+                    CarrierFilter.builder().build(),
+                    PageRequest.builder().page(0).size(10).build()
+            );
+            assertThat(allCarriers.getContent()).hasSize(1);
         }
 
         @Test
@@ -127,17 +137,21 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
                             .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isBadRequest());
 
-            assertThat(carrierSpringDataRepository.findAll()).isEmpty();
+            var allCarriers = carriersRepositoryPort.findAll(
+                    CarrierFilter.builder().build(),
+                    PageRequest.builder().page(0).size(10).build()
+            );
+            assertThat(allCarriers.getContent()).isEmpty();
         }
 
         @Test
         @DisplayName("should return 400 when name is duplicate")
         void shouldReturn400WhenDuplicateName() throws Exception {
-            CarrierJpaEntity existing = CarrierJpaEntity.builder()
+            Carrier existing = Carrier.builder()
                     .name("Acme Transport")
                     .phone("+7-111")
                     .build();
-            carrierSpringDataRepository.save(existing);
+            carriersRepositoryPort.save(existing);
 
             CreateCarrierRequest request = new CreateCarrierRequest();
             request.setName("Acme Transport");
@@ -153,7 +167,7 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should return user message when name is duplicate")
         void shouldReturnUserMessageOnDuplicateName() throws Exception {
-            carrierSpringDataRepository.save(CarrierJpaEntity.builder()
+            carriersRepositoryPort.save(Carrier.builder()
                     .name("Acme Transport").phone("+7-111").build());
 
             CreateCarrierRequest request = new CreateCarrierRequest();
@@ -180,8 +194,8 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should return 200 with carrier")
         void shouldReturnCarrier() throws Exception {
-            CarrierJpaEntity saved = carrierSpringDataRepository.save(
-                    CarrierJpaEntity.builder()
+            Carrier saved = carriersRepositoryPort.save(
+                    Carrier.builder()
                             .name("Acme")
                             .phone("+7-999")
                             .build());
@@ -221,10 +235,10 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should return 200 with list of carriers")
         void shouldReturnList() throws Exception {
-            carrierSpringDataRepository.save(CarrierJpaEntity.builder()
+            carriersRepositoryPort.save(Carrier.builder()
                     .name("Acme")
                     .phone("+7-111").build());
-            carrierSpringDataRepository.save(CarrierJpaEntity.builder()
+            carriersRepositoryPort.save(Carrier.builder()
                     .name("Beta")
                     .phone("+7-222").build());
 
@@ -237,9 +251,9 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should filter by name")
         void shouldFilterByName() throws Exception {
-            carrierSpringDataRepository.save(CarrierJpaEntity.builder()
+            carriersRepositoryPort.save(Carrier.builder()
                     .name("Acme").phone("+7-111").build());
-            carrierSpringDataRepository.save(CarrierJpaEntity.builder()
+            carriersRepositoryPort.save(Carrier.builder()
                     .name("Beta").phone("+7-222").build());
 
             mockMvc.perform(get("/api/carriers")
@@ -253,9 +267,9 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should filter by phone")
         void shouldFilterByPhone() throws Exception {
-            carrierSpringDataRepository.save(CarrierJpaEntity.builder()
+            carriersRepositoryPort.save(Carrier.builder()
                     .name("Acme").phone("+7-111").build());
-            carrierSpringDataRepository.save(CarrierJpaEntity.builder()
+            carriersRepositoryPort.save(Carrier.builder()
                     .name("Beta").phone("+7-222").build());
 
             mockMvc.perform(get("/api/carriers")
@@ -269,9 +283,9 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should filter by query")
         void shouldFilterByQuery() throws Exception {
-            carrierSpringDataRepository.save(CarrierJpaEntity.builder()
+            carriersRepositoryPort.save(Carrier.builder()
                     .name("Acme").phone("+7-111").build());
-            carrierSpringDataRepository.save(CarrierJpaEntity.builder()
+            carriersRepositoryPort.save(Carrier.builder()
                     .name("Beta").phone("+7-222").build());
 
             mockMvc.perform(get("/api/carriers")
@@ -284,18 +298,18 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should filter by createDateFrom")
         void shouldFilterByCreateDateFrom() throws Exception {
-            CarrierJpaEntity old = CarrierJpaEntity.builder()
+            Carrier old = Carrier.builder()
                     .name("Old").phone("+7-111")
                     .createdAt(LocalDateTime.now().minusDays(10))
                     .updatedAt(LocalDateTime.now().minusDays(10))
                     .build();
-            CarrierJpaEntity fresh = CarrierJpaEntity.builder()
+            Carrier fresh = Carrier.builder()
                     .name("Fresh").phone("+7-222")
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .build();
-            carrierSpringDataRepository.save(old);
-            carrierSpringDataRepository.save(fresh);
+            carriersRepositoryPort.save(old);
+            carriersRepositoryPort.save(fresh);
 
             String from = LocalDate.now().minusDays(1).toString();
 
@@ -310,18 +324,18 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should filter by createDateTo")
         void shouldFilterByCreateDateTo() throws Exception {
-            CarrierJpaEntity old = CarrierJpaEntity.builder()
+            Carrier old = Carrier.builder()
                     .name("Old").phone("+7-111")
                     .createdAt(LocalDateTime.now().minusDays(10))
                     .updatedAt(LocalDateTime.now().minusDays(10))
                     .build();
-            CarrierJpaEntity fresh = CarrierJpaEntity.builder()
+            Carrier fresh = Carrier.builder()
                     .name("Fresh").phone("+7-222")
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .build();
-            carrierSpringDataRepository.save(old);
-            carrierSpringDataRepository.save(fresh);
+            carriersRepositoryPort.save(old);
+            carriersRepositoryPort.save(fresh);
 
             String to = LocalDate.now().minusDays(1).toString();
 
@@ -343,8 +357,8 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should patch name and return 200")
         void shouldPatchName() throws Exception {
-            CarrierJpaEntity saved = carrierSpringDataRepository.save(
-                    CarrierJpaEntity.builder()
+            Carrier saved = carriersRepositoryPort.save(
+                    Carrier.builder()
                             .name("Old Name")
                             .phone("+7-111")
                             .build());
@@ -360,7 +374,7 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
                     .andExpect(jsonPath("$.name").value("New Name"))
                     .andExpect(jsonPath("$.phone").value("+7-111"));
 
-            CarrierJpaEntity updated = carrierSpringDataRepository.findById(saved.getId()).orElseThrow();
+            Carrier updated = carriersRepositoryPort.findById(saved.getId()).orElseThrow();
             assertThat(updated.getName()).isEqualTo("New Name");
         }
 
