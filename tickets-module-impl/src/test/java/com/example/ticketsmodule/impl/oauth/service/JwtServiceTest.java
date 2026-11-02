@@ -1,9 +1,9 @@
 package com.example.ticketsmodule.impl.oauth.service;
 
 import com.example.ticketsmodule.api.model.LoginResponse;
-import com.example.ticketsmodule.impl.config.JwtProperties;
-import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
+import com.example.ticketsmodule.domain.user.model.User;
 import com.example.ticketsmodule.domain.user.model.UserRoleEnum;
+import com.example.ticketsmodule.impl.config.JwtProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -39,7 +39,7 @@ class JwtServiceTest {
     private JwtService jwtService;
 
     private UUID userId;
-    private UserJpaEntity user;
+    private User user;
 
     private static final Duration ACCESS_TTL = Duration.ofHours(10);
     private static final Duration REFRESH_TTL = Duration.ofDays(7);
@@ -49,12 +49,12 @@ class JwtServiceTest {
     void setUp() {
         userId = UUID.randomUUID();
 
-        user = new UserJpaEntity();
-        user.setId(userId);
-        user.setLogin("admin");
-        user.setRole(UserRoleEnum.ADMIN);
+        user = User.builder()
+                .id(userId)
+                .login("admin")
+                .role(UserRoleEnum.ADMIN)
+                .build();
 
-        // Мокаем JwtProperties — используем lenient() для тестов, где не все стабы нужны
         lenient().when(jwtProperties.getAccessTokenTtl()).thenReturn(ACCESS_TTL);
         lenient().when(jwtProperties.getRefreshTokenTtl()).thenReturn(REFRESH_TTL);
         lenient().when(jwtProperties.getIssuer()).thenReturn(ISSUER);

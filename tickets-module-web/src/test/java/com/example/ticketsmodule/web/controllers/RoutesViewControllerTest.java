@@ -3,6 +3,8 @@ package com.example.ticketsmodule.web.controllers;
 import com.example.ticketsmodule.api.model.CreateRouteResponse;
 import com.example.ticketsmodule.api.model.CreateTicketResponse;
 import com.example.ticketsmodule.api.model.RoutesSearchRequest;
+import com.example.ticketsmodule.domain.common.PageRequest;
+import com.example.ticketsmodule.domain.common.PageResult;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
@@ -14,9 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -60,9 +59,13 @@ class RoutesViewControllerTest {
     @Test
     @DisplayName("GET /routes returns list view")
     void listShouldReturnListView() throws Exception {
-        Page<CreateRouteResponse> page = new PageImpl<>(List.of(new CreateRouteResponse()));
-        when(routesService.findAll(any(RoutesSearchRequest.class), any(Pageable.class)))
-                .thenReturn(page);
+        PageResult<CreateRouteResponse> pageResult = PageResult.<CreateRouteResponse>builder()
+                .content(List.of(new CreateRouteResponse()))
+                .totalElements(1)
+                .build();
+
+        when(routesService.findAll(any(RoutesSearchRequest.class), any(PageRequest.class)))
+                .thenReturn(pageResult);
 
         mockMvc.perform(get("/routes")
                         .param("page", "0")

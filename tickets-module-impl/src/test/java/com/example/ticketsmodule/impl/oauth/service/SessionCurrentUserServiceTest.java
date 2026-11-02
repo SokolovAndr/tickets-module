@@ -1,7 +1,7 @@
 package com.example.ticketsmodule.impl.oauth.service;
 
-import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
-import com.example.ticketsmodule.impl.users.persistence.repository.UserSpringDataRepository;
+import com.example.ticketsmodule.domain.user.model.User;
+import com.example.ticketsmodule.domain.user.repository.UsersRepositoryPort;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,17 +26,17 @@ import static org.mockito.Mockito.when;
 class SessionCurrentUserServiceTest {
 
     @Mock
-    private UserSpringDataRepository userSpringDataRepository;
+    private UsersRepositoryPort usersRepositoryPort; // <-- Заменили репозиторий на порт
 
     @InjectMocks
     private SessionCurrentUserService sessionCurrentUserService;
 
-    private UserJpaEntity user;
+    private User user; // <-- Теперь доменный User
     private Authentication authentication;
 
     @BeforeEach
     void setUp() {
-        user = UserJpaEntity.builder()
+        user = User.builder()
                 .id(UUID.randomUUID())
                 .login("testuser")
                 .build();
@@ -53,16 +53,16 @@ class SessionCurrentUserServiceTest {
 
     @Test
     void getCurrentUser_ShouldReturnUser_WhenAuthenticatedAndUserExists() {
-        when(userSpringDataRepository.findByLogin("testuser")).thenReturn(Optional.of(user));
+        when(usersRepositoryPort.findByLogin("testuser")).thenReturn(Optional.of(user));
 
-        UserJpaEntity result = sessionCurrentUserService.getCurrentUser();
+        User result = sessionCurrentUserService.getCurrentUser();
 
         assertEquals(user, result);
     }
 
     @Test
     void getCurrentUser_ShouldThrow_WhenUserNotFound() {
-        when(userSpringDataRepository.findByLogin("testuser")).thenReturn(Optional.empty());
+        when(usersRepositoryPort.findByLogin("testuser")).thenReturn(Optional.empty());
 
         IllegalStateException ex = assertThrows(IllegalStateException.class,
                 () -> sessionCurrentUserService.getCurrentUser());
@@ -94,7 +94,7 @@ class SessionCurrentUserServiceTest {
 
     @Test
     void getCurrentUserId_ShouldReturnUserId() {
-        when(userSpringDataRepository.findByLogin("testuser")).thenReturn(Optional.of(user));
+        when(usersRepositoryPort.findByLogin("testuser")).thenReturn(Optional.of(user));
 
         UUID id = sessionCurrentUserService.getCurrentUserId();
 

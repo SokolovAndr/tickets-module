@@ -3,8 +3,8 @@ package com.example.ticketsmodule.web.controllers;
 import com.example.ticketsmodule.api.model.ChangePasswordRequest;
 import com.example.ticketsmodule.api.model.UserPatchRequest;
 import com.example.ticketsmodule.api.model.UserResponse;
+import com.example.ticketsmodule.domain.user.model.User;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
-import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
 import com.example.ticketsmodule.domain.user.model.UserRoleEnum;
 import com.example.ticketsmodule.impl.users.service.UsersService;
 import com.example.ticketsmodule.web.profile.controller.ProfileViewController;
@@ -64,14 +64,14 @@ class ProfileViewControllerTest {
     private SessionCurrentUserService sessionCurrentUserService;
 
     private UUID userId;
-    private UserJpaEntity user;
+    private User user;
     private UserResponse userResponse;
 
     @BeforeEach
     void setUp() {
         userId = UUID.randomUUID();
 
-        user = UserJpaEntity.builder()
+        user = User.builder()
                 .id(userId)
                 .login("testuser")
                 .password("encodedPassword")
@@ -85,7 +85,7 @@ class ProfileViewControllerTest {
 
         when(sessionCurrentUserService.getCurrentUserId()).thenReturn(userId);
         when(usersService.findOneById(userId)).thenReturn(user);
-        when(usersService.toResponse(any(UserJpaEntity.class))).thenReturn(userResponse);
+        when(usersService.toResponse(any(User.class))).thenReturn(userResponse);
     }
 
     // ==================================================================

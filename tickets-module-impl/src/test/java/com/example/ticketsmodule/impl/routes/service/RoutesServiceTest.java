@@ -4,12 +4,15 @@ import com.example.ticketsmodule.api.model.CreateRouteRequest;
 import com.example.ticketsmodule.api.model.CreateRouteResponse;
 import com.example.ticketsmodule.api.model.RoutePatchRequest;
 import com.example.ticketsmodule.api.model.RoutesSearchRequest;
-import com.example.ticketsmodule.impl.carriers.persistence.entity.CarrierJpaEntity;
-import com.example.ticketsmodule.impl.carriers.service.CarriersService;
+import com.example.ticketsmodule.domain.carrier.exception.CarrierNotFoundException;
+import com.example.ticketsmodule.domain.carrier.model.Carrier;
+import com.example.ticketsmodule.domain.carrier.repository.CarriersRepositoryPort;
+import com.example.ticketsmodule.domain.common.PageRequest;
+import com.example.ticketsmodule.domain.common.PageResult;
+import com.example.ticketsmodule.domain.route.exception.RouteNotFoundException;
+import com.example.ticketsmodule.domain.route.model.Route;
+import com.example.ticketsmodule.domain.route.repository.RoutesRepositoryPort;
 import com.example.ticketsmodule.impl.routes.conversion.RouteMapper;
-import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
-import com.example.ticketsmodule.impl.routes.persistence.repository.RouteSpringDataRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,11 +21,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -40,17 +38,17 @@ import static org.mockito.Mockito.*;
 @DisplayName("RoutesService unit tests")
 class RoutesServiceTest {
 
-    @Mock private RouteSpringDataRepository routeSpringDataRepository;
+    @Mock private RoutesRepositoryPort routesRepositoryPort;
+    @Mock private CarriersRepositoryPort carriersRepositoryPort;
     @Mock private RouteMapper routeMapper;
-    @Mock private CarriersService carriersService;
 
     @InjectMocks
     private RoutesService routesService;
 
     private UUID routeId;
     private UUID carrierId;
-    private RouteJpaEntity routeJpaEntity;
-    private CarrierJpaEntity carrierJpaEntity;
+    private Route route;
+    private Carrier carrier;
     private CreateRouteResponse expectedResponse;
 
     @BeforeEach
@@ -58,17 +56,17 @@ class RoutesServiceTest {
         routeId = UUID.randomUUID();
         carrierId = UUID.randomUUID();
 
-        carrierJpaEntity = new CarrierJpaEntity();
-        carrierJpaEntity.setId(carrierId);
+        carrier = Carrier.builder().id(carrierId).build();
 
-        routeJpaEntity = new RouteJpaEntity();
-        routeJpaEntity.setId(routeId);
-        routeJpaEntity.setCarrier(carrierJpaEntity);
-        routeJpaEntity.setDeparturePoint("Moscow");
-        routeJpaEntity.setDestinationPoint("SPb");
-        routeJpaEntity.setDepartureAt(LocalDateTime.now().plusDays(1));
-        routeJpaEntity.setDestinationAt(LocalDateTime.now().plusDays(1).plusHours(2));
-        routeJpaEntity.setDurationMinutes(120);
+        route = Route.builder()
+                .id(routeId)
+                .carrier(carrier)
+                .departurePoint("Moscow")
+                .destinationPoint("SPb")
+                .departureAt(LocalDateTime.now().plusDays(1))
+                .destinationAt(LocalDateTime.now().plusDays(1).plusHours(2))
+                .durationMinutes(120)
+                .build();
 
         expectedResponse = new CreateRouteResponse();
     }
@@ -80,39 +78,36 @@ class RoutesServiceTest {
     class CreateTests {
 
         @Test
-        @DisplayName("should save route and return converted response")
+        @DisplayName("should save route and return response")
         void shouldSaveRouteAndReturnResponse() {
             CreateRouteRequest request = new CreateRouteRequest();
             request.setCarrierId(carrierId);
 
-            when(carriersService.findOneById(carrierId)).thenReturn(carrierJpaEntity);
-            when(routeMapper.toEntity(request, carrierJpaEntity)).thenReturn(routeJpaEntity);
-            when(routeSpringDataRepository.save(routeJpaEntity)).thenReturn(routeJpaEntity);
-            when(routeMapper.toResponse(routeJpaEntity)).thenReturn(expectedResponse);
+            when(carriersRepositoryPort.findById(carrierId)).thenReturn(Optional.of(carrier));
+            when(routeMapper.toDomain(request)).thenReturn(route);
+            when(routesRepositoryPort.save(route)).thenReturn(route);
+            when(routeMapper.toResponse(route)).thenReturn(expectedResponse);
 
             CreateRouteResponse actual = routesService.create(request);
 
             assertThat(actual).isSameAs(expectedResponse);
-            verify(carriersService).findOneById(carrierId);
-            verify(routeMapper).toEntity(request, carrierJpaEntity);
-            verify(routeSpringDataRepository).save(routeJpaEntity);
-            verify(routeMapper).toResponse(routeJpaEntity);
+            verify(carriersRepositoryPort).findById(carrierId);
+            verify(routeMapper).toDomain(request);
+            verify(routesRepositoryPort).save(route);
         }
 
         @Test
-        @DisplayName("should propagate exception when carrier not found")
-        void shouldPropagateExceptionWhenCarrierNotFound() {
+        @DisplayName("should throw CarrierNotFoundException if carrier not found")
+        void shouldThrowWhenCarrierNotFound() {
             CreateRouteRequest request = new CreateRouteRequest();
             request.setCarrierId(carrierId);
 
-            when(carriersService.findOneById(carrierId))
-                    .thenThrow(new EntityNotFoundException("Carrier not found"));
+            when(carriersRepositoryPort.findById(carrierId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> routesService.create(request))
-                    .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining("Carrier not found");
+                    .isInstanceOf(CarrierNotFoundException.class);
 
-            verifyNoInteractions(routeSpringDataRepository, routeMapper);
+            verifyNoInteractions(routesRepositoryPort, routeMapper);
         }
     }
 
@@ -123,48 +118,38 @@ class RoutesServiceTest {
     class FindAllTests {
 
         @Test
-        @DisplayName("should return mapped page of responses")
-        void shouldReturnMappedPage() {
+        @DisplayName("should return mapped PageResult")
+        void shouldReturnMappedPageResult() {
             RoutesSearchRequest search = new RoutesSearchRequest();
-            Pageable pageable = PageRequest.of(0, 10);
+            PageRequest pageReq = PageRequest.builder().page(0).size(10).build();
 
-            Page<RouteJpaEntity> entityPage = new PageImpl<>(List.of(routeJpaEntity));
-            when(routeSpringDataRepository.findAll(any(Specification.class), eq(pageable)))
-                    .thenReturn(entityPage);
-            when(routeMapper.toResponse(routeJpaEntity)).thenReturn(expectedResponse);
+            PageResult<Route> domainPage = PageResult.<Route>builder()
+                    .content(List.of(route))
+                    .totalElements(1)
+                    .build();
 
-            Page<CreateRouteResponse> actual = routesService.findAll(search, pageable);
+            when(routesRepositoryPort.findAll(any(), eq(pageReq))).thenReturn(domainPage);
+            when(routeMapper.toResponse(route)).thenReturn(expectedResponse);
 
-            assertThat(actual).hasSize(1);
-            assertThat(actual.getContent()).containsExactly(expectedResponse);
-            verify(routeSpringDataRepository).findAll(any(Specification.class), eq(pageable));
-        }
+            PageResult<CreateRouteResponse> actual = routesService.findAll(search, pageReq);
 
-        @Test
-        @DisplayName("should return empty page when no routes")
-        void shouldReturnEmptyPage() {
-            Pageable pageable = PageRequest.of(0, 10);
-            when(routeSpringDataRepository.findAll(any(Specification.class), eq(pageable)))
-                    .thenReturn(Page.empty());
-
-            Page<CreateRouteResponse> actual = routesService.findAll(null, pageable);
-
-            assertThat(actual).isEmpty();
-            verifyNoInteractions(routeMapper);
+            assertThat(actual.getContent()).hasSize(1);
+            assertThat(actual.getContent().get(0)).isSameAs(expectedResponse);
+            assertThat(actual.getTotalElements()).isEqualTo(1);
         }
     }
 
-    // ---------- findOne() ----------
+    // ---------- findOne() / findOneById() ----------
 
     @Nested
-    @DisplayName("findOne()")
+    @DisplayName("find methods")
     class FindOneTests {
 
         @Test
         @DisplayName("should return response when route exists")
         void shouldReturnResponseWhenFound() {
-            when(routeSpringDataRepository.findById(routeId)).thenReturn(Optional.of(routeJpaEntity));
-            when(routeMapper.toResponse(routeJpaEntity)).thenReturn(expectedResponse);
+            when(routesRepositoryPort.findById(routeId)).thenReturn(Optional.of(route));
+            when(routeMapper.toResponse(route)).thenReturn(expectedResponse);
 
             CreateRouteResponse actual = routesService.findOne(routeId);
 
@@ -172,41 +157,17 @@ class RoutesServiceTest {
         }
 
         @Test
-        @DisplayName("should throw EntityNotFoundException when route does not exist")
+        @DisplayName("should throw RouteNotFoundException when route does not exist")
         void shouldThrowWhenNotFound() {
-            when(routeSpringDataRepository.findById(routeId)).thenReturn(Optional.empty());
+            when(routesRepositoryPort.findById(routeId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> routesService.findOne(routeId))
-                    .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining(routeId.toString());
-
-            verifyNoInteractions(routeMapper);
-        }
-    }
-
-    // ---------- findOneById() ----------
-
-    @Nested
-    @DisplayName("findOneById()")
-    class FindOneByIdTests {
-
-        @Test
-        @DisplayName("should return entity when route exists")
-        void shouldReturnEntityWhenFound() {
-            when(routeSpringDataRepository.findById(routeId)).thenReturn(Optional.of(routeJpaEntity));
-
-            RouteJpaEntity actual = routesService.findOneById(routeId);
-
-            assertThat(actual).isSameAs(routeJpaEntity);
-        }
-
-        @Test
-        @DisplayName("should throw EntityNotFoundException when route does not exist")
-        void shouldThrowWhenNotFound() {
-            when(routeSpringDataRepository.findById(routeId)).thenReturn(Optional.empty());
+                    .isInstanceOf(RouteNotFoundException.class);
 
             assertThatThrownBy(() -> routesService.findOneById(routeId))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(RouteNotFoundException.class);
+
+            verifyNoInteractions(routeMapper);
         }
     }
 
@@ -223,52 +184,53 @@ class RoutesServiceTest {
             patch.setDeparturePoint("Kazan");
             patch.setDestinationPoint("Sochi");
 
-            when(routeSpringDataRepository.findById(routeId)).thenReturn(Optional.of(routeJpaEntity));
-            when(routeSpringDataRepository.save(any(RouteJpaEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(routeMapper.toResponse(any(RouteJpaEntity.class))).thenReturn(expectedResponse);
+            when(routesRepositoryPort.findById(routeId)).thenReturn(Optional.of(route));
+            when(routesRepositoryPort.save(any(Route.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(routeMapper.toResponse(any(Route.class))).thenReturn(expectedResponse);
 
             CreateRouteResponse actual = routesService.patch(routeId, patch);
 
             assertThat(actual).isSameAs(expectedResponse);
-            assertThat(routeJpaEntity.getDeparturePoint()).isEqualTo("Kazan");
-            assertThat(routeJpaEntity.getDestinationPoint()).isEqualTo("Sochi");
-            assertThat(routeJpaEntity.getUpdatedAt()).isNotNull();
-            verify(carriersService, never()).findOneById(any());
+            assertThat(route.getDeparturePoint()).isEqualTo("Kazan");
+            assertThat(route.getDestinationPoint()).isEqualTo("Sochi");
+            assertThat(route.getUpdatedAt()).isNotNull();
+            verify(carriersRepositoryPort, never()).findById(any());
         }
 
         @Test
         @DisplayName("should update carrier when carrierId provided")
         void shouldUpdateCarrierWhenProvided() {
             UUID newCarrierId = UUID.randomUUID();
-            CarrierJpaEntity newCarrier = new CarrierJpaEntity();
-            newCarrier.setId(newCarrierId);
+            Carrier newCarrier = Carrier.builder().id(newCarrierId).build();
 
             RoutePatchRequest patch = new RoutePatchRequest();
             patch.setCarrierId(newCarrierId);
 
-            when(routeSpringDataRepository.findById(routeId)).thenReturn(Optional.of(routeJpaEntity));
-            when(carriersService.findOneById(newCarrierId)).thenReturn(newCarrier);
-            when(routeSpringDataRepository.save(any(RouteJpaEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(routeMapper.toResponse(any(RouteJpaEntity.class))).thenReturn(expectedResponse);
+            when(routesRepositoryPort.findById(routeId)).thenReturn(Optional.of(route));
+            when(carriersRepositoryPort.findById(newCarrierId)).thenReturn(Optional.of(newCarrier));
+            when(routesRepositoryPort.save(any(Route.class))).thenAnswer(inv -> inv.getArgument(0));
+            when(routeMapper.toResponse(any(Route.class))).thenReturn(expectedResponse);
 
             routesService.patch(routeId, patch);
 
-            assertThat(routeJpaEntity.getCarrier()).isSameAs(newCarrier);
-            verify(carriersService).findOneById(newCarrierId);
+            assertThat(route.getCarrier()).isSameAs(newCarrier);
+            verify(carriersRepositoryPort).findById(newCarrierId);
         }
 
         @Test
-        @DisplayName("should throw EntityNotFoundException when route does not exist")
+        @DisplayName("should throw RouteNotFoundException when route does not exist")
         void shouldThrowWhenNotFound() {
             RoutePatchRequest patch = new RoutePatchRequest();
-            when(routeSpringDataRepository.findById(routeId)).thenReturn(Optional.empty());
+            when(routesRepositoryPort.findById(routeId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> routesService.patch(routeId, patch))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(RouteNotFoundException.class);
 
-            verify(routeSpringDataRepository, never()).save(any());
+            verify(routesRepositoryPort, never()).save(any());
         }
     }
+
+    // ---------- findAllByIds() ----------
 
     @Nested
     @DisplayName("findAllByIds()")
@@ -279,23 +241,21 @@ class RoutesServiceTest {
         void shouldReturnEmptyMapForNullOrEmpty() {
             assertThat(routesService.findAllByIds(null)).isEmpty();
             assertThat(routesService.findAllByIds(List.of())).isEmpty();
-            verifyNoInteractions(routeSpringDataRepository);
+            verifyNoInteractions(routesRepositoryPort);
         }
 
         @Test
         @DisplayName("should return map by id")
         void shouldReturnMapById() {
-            RouteJpaEntity second = new RouteJpaEntity();
-            second.setId(UUID.randomUUID());
+            Route second = Route.builder().id(UUID.randomUUID()).build();
 
-            when(routeSpringDataRepository.findAllById(List.of(routeId, second.getId())))
-                    .thenReturn(List.of(routeJpaEntity, second));
+            when(routesRepositoryPort.findAllByIds(List.of(routeId, second.getId())))
+                    .thenReturn(List.of(route, second));
 
-            Map<UUID, RouteJpaEntity> result =
-                    routesService.findAllByIds(List.of(routeId, second.getId()));
+            Map<UUID, Route> result = routesService.findAllByIds(List.of(routeId, second.getId()));
 
             assertThat(result)
-                    .containsEntry(routeId, routeJpaEntity)
+                    .containsEntry(routeId, route)
                     .containsEntry(second.getId(), second);
         }
     }

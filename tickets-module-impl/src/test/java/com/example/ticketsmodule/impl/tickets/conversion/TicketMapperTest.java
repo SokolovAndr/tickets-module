@@ -2,9 +2,9 @@ package com.example.ticketsmodule.impl.tickets.conversion;
 
 import com.example.ticketsmodule.api.model.CreateTicketRequest;
 import com.example.ticketsmodule.api.model.CreateTicketResponse;
-import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
-import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketJpaEntity;
-import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
+import com.example.ticketsmodule.domain.route.model.Route;
+import com.example.ticketsmodule.domain.ticket.model.Ticket;
+import com.example.ticketsmodule.domain.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -24,8 +24,8 @@ class TicketMapperTest {
     private UUID ticketId;
     private UUID routeId;
     private UUID userId;
-    private RouteJpaEntity route;
-    private UserJpaEntity user;
+    private Route route;
+    private User user;
 
     @BeforeEach
     void setUp() {
@@ -35,19 +35,15 @@ class TicketMapperTest {
         routeId = UUID.randomUUID();
         userId = UUID.randomUUID();
 
-        route = new RouteJpaEntity();
-        route.setId(routeId);
-
-        user = new UserJpaEntity();
-        user.setId(userId);
-        user.setLogin("admin");
+        route = Route.builder().id(routeId).build();
+        user = User.builder().id(userId).login("admin").build();
     }
 
-    // ---------- toEntity() ----------
+    // ---------- toDomain() ----------
 
     @Nested
-    @DisplayName("toEntity()")
-    class ToEntityTests {
+    @DisplayName("toDomain()")
+    class ToDomainTests {
 
         @Test
         @DisplayName("should map seatNumber and price from request")
@@ -56,129 +52,36 @@ class TicketMapperTest {
             request.setSeatNumber(15);
             request.setPrice(BigDecimal.valueOf(250));
 
-            TicketJpaEntity entity = mapper.toEntity(request, route);
+            Ticket ticket = mapper.toDomain(request);
 
-            assertThat(entity).isNotNull();
-            assertThat(entity.getSeatNumber()).isEqualTo(15);
-            assertThat(entity.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(250));
+            assertThat(ticket).isNotNull();
+            assertThat(ticket.getSeatNumber()).isEqualTo(15);
+            assertThat(ticket.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(250));
         }
 
         @Test
-        @DisplayName("should set route from argument")
-        void shouldSetRouteFromArgument() {
+        @DisplayName("should ignore id, route, user, purchased, purchasedAt, timestamps")
+        void shouldIgnoreSystemFields() {
             CreateTicketRequest request = new CreateTicketRequest();
             request.setSeatNumber(1);
             request.setPrice(BigDecimal.ONE);
 
-            TicketJpaEntity entity = mapper.toEntity(request, route);
+            Ticket ticket = mapper.toDomain(request);
 
-            assertThat(entity.getRoute()).isSameAs(route);
-            assertThat(entity.getRoute().getId()).isEqualTo(routeId);
+            assertThat(ticket.getId()).isNull();
+            assertThat(ticket.getRoute()).isNull();
+            assertThat(ticket.getUser()).isNull();
+            assertThat(ticket.isPurchased()).isFalse();
+            assertThat(ticket.getPurchasedAt()).isNull();
+            assertThat(ticket.getCreatedAt()).isNull();
+            assertThat(ticket.getUpdatedAt()).isNull();
         }
 
         @Test
-        @DisplayName("should ignore id")
-        void shouldIgnoreId() {
-            CreateTicketRequest request = new CreateTicketRequest();
-            request.setSeatNumber(1);
-            request.setPrice(BigDecimal.ONE);
-
-            TicketJpaEntity entity = mapper.toEntity(request, route);
-
-            assertThat(entity.getId()).isNull();
-        }
-
-        @Test
-        @DisplayName("should ignore createdAt")
-        void shouldIgnoreCreatedAt() {
-            CreateTicketRequest request = new CreateTicketRequest();
-            request.setSeatNumber(1);
-            request.setPrice(BigDecimal.ONE);
-
-            TicketJpaEntity entity = mapper.toEntity(request, route);
-
-            assertThat(entity.getCreatedAt()).isNull();
-        }
-
-        @Test
-        @DisplayName("should ignore updatedAt")
-        void shouldIgnoreUpdatedAt() {
-            CreateTicketRequest request = new CreateTicketRequest();
-            request.setSeatNumber(1);
-            request.setPrice(BigDecimal.ONE);
-
-            TicketJpaEntity entity = mapper.toEntity(request, route);
-
-            assertThat(entity.getUpdatedAt()).isNull();
-        }
-
-        @Test
-        @DisplayName("should set isPurchased=false by default")
-        void shouldSetIsPurchasedFalse() {
-            CreateTicketRequest request = new CreateTicketRequest();
-            request.setSeatNumber(1);
-            request.setPrice(BigDecimal.ONE);
-
-            TicketJpaEntity entity = mapper.toEntity(request, route);
-
-            assertThat(entity.isPurchased()).isFalse();
-        }
-
-        @Test
-        @DisplayName("should set user=null by default")
-        void shouldSetUserNull() {
-            CreateTicketRequest request = new CreateTicketRequest();
-            request.setSeatNumber(1);
-            request.setPrice(BigDecimal.ONE);
-
-            TicketJpaEntity entity = mapper.toEntity(request, route);
-
-            assertThat(entity.getUser()).isNull();
-        }
-
-        @Test
-        @DisplayName("should set purchasedAt=null by default")
-        void shouldSetPurchasedAtNull() {
-            CreateTicketRequest request = new CreateTicketRequest();
-            request.setSeatNumber(1);
-            request.setPrice(BigDecimal.ONE);
-
-            TicketJpaEntity entity = mapper.toEntity(request, route);
-
-            assertThat(entity.getPurchasedAt()).isNull();
-        }
-
-        @Test
-        @DisplayName("should accept null route")
-        void shouldAcceptNullRoute() {
-            CreateTicketRequest request = new CreateTicketRequest();
-            request.setSeatNumber(1);
-            request.setPrice(BigDecimal.ONE);
-
-            TicketJpaEntity entity = mapper.toEntity(request, null);
-
-            assertThat(entity).isNotNull();
-            assertThat(entity.getRoute()).isNull();
-        }
-
-        @Test
-        @DisplayName("should return null when both sources are null")
-        void shouldReturnNullWhenBothSourcesNull() {
-            TicketJpaEntity entity = mapper.toEntity(null, null);
-
-            assertThat(entity).isNull();
-        }
-
-        @Test
-        @DisplayName("should set seatNumber=0 when request has null seatNumber")
-        void shouldSetZeroWhenSeatNumberNull() {
-            CreateTicketRequest request = new CreateTicketRequest();
-            request.setSeatNumber(null);
-            request.setPrice(BigDecimal.ONE);
-
-            TicketJpaEntity entity = mapper.toEntity(request, route);
-
-            assertThat(entity.getSeatNumber()).isZero();
+        @DisplayName("should return null when source is null")
+        void shouldReturnNullWhenSourceNull() {
+            Ticket ticket = mapper.toDomain(null);
+            assertThat(ticket).isNull();
         }
     }
 
@@ -189,13 +92,13 @@ class TicketMapperTest {
     class ToResponseTests {
 
         @Test
-        @DisplayName("should map all fields from entity")
+        @DisplayName("should map all fields from domain")
         void shouldMapAllFields() {
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime purchasedAt = now.minusHours(1);
             LocalDateTime created = now.minusDays(1);
 
-            TicketJpaEntity entity = TicketJpaEntity.builder()
+            Ticket ticket = Ticket.builder()
                     .id(ticketId)
                     .route(route)
                     .seatNumber(15)
@@ -207,7 +110,7 @@ class TicketMapperTest {
                     .updatedAt(now)
                     .build();
 
-            CreateTicketResponse response = mapper.toResponse(entity);
+            CreateTicketResponse response = mapper.toResponse(ticket);
 
             assertThat(response).isNotNull();
             assertThat(response.getId()).isEqualTo(ticketId);
@@ -225,10 +128,9 @@ class TicketMapperTest {
         @DisplayName("should map route.id to routeId")
         void shouldMapRouteIdFromNestedRoute() {
             UUID customRouteId = UUID.randomUUID();
-            RouteJpaEntity customRoute = new RouteJpaEntity();
-            customRoute.setId(customRouteId);
+            Route customRoute = Route.builder().id(customRouteId).build();
 
-            TicketJpaEntity entity = TicketJpaEntity.builder()
+            Ticket ticket = Ticket.builder()
                     .id(ticketId)
                     .route(customRoute)
                     .seatNumber(1)
@@ -236,7 +138,7 @@ class TicketMapperTest {
                     .purchased(false)
                     .build();
 
-            CreateTicketResponse response = mapper.toResponse(entity);
+            CreateTicketResponse response = mapper.toResponse(ticket);
 
             assertThat(response.getRouteId()).isEqualTo(customRouteId);
         }
@@ -245,10 +147,9 @@ class TicketMapperTest {
         @DisplayName("should map user.id to purchasedById")
         void shouldMapPurchasedByIdFromNestedUser() {
             UUID customUserId = UUID.randomUUID();
-            UserJpaEntity customUser = new UserJpaEntity();
-            customUser.setId(customUserId);
+            User customUser = User.builder().id(customUserId).build();
 
-            TicketJpaEntity entity = TicketJpaEntity.builder()
+            Ticket ticket = Ticket.builder()
                     .id(ticketId)
                     .route(route)
                     .seatNumber(1)
@@ -257,7 +158,7 @@ class TicketMapperTest {
                     .user(customUser)
                     .build();
 
-            CreateTicketResponse response = mapper.toResponse(entity);
+            CreateTicketResponse response = mapper.toResponse(ticket);
 
             assertThat(response.getPurchasedById()).isEqualTo(customUserId);
         }
@@ -265,7 +166,7 @@ class TicketMapperTest {
         @Test
         @DisplayName("should set purchasedById=null when user is null")
         void shouldSetPurchasedByIdNull() {
-            TicketJpaEntity entity = TicketJpaEntity.builder()
+            Ticket ticket = Ticket.builder()
                     .id(ticketId)
                     .route(route)
                     .seatNumber(1)
@@ -274,15 +175,15 @@ class TicketMapperTest {
                     .user(null)
                     .build();
 
-            CreateTicketResponse response = mapper.toResponse(entity);
+            CreateTicketResponse response = mapper.toResponse(ticket);
 
             assertThat(response.getPurchasedById()).isNull();
         }
 
         @Test
-        @DisplayName("should map isPurchased=true")
+        @DisplayName("should map purchased=true to isPurchased=true")
         void shouldMapIsPurchasedTrue() {
-            TicketJpaEntity entity = TicketJpaEntity.builder()
+            Ticket ticket = Ticket.builder()
                     .id(ticketId)
                     .route(route)
                     .seatNumber(1)
@@ -291,15 +192,15 @@ class TicketMapperTest {
                     .user(user)
                     .build();
 
-            CreateTicketResponse response = mapper.toResponse(entity);
+            CreateTicketResponse response = mapper.toResponse(ticket);
 
             assertThat(response.getIsPurchased()).isTrue();
         }
 
         @Test
-        @DisplayName("should map isPurchased=false")
+        @DisplayName("should map purchased=false to isPurchased=false")
         void shouldMapIsPurchasedFalse() {
-            TicketJpaEntity entity = TicketJpaEntity.builder()
+            Ticket ticket = Ticket.builder()
                     .id(ticketId)
                     .route(route)
                     .seatNumber(1)
@@ -307,7 +208,7 @@ class TicketMapperTest {
                     .purchased(false)
                     .build();
 
-            CreateTicketResponse response = mapper.toResponse(entity);
+            CreateTicketResponse response = mapper.toResponse(ticket);
 
             assertThat(response.getIsPurchased()).isFalse();
         }
@@ -316,14 +217,13 @@ class TicketMapperTest {
         @DisplayName("should return null when source is null")
         void shouldReturnNullWhenSourceNull() {
             CreateTicketResponse response = mapper.toResponse(null);
-
             assertThat(response).isNull();
         }
 
         @Test
         @DisplayName("should preserve null timestamps")
         void shouldPreserveNullTimestamps() {
-            TicketJpaEntity entity = TicketJpaEntity.builder()
+            Ticket ticket = Ticket.builder()
                     .id(ticketId)
                     .route(route)
                     .seatNumber(1)
@@ -334,7 +234,7 @@ class TicketMapperTest {
                     .updatedAt(null)
                     .build();
 
-            CreateTicketResponse response = mapper.toResponse(entity);
+            CreateTicketResponse response = mapper.toResponse(ticket);
 
             assertThat(response.getPurchasedAt()).isNull();
             assertThat(response.getCreatedAt()).isNull();
@@ -344,14 +244,14 @@ class TicketMapperTest {
         @Test
         @DisplayName("should preserve null id")
         void shouldPreserveNullId() {
-            TicketJpaEntity entity = TicketJpaEntity.builder()
+            Ticket ticket = Ticket.builder()
                     .route(route)
                     .seatNumber(1)
                     .price(BigDecimal.ONE)
                     .purchased(false)
                     .build();
 
-            CreateTicketResponse response = mapper.toResponse(entity);
+            CreateTicketResponse response = mapper.toResponse(ticket);
 
             assertThat(response.getId()).isNull();
         }
@@ -364,18 +264,19 @@ class TicketMapperTest {
     class RoundTripTests {
 
         @Test
-        @DisplayName("request -> entity -> response should preserve main fields")
+        @DisplayName("request -> domain -> response should preserve main fields")
         void shouldPreserveFieldsOnRoundTrip() {
             CreateTicketRequest request = new CreateTicketRequest();
             request.setSeatNumber(15);
             request.setPrice(BigDecimal.valueOf(250));
 
-            TicketJpaEntity entity = mapper.toEntity(request, route);
-            entity.setId(ticketId);
-            entity.setCreatedAt(LocalDateTime.now());
-            entity.setUpdatedAt(LocalDateTime.now());
+            Ticket ticket = mapper.toDomain(request);
+            ticket.setId(ticketId);
+            ticket.setRoute(route);
+            ticket.setCreatedAt(LocalDateTime.now());
+            ticket.setUpdatedAt(LocalDateTime.now());
 
-            CreateTicketResponse response = mapper.toResponse(entity);
+            CreateTicketResponse response = mapper.toResponse(ticket);
 
             assertThat(response.getSeatNumber()).isEqualTo(15);
             assertThat(response.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(250));

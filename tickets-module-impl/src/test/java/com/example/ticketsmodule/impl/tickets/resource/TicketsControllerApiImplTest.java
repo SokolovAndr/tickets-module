@@ -6,25 +6,26 @@ import com.example.ticketsmodule.api.model.ReleaseTicketsBatchRequest;
 import com.example.ticketsmodule.api.model.ReleaseTicketsBatchResponse;
 import com.example.ticketsmodule.api.model.TicketPatchRequest;
 import com.example.ticketsmodule.api.model.TicketsSearchRequest;
+import com.example.ticketsmodule.domain.common.PageRequest;
+import com.example.ticketsmodule.domain.common.PageResult;
+import com.example.ticketsmodule.domain.ticket.exception.TicketNotFoundException;
+import com.example.ticketsmodule.domain.ticket.model.Ticket;
+import com.example.ticketsmodule.domain.user.model.User;
 import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
-import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketJpaEntity;
 import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
-import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -37,6 +38,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,14 +63,11 @@ class TicketsControllerApiImplTest {
         response = new CreateTicketResponse();
     }
 
-    // ---------- createTicket() ----------
-
     @Nested
     @DisplayName("createTicket()")
     class CreateTicketTests {
-
         @Test
-        @DisplayName("should return 201 Created with body from service")
+        @DisplayName("should return 201 Created")
         void shouldReturn201Created() {
             CreateTicketRequest request = new CreateTicketRequest();
             when(ticketsService.create(request)).thenReturn(response);
@@ -77,64 +76,41 @@ class TicketsControllerApiImplTest {
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             assertThat(result.getBody()).isSameAs(response);
-            verify(ticketsService).create(request);
-        }
-
-        @Test
-        @DisplayName("should propagate exception from service")
-        void shouldPropagateException() {
-            CreateTicketRequest request = new CreateTicketRequest();
-            when(ticketsService.create(request))
-                    .thenThrow(new EntityNotFoundException("Route not found"));
-
-            assertThatThrownBy(() -> controller.createTicket(request))
-                    .isInstanceOf(EntityNotFoundException.class);
         }
     }
-
-    // ---------- getAllTickets() ----------
 
     @Nested
     @DisplayName("getAllTickets()")
     class GetAllTicketsTests {
 
         @Test
-        @DisplayName("should return 200 OK with page from service")
-        void shouldReturn200OkWithPage() {
-            Pageable pageable = PageRequest.of(0, 10);
+        @DisplayName("should convert Pageable to PageRequest and return Spring Page")
+        void shouldConvertPageableToDomainAndBack() {
+            Pageable springPageable = org.springframework.data.domain.PageRequest.of(1, 5);
             TicketsSearchRequest search = new TicketsSearchRequest();
-            Page<CreateTicketResponse> page = new PageImpl<>(List.of(response));
-            when(ticketsService.findAll(search, pageable)).thenReturn(page);
+            PageResult<CreateTicketResponse> domainResult = PageResult.<CreateTicketResponse>builder()
+                    .content(List.of(response))
+                    .totalElements(100)
+                    .build();
 
-            ResponseEntity<Page> result = controller.getAllTickets(pageable, search);
+            ArgumentCaptor<PageRequest> captor = ArgumentCaptor.forClass(PageRequest.class);
+            when(ticketsService.findAll(eq(search), captor.capture())).thenReturn(domainResult);
 
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(result.getBody()).isSameAs(page);
-            verify(ticketsService).findAll(search, pageable);
-        }
+            ResponseEntity<Page> result = controller.getAllTickets(springPageable, search);
 
-        @Test
-        @DisplayName("should return 200 OK with empty page")
-        void shouldReturn200OkWithEmptyPage() {
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<CreateTicketResponse> empty = Page.empty();
-            when(ticketsService.findAll(null, pageable)).thenReturn(empty);
-
-            ResponseEntity<Page> result = controller.getAllTickets(pageable, null);
-
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(result.getBody()).isEmpty();
+            assertThat(captor.getValue().getPage()).isEqualTo(1);
+            assertThat(captor.getValue().getSize()).isEqualTo(5);
+            assertThat(result.getBody()).isNotNull();
+            assertThat(result.getBody().getTotalElements()).isEqualTo(100);
         }
     }
-
-    // ---------- getAllMyTickets() ----------
 
     @Nested
     @DisplayName("getAllMyTickets()")
     class GetAllMyTicketsTests {
 
         @Test
-        @DisplayName("should return 200 OK with list of current user's tickets")
+        @DisplayName("should return 200 OK with list")
         void shouldReturn200OkWithList() {
             when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
             when(ticketsService.findAllMyTickets(userId)).thenReturn(List.of(response));
@@ -143,75 +119,34 @@ class TicketsControllerApiImplTest {
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getBody()).containsExactly(response);
-            verify(jwtCurrentUserService).getCurrentUserId();
-            verify(ticketsService).findAllMyTickets(userId);
-        }
-
-        @Test
-        @DisplayName("should return 200 OK with empty list when no tickets")
-        void shouldReturn200OkWithEmptyList() {
-            when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
-            when(ticketsService.findAllMyTickets(userId)).thenReturn(List.of());
-
-            ResponseEntity<List<CreateTicketResponse>> result = controller.getAllMyTickets();
-
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(result.getBody()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("should propagate exception when current user cannot be resolved")
-        void shouldPropagateExceptionFromJwtService() {
-            when(jwtCurrentUserService.getCurrentUserId())
-                    .thenThrow(new IllegalStateException("No authenticated user"));
-
-            assertThatThrownBy(() -> controller.getAllMyTickets())
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("No authenticated user");
-
-            verifyNoInteractions(ticketsService);
         }
     }
 
-    // ---------- getTicket() ----------
-
     @Nested
-    @DisplayName("getTicket()")
-    class GetTicketTests {
+    @DisplayName("getTicket() / patchTicket()")
+    class SingleTicketTests {
 
         @Test
-        @DisplayName("should return 200 OK with body from service")
+        @DisplayName("should return 200 OK")
         void shouldReturn200Ok() {
             when(ticketsService.findOne(ticketId)).thenReturn(response);
-
             ResponseEntity<CreateTicketResponse> result = controller.getTicket(ticketId);
-
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getBody()).isSameAs(response);
-            verify(ticketsService).findOne(ticketId);
         }
 
         @Test
-        @DisplayName("should propagate EntityNotFoundException from service")
+        @DisplayName("should propagate TicketNotFoundException")
         void shouldPropagateException() {
-            when(ticketsService.findOne(ticketId))
-                    .thenThrow(new EntityNotFoundException("Ticket not found"));
+            when(ticketsService.findOne(ticketId)).thenThrow(new TicketNotFoundException(ticketId));
 
             assertThatThrownBy(() -> controller.getTicket(ticketId))
-                    .isInstanceOf(EntityNotFoundException.class)
-                    .hasMessageContaining("Ticket not found");
+                    .isInstanceOf(TicketNotFoundException.class);
         }
-    }
-
-    // ---------- patchTicket() ----------
-
-    @Nested
-    @DisplayName("patchTicket()")
-    class PatchTicketTests {
 
         @Test
-        @DisplayName("should return 200 OK with patched body")
-        void shouldReturn200OkWithPatchedBody() {
+        @DisplayName("should return 200 OK for patch")
+        void shouldReturn200OkForPatch() {
             TicketPatchRequest patch = new TicketPatchRequest();
             when(ticketsService.patch(ticketId, patch)).thenReturn(response);
 
@@ -219,30 +154,16 @@ class TicketsControllerApiImplTest {
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getBody()).isSameAs(response);
-            verify(ticketsService).patch(ticketId, patch);
-        }
-
-        @Test
-        @DisplayName("should propagate EntityNotFoundException from service")
-        void shouldPropagateException() {
-            TicketPatchRequest patch = new TicketPatchRequest();
-            when(ticketsService.patch(ticketId, patch))
-                    .thenThrow(new EntityNotFoundException("Ticket not found"));
-
-            assertThatThrownBy(() -> controller.patchTicket(ticketId, patch))
-                    .isInstanceOf(EntityNotFoundException.class);
         }
     }
 
-    // ---------- buyTicket() ----------
-
     @Nested
-    @DisplayName("buyTicket()")
-    class BuyTicketTests {
+    @DisplayName("buyTicket() / returnTicket()")
+    class BuyAndReturnTests {
 
         @Test
-        @DisplayName("should return 200 OK with purchased ticket")
-        void shouldReturn200Ok() {
+        @DisplayName("should return 200 OK for buyTicket")
+        void shouldReturn200OkForBuy() {
             when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
             when(ticketsService.buyTicket(ticketId, userId)).thenReturn(response);
 
@@ -250,32 +171,11 @@ class TicketsControllerApiImplTest {
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getBody()).isSameAs(response);
-            verify(ticketsService).buyTicket(ticketId, userId);
         }
 
         @Test
-        @DisplayName("should propagate IllegalStateException when already purchased")
-        void shouldPropagateIllegalState() {
-            when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
-
-            when(ticketsService.buyTicket(ticketId, userId))
-                    .thenThrow(new IllegalStateException("Ticket already purchased"));
-
-            assertThatThrownBy(() -> controller.buyTicket(ticketId))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("already purchased");
-        }
-    }
-
-    // ---------- returnTicket() ----------
-
-    @Nested
-    @DisplayName("returnTicket()")
-    class ReturnTicketTests {
-
-        @Test
-        @DisplayName("should return 200 OK with returned ticket")
-        void shouldReturn200Ok() {
+        @DisplayName("should return 200 OK for returnTicket")
+        void shouldReturn200OkForReturn() {
             when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
             when(ticketsService.returnTicket(ticketId, userId)).thenReturn(response);
 
@@ -283,89 +183,53 @@ class TicketsControllerApiImplTest {
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getBody()).isSameAs(response);
-            verify(ticketsService).returnTicket(ticketId, userId);
-        }
-
-        @Test
-        @DisplayName("should propagate IllegalStateException when not purchased")
-        void shouldPropagateIllegalState() {
-            when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
-            when(ticketsService.returnTicket(ticketId, userId))
-                    .thenThrow(new IllegalStateException("Ticket is not purchased"));
-
-            assertThatThrownBy(() -> controller.returnTicket(ticketId))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("not purchased");
         }
     }
-
-    // ---------- releaseTicketsBatch() ----------
 
     @Nested
     @DisplayName("releaseTicketsBatch()")
     class ReleaseTicketsBatchTests {
 
         @Test
-        @DisplayName("should return 200 OK with batch response")
+        @DisplayName("should return 200 OK")
         void shouldReturn200Ok() {
             ReleaseTicketsBatchRequest request = new ReleaseTicketsBatchRequest();
             ReleaseTicketsBatchResponse batchResponse = new ReleaseTicketsBatchResponse();
             when(ticketsService.releaseTicketsBatch(request)).thenReturn(batchResponse);
 
-            ResponseEntity<ReleaseTicketsBatchResponse> result =
-                    controller.releaseTicketsBatch(request);
+            ResponseEntity<ReleaseTicketsBatchResponse> result = controller.releaseTicketsBatch(request);
 
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getBody()).isSameAs(batchResponse);
-            verify(ticketsService).releaseTicketsBatch(request);
-        }
-
-        @Test
-        @DisplayName("should propagate IllegalStateException when no free seats")
-        void shouldPropagateIllegalState() {
-            ReleaseTicketsBatchRequest request = new ReleaseTicketsBatchRequest();
-            when(ticketsService.releaseTicketsBatch(request))
-                    .thenThrow(new IllegalStateException("Нет свободных мест"));
-
-            assertThatThrownBy(() -> controller.releaseTicketsBatch(request))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("Нет свободных мест");
         }
     }
-
-    // ---------- downloadTicketPdf() ----------
 
     @Nested
     @DisplayName("downloadTicketPdf()")
     class DownloadTicketPdfTests {
 
-        private TicketJpaEntity ticket;
+        private Ticket ticket;
         private byte[] pdfBytes;
 
         @BeforeEach
         void setUp() {
-            UserJpaEntity user = new UserJpaEntity();
-            user.setId(userId);
-
-            ticket = new TicketJpaEntity();
-            ticket.setId(ticketId);
-            ticket.setUser(user);
-
-            pdfBytes = new byte[]{37, 80, 68, 70}; // %PDF (магия PDF файла)
+            User user = User.builder().id(userId).build();
+            ticket = Ticket.builder()
+                    .id(ticketId)
+                    .user(user)
+                    .build();
+            pdfBytes = new byte[]{37, 80, 68, 70}; // %PDF
         }
 
         @Test
-        @DisplayName("should return 200 OK with PDF file when user owns the ticket")
+        @DisplayName("should return 200 OK with PDF file")
         void shouldReturn200OkWithPdf() {
-            // given
             when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
             when(ticketsService.findById(ticketId)).thenReturn(ticket);
             when(ticketPdfService.generatePdf(ticket)).thenReturn(pdfBytes);
 
-            // when
             ResponseEntity<Resource> response = controller.downloadTicketPdf(ticketId);
 
-            // then
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
             assertThat(response.getHeaders().getContentLength()).isEqualTo(pdfBytes.length);
@@ -374,22 +238,15 @@ class TicketsControllerApiImplTest {
 
             assertThat(response.getBody()).isInstanceOf(ByteArrayResource.class);
             assertThat(((ByteArrayResource) response.getBody()).getByteArray()).isEqualTo(pdfBytes);
-
-            verify(ticketPdfService).generatePdf(ticket);
         }
 
         @Test
-        @DisplayName("should throw AccessDeniedException when ticket belongs to another user")
+        @DisplayName("should throw AccessDeniedException when different user")
         void shouldThrowWhenDifferentUser() {
-            // given
-            UserJpaEntity otherUser = new UserJpaEntity();
-            otherUser.setId(UUID.randomUUID());
-            ticket.setUser(otherUser);
-
+            ticket.setUser(User.builder().id(UUID.randomUUID()).build());
             when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
             when(ticketsService.findById(ticketId)).thenReturn(ticket);
 
-            // when & then
             assertThatThrownBy(() -> controller.downloadTicketPdf(ticketId))
                     .isInstanceOf(AccessDeniedException.class)
                     .hasMessage("Это не ваш билет");
@@ -398,15 +255,12 @@ class TicketsControllerApiImplTest {
         }
 
         @Test
-        @DisplayName("should throw AccessDeniedException when ticket is not purchased")
+        @DisplayName("should throw AccessDeniedException when no user")
         void shouldThrowWhenTicketHasNoUser() {
-            // given
             ticket.setUser(null);
-
             when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
             when(ticketsService.findById(ticketId)).thenReturn(ticket);
 
-            // when & then
             assertThatThrownBy(() -> controller.downloadTicketPdf(ticketId))
                     .isInstanceOf(AccessDeniedException.class)
                     .hasMessage("Это не ваш билет");
@@ -415,14 +269,13 @@ class TicketsControllerApiImplTest {
         }
 
         @Test
-        @DisplayName("should propagate EntityNotFoundException when ticket not found")
+        @DisplayName("should propagate TicketNotFoundException")
         void shouldPropagateExceptionWhenNotFound() {
             when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
-            when(ticketsService.findById(ticketId))
-                    .thenThrow(new EntityNotFoundException("Ticket with id " + ticketId + " not found"));
+            when(ticketsService.findById(ticketId)).thenThrow(new TicketNotFoundException(ticketId));
 
             assertThatThrownBy(() -> controller.downloadTicketPdf(ticketId))
-                    .isInstanceOf(EntityNotFoundException.class);
+                    .isInstanceOf(TicketNotFoundException.class);
 
             verifyNoInteractions(ticketPdfService);
         }

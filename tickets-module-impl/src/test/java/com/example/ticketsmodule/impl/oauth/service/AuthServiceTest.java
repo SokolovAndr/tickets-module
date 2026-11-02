@@ -4,9 +4,9 @@ import com.example.ticketsmodule.api.model.LoginRequest;
 import com.example.ticketsmodule.api.model.LoginResponse;
 import com.example.ticketsmodule.api.model.RefreshTokenRequest;
 import com.example.ticketsmodule.api.model.RegisterRequest;
+import com.example.ticketsmodule.domain.user.model.User;
+import com.example.ticketsmodule.domain.user.repository.UsersRepositoryPort;
 import com.example.ticketsmodule.impl.users.conversion.RegisterMapper;
-import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
-import com.example.ticketsmodule.impl.users.persistence.repository.UserSpringDataRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.*;
 @DisplayName("AuthService unit tests")
 class AuthServiceTest {
 
-    @Mock private UserSpringDataRepository userSpringDataRepository;
+    @Mock private UsersRepositoryPort usersRepositoryPort; // <-- Порт
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private JwtService jwtService;
     @Mock private JwtDecoder refreshTokenJwtDecoder;
@@ -43,18 +43,19 @@ class AuthServiceTest {
     private AuthService authService;
 
     private UUID userId;
-    private UserJpaEntity user;
+    private User user; // <-- Домен
     private LoginResponse expectedResponse;
 
     @BeforeEach
     void setUp() {
         userId = UUID.randomUUID();
 
-        user = new UserJpaEntity();
-        user.setId(userId);
-        user.setLogin("admin");
-        user.setPassword("$2a$10$hashed");
-        user.setFullName("Admin Adminov");
+        user = User.builder()
+                .id(userId)
+                .login("admin")
+                .password("$2a$10$hashed")
+                .fullName("Admin Adminov")
+                .build();
 
         expectedResponse = new LoginResponse();
     }
@@ -72,14 +73,14 @@ class AuthServiceTest {
             request.setLogin("admin");
             request.setPassword("secret");
 
-            when(userSpringDataRepository.findByLogin("admin")).thenReturn(Optional.of(user));
+            when(usersRepositoryPort.findByLogin("admin")).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("secret", user.getPassword())).thenReturn(true);
             when(jwtService.createTokenPair(user)).thenReturn(expectedResponse);
 
             LoginResponse actual = authService.login(request);
 
             assertThat(actual).isSameAs(expectedResponse);
-            verify(userSpringDataRepository).findByLogin("admin");
+            verify(usersRepositoryPort).findByLogin("admin");
             verify(passwordEncoder).matches("secret", user.getPassword());
             verify(jwtService).createTokenPair(user);
         }
@@ -91,7 +92,7 @@ class AuthServiceTest {
             request.setLogin("unknown");
             request.setPassword("secret");
 
-            when(userSpringDataRepository.findByLogin("unknown")).thenReturn(Optional.empty());
+            when(usersRepositoryPort.findByLogin("unknown")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> authService.login(request))
                     .isInstanceOf(BadCredentialsException.class)
@@ -107,7 +108,7 @@ class AuthServiceTest {
             request.setLogin("admin");
             request.setPassword("wrong");
 
-            when(userSpringDataRepository.findByLogin("admin")).thenReturn(Optional.of(user));
+            when(usersRepositoryPort.findByLogin("admin")).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("wrong", user.getPassword())).thenReturn(false);
 
             assertThatThrownBy(() -> authService.login(request))
@@ -133,7 +134,7 @@ class AuthServiceTest {
             Jwt jwt = buildJwt(userId, JwtService.TOKEN_TYPE_REFRESH);
 
             when(refreshTokenJwtDecoder.decode("valid.refresh.token")).thenReturn(jwt);
-            when(userSpringDataRepository.findById(userId)).thenReturn(Optional.of(user));
+            when(usersRepositoryPort.findById(userId)).thenReturn(Optional.of(user));
             when(jwtService.createTokenPair(user)).thenReturn(expectedResponse);
 
             LoginResponse actual = authService.refresh(request);
@@ -148,7 +149,7 @@ class AuthServiceTest {
             RefreshTokenRequest request = new RefreshTokenRequest();
             request.setRefreshToken("access.token");
 
-            Jwt jwt = buildJwt(userId, "access"); // не refresh
+            Jwt jwt = buildJwt(userId, "access");
 
             when(refreshTokenJwtDecoder.decode("access.token")).thenReturn(jwt);
 
@@ -156,7 +157,7 @@ class AuthServiceTest {
                     .isInstanceOf(BadCredentialsException.class)
                     .hasMessageContaining("Invalid refresh token");
 
-            verifyNoInteractions(userSpringDataRepository, jwtService);
+            verifyNoInteractions(usersRepositoryPort, jwtService);
         }
 
         @Test
@@ -168,7 +169,7 @@ class AuthServiceTest {
             Jwt jwt = buildJwt(userId, JwtService.TOKEN_TYPE_REFRESH);
 
             when(refreshTokenJwtDecoder.decode("valid.refresh.token")).thenReturn(jwt);
-            when(userSpringDataRepository.findById(userId)).thenReturn(Optional.empty());
+            when(usersRepositoryPort.findById(userId)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> authService.refresh(request))
                     .isInstanceOf(BadCredentialsException.class)
@@ -189,7 +190,7 @@ class AuthServiceTest {
             assertThatThrownBy(() -> authService.refresh(request))
                     .isInstanceOf(org.springframework.security.oauth2.jwt.JwtException.class);
 
-            verifyNoInteractions(userSpringDataRepository, jwtService);
+            verifyNoInteractions(usersRepositoryPort, jwtService);
         }
     }
 
@@ -207,21 +208,22 @@ class AuthServiceTest {
             request.setPassword("secret");
             request.setFullName("New User");
 
-            UserJpaEntity newUser = new UserJpaEntity();
-            newUser.setId(UUID.randomUUID());
-            newUser.setLogin("newuser");
+            User newUser = User.builder()
+                    .id(UUID.randomUUID())
+                    .login("newuser")
+                    .build();
 
-            when(userSpringDataRepository.findByLogin("newuser")).thenReturn(Optional.empty());
-            when(registerMapper.toEntity(request)).thenReturn(newUser);
+            when(usersRepositoryPort.findByLogin("newuser")).thenReturn(Optional.empty());
+            when(registerMapper.toDomain(request)).thenReturn(newUser); // <-- toDomain!
             when(passwordEncoder.encode("secret")).thenReturn("$2a$10$encrypted");
-            when(userSpringDataRepository.save(newUser)).thenReturn(newUser);
+            when(usersRepositoryPort.save(newUser)).thenReturn(newUser);
             when(jwtService.createTokenPair(newUser)).thenReturn(expectedResponse);
 
             LoginResponse actual = authService.register(request);
 
             assertThat(actual).isSameAs(expectedResponse);
-            verify(registerMapper).toEntity(request);
-            verify(userSpringDataRepository).save(newUser);
+            verify(registerMapper).toDomain(request); // <-- Проверяем toDomain
+            verify(usersRepositoryPort).save(newUser);
             verify(jwtService).createTokenPair(newUser);
         }
 
@@ -231,23 +233,19 @@ class AuthServiceTest {
             RegisterRequest request = new RegisterRequest();
             request.setLogin("admin");
 
-            when(userSpringDataRepository.findByLogin("admin")).thenReturn(Optional.of(user));
+            when(usersRepositoryPort.findByLogin("admin")).thenReturn(Optional.of(user));
 
             assertThatThrownBy(() -> authService.register(request))
                     .isInstanceOf(BadCredentialsException.class)
                     .hasMessageContaining("Login is already occupied");
 
-            verify(userSpringDataRepository, never()).save(any());
+            verify(usersRepositoryPort, never()).save(any());
             verifyNoInteractions(registerMapper, jwtService);
         }
     }
 
     // ---------- helper ----------
 
-    /**
-     * Собирает настоящий Jwt через builder, чтобы не мокать Spring-класс.
-     * subject = userId, claim typ = tokenType.
-     */
     private static Jwt buildJwt(UUID subject, String tokenType) {
         Instant now = Instant.now();
         return Jwt.withTokenValue("token-value")
