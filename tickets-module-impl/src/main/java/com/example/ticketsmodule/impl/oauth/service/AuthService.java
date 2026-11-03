@@ -67,8 +67,7 @@ public class AuthService {
         newUser.setCreatedAt(LocalDateTime.now());
         newUser.setUpdatedAt(LocalDateTime.now());
 
-        usersRepositoryPort.save(newUser);
-
-        return jwtService.createTokenPair(newUser);
+        User savedUser = usersRepositoryPort.save(newUser);
+        return jwtService.createTokenPair(savedUser);
     }
 }
