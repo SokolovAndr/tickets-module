@@ -10,9 +10,6 @@
 Основная бизнес-логика — управление билетами, маршрутами и перевозчиками.
 Дополнительно реализован web-модуль с HTML-формами на Spring MVC + Spring Security.
 
-> 🌐 **Production:** https://tickets-module-production.up.railway.app  
-> 📄 **API Documentation (Swagger UI):** https://tickets-module-production.up.railway.app/swagger-ui/index.html
-
 ## 📸 Скриншоты
 
 <table>
@@ -82,22 +79,22 @@ graph TD
 
 ## 🛠 Технологии
 
-| Технология                     | Назначение                                  |
-|--------------------------------|---------------------------------------------|
-| ☕ Java 17 + Spring Boot 3.2.5  | Основной язык и фреймворк                   |
-| 🔐 Spring Security 6           | Сессии, JWT                                 |
-| 🖼 Thymeleaf                   | Шаблонизатор для web-форм                   |
-| 📦 Maven (wrapper)             | Многомодульная сборка                       |
+| Технология                     | Назначение                                 |
+|--------------------------------|--------------------------------------------|
+| ☕ Java 17 + Spring Boot 3.2.5  | Основной язык и фреймворк                  |
+| 🔐 Spring Security 6           | Сессии, JWT                                |
+| 🖼 Thymeleaf                   | Шаблонизатор для web-форм                  |
+| 📦 Maven (wrapper)             | Многомодульная сборка                      |
 | 🐘 PostgreSQL 13               | Основная база данных (через `compose.yaml`) |
-| 🧪 JUnit 5 + Mockito + MockMvc | Юнит- и интеграционные тесты                |
-| 📊 JaCoCo 0.8.11               | Покрытие кода                               |
-| 🔍 SonarCloud                  | Анализ качества и Quality Gate              |
-| 🐳 Docker Compose              | Локальный запуск БД и Redis                 |
+| 🧪 JUnit 5 + Mockito + MockMvc | Юнит- и интеграционные тесты               |
+| 📊 JaCoCo 0.8.11               | Покрытие кода                              |
+| 🔍 SonarCloud                  | Анализ качества и Quality Gate             |
+| 🐳 Docker Compose              | Локальный запуск БД и Redis                |
 | 📦 Testcontainers              | Подъём PostgreSQL для интеграционных тестов |
-| 📄 OpenAPI Generator           | Генерация DTO и интерфейсов контроллеров    |
-| 🏗 Dockerfile                  | Сборка образа для деплоя на Railway         |
+| 📄 OpenAPI Generator           | Генерация DTO и интерфейсов контроллеров   |
+| 🏗 Dockerfile                  | Сборка Docker-образа приложения        |
 | 🔄 MapStruct 1.5.5             | Генерация мапперов Domain ↔ DTO и JPA Entity ↔ Domain |
-| 🔴 Redis 7                    | Кэш купленных билетов пользователя          |
+| 🔴 Redis 7                    | Кэш купленных билетов пользователя         |
 
 
 ## 🚀 Быстрый старт
@@ -168,7 +165,6 @@ tickets-module-app/target/site/jacoco/index.html
 | Профиль | Назначение |
 |---------|-----------|
 | `application-local.yml` | Локальная конфигурация |
-| `application-railway.yml` | Конфигурация для деплоя на [Railway](https://railway.app/) |
 | `application-test.yml` | Конфигурация для интеграционных тестов (PostgreSQL в Docker через Testcontainers) |
 
 Интеграционные тесты (`*IT`) используют `Testcontainers`. 
@@ -176,30 +172,6 @@ tickets-module-app/target/site/jacoco/index.html
 Отдельно поднимать БД через `docker compose` для тестов не нужно — достаточно, чтобы был доступен Docker.
 
 Redis подключается в профиле `application-local.yml`. В тестах кэш отключён (`spring.cache.type: none`).
-
-## 🐳 Docker / Railway
-
-Сборка образа:
-
-```bash
-docker build -t tickets-module .
-```
-
-Dockerfile использует multi-stage build:
-1. **build** — `maven:3.9.6-eclipse-temurin-17`, кэширует зависимости (`dependency:go-offline`), собирает JAR.
-2. **runtime** — `eclipse-temurin:17-jre-jammy`, запускает `tickets-module-app`.
-
-## ⚠️ Ограничения Free-плана Railway
-
-Приложение размещено на **бесплатном плане Railway (Free)**, поэтому производительность ограничена ресурсами хостинга, а не кодом:
-
-- **CPU** — shared, с троттлингом под нагрузкой;
-- **RAM** — ~512 МБ, часто приводит к частому GC и замедлению JVM;
-- **Cold start** — приложение «засыпает» при простое, первый запрос долгий;
-- **БД** — те же лимиты по CPU/RAM и количеству подключений;
-- **Redis на Railway не подключён** — кэш отключён, запросы `GET /api/tickets/my` идут напрямую в PostgreSQL;
-
-Как следствие: медленный старт, долгие ответы API, долгая загрузка web-страниц. Это ожидаемое поведение Free-плана, а не баг приложения.
 
 ## 🔐 Безопасность
 
@@ -214,7 +186,7 @@ Dockerfile использует multi-stage build:
 
 ## ⚡ Кэширование
 
-Проект использует Redis для кэширования списка купленных билетов пользователя (в локальном профиле).
+Проект использует Redis для кэширования списка купленных билетов пользователя.
 
 ### Что кэшируется
 
@@ -230,8 +202,6 @@ Dockerfile использует multi-stage build:
 | TTL | 30 минут |
 | Инвалидация | `@CacheEvict` на `buyTicket` и `returnTicket` |
 | Fallback | `LoggingCacheErrorHandler` — при падении Redis метод идёт в Postgres |
-
-> ℹ️ Кэш активен только в профиле `local`. На Railway Redis не развёрнут, поэтому метод уходит в PostgreSQL.
 
 ### Проверка
 
