@@ -89,12 +89,12 @@ graph TD
 | 🧪 JUnit 5 + Mockito + MockMvc | Юнит- и интеграционные тесты               |
 | 📊 JaCoCo 0.8.11               | Покрытие кода                              |
 | 🔍 SonarCloud                  | Анализ качества и Quality Gate             |
-| 🐳 Docker Compose              | Локальный запуск БД и Redis                |
+| 🐳 Docker Compose              | Запуск всего стека (БД + Redis + App)      |
 | 📦 Testcontainers              | Подъём PostgreSQL для интеграционных тестов |
 | 📄 OpenAPI Generator           | Генерация DTO и интерфейсов контроллеров   |
-| 🏗 Dockerfile                  | Сборка Docker-образа приложения        |
+| 🏗 Dockerfile                  | Multi-stage сборка Docker-образа приложения        |
 | 🔄 MapStruct 1.5.5             | Генерация мапперов Domain ↔ DTO и JPA Entity ↔ Domain |
-| 🔴 Redis 7                    | Кэш купленных билетов пользователя         |
+| 🔴 Redis 7                     | Кэш купленных билетов пользователя         |
 
 
 ## 🚀 Быстрый старт
@@ -115,40 +115,53 @@ git clone https://github.com/SokolovAndr/tickets-module.git
 cd tickets-module
 ```
 
-### 🐳 Запуск инфраструктуры
-
-```bash
-docker compose up -d
-```
-
-Поднимает два сервиса:
-- `postgres` — порт 5454
-- `redis` — порт 6379
-
 
 ### ▶️ Запуск приложения
 
-#### Для локального запуска через IDEA необходимо:
-1. создать environment variable "JWT_SECRET" в Run/Debug Configuration. Значение переменной нужно уточнить у автора.
-2. Указать профиль: _local_
-3. Запустить
+У вас есть **три варианта** запуска. Выбирайте тот, который удобнее для ваших задач.
 
-#### Для локального запуска через терминал необходимо:
-1. собрать приложение командой:
+#### 🐳 Вариант 1: Полный запуск через Docker Compose (Самый простой)
 
-```
-./mvnw clean package
-# или
-mvn clean package
-```
+Этот способ поднимает **весь стек** (PostgreSQL, Redis и само Spring Boot приложение) в изолированных контейнерах. 
+Вам не нужно устанавливать JDK или Maven, достаточно только Docker.
 
-2. запустить командой:
+**⚠️ ВАЖНО:** Перед запуском откройте `compose.yaml` и убедитесь, что задано значение переменной `JWT_SECRET`.
 
-```cmd
+1. Соберите и запустите всё одной командой:
+   ```bash
+   docker compose up --build -d
+   ```
+2. Приложение будет доступно на http://localhost:8080
+3. Остановить всё: docker compose down
+
+#### 💻 Вариант 2: Локальный запуск в IDEA (Для разработки)
+
+В этом варианте Docker используется только для БД и Redis, а приложение вы запускаете в IDEA (чтобы работал Debug).
+1. Поднимите только инфраструктуру (БД и Redis):
+   ```bash
+   docker compose up -d postgres redis
+   ```
+2. Откройте IDEA -> Run -> Edit Configurations.
+3. В поле Environment variables добавьте: `JWT_SECRET=super_secret_jwt_key_which_is_long_enough_12345`
+4. Укажите профиль: local.
+5. Запустите Application.java. Приложение будет доступно на http://localhost:8080.
+
+#### 📦 Вариант 3: Запуск через JAR-файл (Ближе к Production)
+1. Поднимите инфраструктуру:
+   ```bash
+   docker compose up -d postgres redis
+   ```
+2. Соберите приложение:
+   ```bash
+   ./mvnw clean package
+   ```
+3. Передайте секрет и запустите JAR:
+
+```bash
 $env:JWT_SECRET="ПОДСТАВИТЬ_ЗНАЧЕНИЕ_JWT_SECRET"
 java -jar tickets-module-app/target/tickets-module-app-0.0.1-SNAPSHOT.jar --spring.profiles.active=local
 ```
-Приложение по умолчанию будет доступно на http://localhost:8099.
+Приложение будет доступно на http://localhost:8080.
 
 ### 🔨 Для полной сборки с интеграционными тестами и агрегированным отчётом JaCoCo:
 
@@ -254,7 +267,7 @@ SonarCloud использует агрегированный отчёт чере
 
 Ключевые решения зафиксированы в [ADR](docs/adr/):
 - [0001 — Разбиение на Maven-модули](docs/adr/0001-multimodule-structure.md)
-- [0002 — JPA-сущности как доменные модели](docs/adr/0002-jpa-as-domain.md)
+- [0002 — JPA-сущности как доменные модели (Устарело)](docs/adr/0002-jpa-as-domain.md)
 - [0003 — Две цепочки Security: session + JWT](docs/adr/0003-jwt-and-sessions.md)
 - [0004 — Redis для кэша купленных билетов](docs/adr/0004-caching-strategy.md)
 - [0005 — Отклонение от правила web → impl](docs/adr/0005-web-impl-coupling.md)
