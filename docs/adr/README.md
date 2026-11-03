@@ -7,10 +7,11 @@
 | №                                     | Решение | Статус |
 |---------------------------------------|---|---|
 | [0001](0001-multimodule-structure.md) | Разбиение на Maven-модули | Accepted |
-| [0002](0002-jpa-as-domain.md)         | JPA-сущности как доменные модели | Accepted |
+| [0002](0002-jpa-as-domain.md)         | JPA-сущности как доменные модели | Superseded by 0006 |
 | [0003](0003-jwt-and-sessions.md)      | Две цепочки Security: session + JWT | Accepted |
 | [0004](0004-caching-strategy.md)      | Redis для кэша купленных билетов | Accepted |
 | [0005](0005-web-impl-coupling.md)     | Отклонение от правила web → impl | Accepted |
+| [0006](0006-hexagonal-architecture.md)| Выделение чистого домена (Hexagonal) | Accepted |
 
 ## Формат
 

@@ -26,5 +26,8 @@ WORKDIR /app
 # Копируем только готовый fat JAR
 COPY --from=build /app/tickets-module-app/target/tickets-module-app-0.0.1-SNAPSHOT.jar app.jar
 
-# Railway сам подставит $PORT через application-railway.yml
-CMD ["java", "-Xmx384m", "-jar", "app.jar"]
+# По умолчанию приложение запускается на порту 8099 (см. application.yml)
+# Профиль и переменные окружения (например, JWT_SECRET) передаются при запуске контейнера
+EXPOSE 8099
+
+CMD ["java", "-jar", "app.jar"]
