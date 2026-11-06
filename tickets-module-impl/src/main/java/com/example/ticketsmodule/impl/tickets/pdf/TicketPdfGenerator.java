@@ -1,4 +1,4 @@
-package com.example.ticketsmodule.impl.tickets.service;
+package com.example.ticketsmodule.impl.tickets.pdf;
 
 import com.example.ticketsmodule.domain.ticket.model.Ticket;
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder.FontStyle;
@@ -7,7 +7,7 @@ import com.openhtmltopdf.util.XRLog;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
@@ -17,9 +17,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 @Slf4j
-@Service
+@Component
 @RequiredArgsConstructor
-public class TicketPdfService {
+public class TicketPdfGenerator {
 
     private final TemplateEngine templateEngine;
 

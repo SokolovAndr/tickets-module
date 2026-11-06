@@ -4,8 +4,7 @@ import com.example.ticketsmodule.domain.common.PageRequest;
 import com.example.ticketsmodule.domain.common.PageResult;
 import com.example.ticketsmodule.domain.ticket.model.Ticket;
 import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
-import com.example.ticketsmodule.impl.tickets.persistence.entity.TicketJpaEntity;
-import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
+import com.example.ticketsmodule.impl.tickets.pdf.TicketPdfGenerator;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -40,7 +39,7 @@ public class TicketsControllerApiImpl implements TicketsControllerApi {
 
     private final TicketsService ticketsService;
     private final JwtCurrentUserService jwtCurrentUserService;
-    private final TicketPdfService ticketPdfService;
+    private final TicketPdfGenerator ticketPdfGenerator;
 
     @Override
     public ResponseEntity<CreateTicketResponse> createTicket(@RequestBody CreateTicketRequest createTicketRequest) {
@@ -112,7 +111,7 @@ public class TicketsControllerApiImpl implements TicketsControllerApi {
             throw new org.springframework.security.access.AccessDeniedException("Это не ваш билет");
         }
 
-        byte[] pdfBytes = ticketPdfService.generatePdf(ticket);
+        byte[] pdfBytes = ticketPdfGenerator.generatePdf(ticket);
         ByteArrayResource resource = new ByteArrayResource(pdfBytes);
 
         return ResponseEntity.ok()

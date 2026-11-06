@@ -6,7 +6,7 @@ import com.example.ticketsmodule.domain.ticket.model.Ticket;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
 
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
-import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
+import com.example.ticketsmodule.impl.tickets.pdf.TicketPdfGenerator;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
 import com.example.ticketsmodule.web.tickets.dto.MyTicketView;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +39,7 @@ public class MyTicketsViewController {
     private final TicketsService ticketsService;
     private final RoutesService routesService;
     private final SessionCurrentUserService sessionCurrentUserService;
-    private final TicketPdfService ticketPdfService;
+    private final TicketPdfGenerator ticketPdfGenerator;
 
     @GetMapping("/my-tickets")
     public String list(Model model) {
@@ -96,7 +96,7 @@ public class MyTicketsViewController {
             throw new AccessDeniedException("Это не ваш билет");
         }
 
-        byte[] pdfBytes = ticketPdfService.generatePdf(ticket);
+        byte[] pdfBytes = ticketPdfGenerator.generatePdf(ticket);
         ByteArrayResource resource = new ByteArrayResource(pdfBytes);
 
         return ResponseEntity.ok()

@@ -1,6 +1,7 @@
 package com.example.ticketsmodule.impl.tickets.service;
 
 import com.example.ticketsmodule.domain.ticket.model.Ticket;
+import com.example.ticketsmodule.impl.tickets.pdf.TicketPdfGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,13 +22,13 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("TicketPdfService unit tests")
-class TicketPdfServiceTest {
+class TicketPdfGeneratorTest {
 
     @Mock
     private TemplateEngine templateEngine;
 
     @InjectMocks
-    private TicketPdfService ticketPdfService;
+    private TicketPdfGenerator ticketPdfGenerator;
 
     private Ticket testTicket;
 
@@ -46,7 +47,7 @@ class TicketPdfServiceTest {
         when(templateEngine.process(eq("pdf/ticket"), any(Context.class)))
                 .thenReturn(mockHtml);
 
-        byte[] pdfBytes = ticketPdfService.generatePdf(testTicket);
+        byte[] pdfBytes = ticketPdfGenerator.generatePdf(testTicket);
 
         assertThat(pdfBytes).isNotNull().isNotEmpty();
 
@@ -60,7 +61,7 @@ class TicketPdfServiceTest {
         when(templateEngine.process(eq("pdf/ticket"), any(Context.class)))
                 .thenThrow(new RuntimeException("Template error"));
 
-        assertThatThrownBy(() -> ticketPdfService.generatePdf(testTicket))
+        assertThatThrownBy(() -> ticketPdfGenerator.generatePdf(testTicket))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Не удалось сгенерировать PDF");
     }
