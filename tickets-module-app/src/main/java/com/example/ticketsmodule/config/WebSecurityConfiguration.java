@@ -12,6 +12,8 @@ public class WebSecurityConfiguration {
     private static final String LOGIN_PATH = "/login";
     private static final String REGISTER_PATH = "/register";
     private static final String ERROR_PATH = "/error";
+    private static final String ACTUATOR_PATH = "/actuator/**";
+
 
     @Bean
     @Order(2)
@@ -22,6 +24,7 @@ public class WebSecurityConfiguration {
                                 REGISTER_PATH,
                                 LOGIN_PATH,
                                 ERROR_PATH,
+                                ACTUATOR_PATH,
                                 "/css/**",
                                 "/js/**",
                                 "/images/**",

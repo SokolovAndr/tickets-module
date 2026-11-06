@@ -79,22 +79,24 @@ graph TD
 
 ## 🛠 Технологии
 
-| Технология                     | Назначение                                 |
-|--------------------------------|--------------------------------------------|
-| ☕ Java 17 + Spring Boot 3.2.5  | Основной язык и фреймворк                  |
-| 🔐 Spring Security 6           | Сессии, JWT                                |
-| 🖼 Thymeleaf                   | Шаблонизатор для web-форм                  |
-| 📦 Maven (wrapper)             | Многомодульная сборка                      |
-| 🐘 PostgreSQL 13               | Основная база данных (через `compose.yaml`) |
-| 🧪 JUnit 5 + Mockito + MockMvc | Юнит- и интеграционные тесты               |
-| 📊 JaCoCo 0.8.11               | Покрытие кода                              |
-| 🔍 SonarCloud                  | Анализ качества и Quality Gate             |
-| 🐳 Docker Compose              | Запуск всего стека (БД + Redis + App)      |
-| 📦 Testcontainers              | Подъём PostgreSQL для интеграционных тестов |
-| 📄 OpenAPI Generator           | Генерация DTO и интерфейсов контроллеров   |
-| 🏗 Dockerfile                  | Multi-stage сборка Docker-образа приложения        |
+| Технология                     | Назначение                                            |
+|--------------------------------|-------------------------------------------------------|
+| ☕ Java 17 + Spring Boot 3.2.5  | Основной язык и фреймворк                             |
+| 🔐 Spring Security 6           | Сессии, JWT                                           |
+| 🖼 Thymeleaf                   | Шаблонизатор для web-форм                             |
+| 📦 Maven (wrapper)             | Многомодульная сборка                                 |
+| 🐘 PostgreSQL 13               | Основная база данных (через `compose.yaml`)           |
+| 🧪 JUnit 5 + Mockito + MockMvc | Юнит- и интеграционные тесты                          |
+| 📊 JaCoCo 0.8.11               | Покрытие кода                                         |
+| 🔍 SonarCloud                  | Анализ качества и Quality Gate                        |
+| 🐳 Docker Compose              | Запуск всего стека (БД + Redis + App)                 |
+| 📦 Testcontainers              | Подъём PostgreSQL для интеграционных тестов           |
+| 📄 OpenAPI Generator           | Генерация DTO и интерфейсов контроллеров              |
+| 🏗 Dockerfile                  | Multi-stage сборка Docker-образа приложения           |
 | 🔄 MapStruct 1.5.5             | Генерация мапперов Domain ↔ DTO и JPA Entity ↔ Domain |
-| 🔴 Redis 7                     | Кэш купленных билетов пользователя         |
+| 🔴 Redis 7                     | Кэш купленных билетов пользователя                    |
+| 📈 Prometheus                  | Сбор метрик приложения                                |
+| 📊 Grafana                     | Визуализация метрик и дашборды                        |
 
 
 ## 🚀 Быстрый старт
@@ -129,17 +131,17 @@ cd tickets-module
 
 1. Соберите и запустите всё одной командой:
    ```bash
-   docker compose up --build -d
+   docker compose -f docker/compose.yaml up --build -d
    ```
 2. Приложение будет доступно на http://localhost:8080
-3. Остановить всё: docker compose down
+3. Остановить всё: docker compose -f docker/compose.yaml down
 
 #### 💻 Вариант 2: Локальный запуск в IDEA (Для разработки)
 
 В этом варианте Docker используется только для БД и Redis, а приложение вы запускаете в IDEA (чтобы работал Debug).
 1. Поднимите только инфраструктуру (БД и Redis):
    ```bash
-   docker compose up -d postgres redis
+   docker compose -f docker/compose.yaml up -d postgres redis
    ```
 2. Откройте IDEA -> Run -> Edit Configurations.
 3. В поле Environment variables добавьте: `JWT_SECRET=super_secret_jwt_key_which_is_long_enough_12345`
@@ -149,7 +151,7 @@ cd tickets-module
 #### 📦 Вариант 3: Запуск через JAR-файл (Ближе к Production)
 1. Поднимите инфраструктуру:
    ```bash
-   docker compose up -d postgres redis
+   docker compose -f docker/compose.yaml up -d postgres redis
    ```
 2. Соберите приложение:
    ```bash

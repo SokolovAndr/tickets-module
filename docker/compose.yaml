@@ -1,0 +1,85 @@
+name: tickets-module-project
+
+services:
+  postgres:
+    container_name: tickets-module-postgres
+    image: postgres:13
+    ports:
+      - "5454:5432"
+    environment:
+      TZ: Europe/Moscow
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: tickets_module_db
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d tickets_module_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    container_name: tickets-module-redis
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+  app:
+    container_name: tickets-module-app
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+#     НИЖЕ НУЖНО ЗАДАТЬ JWT_SECRET
+      - JWT_SECRET=JWT_SECRET
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/tickets_module_db
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: tickets-module-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - app
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: tickets-module-grafana
+    user: "root"
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: tickets-module-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: tickets-module-promtail
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
