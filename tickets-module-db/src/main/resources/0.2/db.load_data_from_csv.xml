@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="load-data-from-csv" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+            <tableExists tableName="carriers"/>
+            <tableExists tableName="routes"/>
+            <tableExists tableName="tickets"/>
+        </preConditions>
+
+        <loadData tableName="carriers" file="0.2/data/carriers.csv" separator="," quotchar='"'>
+            <column name="id" type="UUID"/>
+            <column name="name" type="STRING"/>
+            <column name="phone" type="STRING"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </loadData>
+
+        <loadData tableName="routes" file="0.2/data/routes.csv" separator="," quotchar='"'>
+            <column name="id" type="UUID"/>
+            <column name="departure_point" type="STRING"/>
+            <column name="destination_point" type="STRING"/>
+            <column name="carrier_id" type="UUID"/>
+            <column name="duration_minutes" type="NUMERIC"/>
+            <column name="departure_at" type="DATETIME"/>
+            <column name="destination_at" type="DATETIME"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </loadData>
+
+        <loadData tableName="tickets" file="0.2/data/tickets.csv" separator="," quotchar='"'>
+            <column name="id" type="UUID"/>
+            <column name="route_id" type="UUID"/>
+            <column name="seat_number" type="NUMERIC"/>
+            <column name="price" type="NUMERIC"/>
+            <column name="is_purchased" type="BOOLEAN"/>
+            <column name="purchased_by" type="UUID"/>
+            <column name="purchased_at" type="DATETIME"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+        </loadData>
+    </changeSet>
+</databaseChangeLog>
