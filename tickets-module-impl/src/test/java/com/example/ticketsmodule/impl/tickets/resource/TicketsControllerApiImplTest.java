@@ -12,7 +12,7 @@ import com.example.ticketsmodule.domain.ticket.exception.TicketNotFoundException
 import com.example.ticketsmodule.domain.ticket.model.Ticket;
 import com.example.ticketsmodule.domain.user.model.User;
 import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
-import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
+import com.example.ticketsmodule.impl.tickets.pdf.TicketPdfGenerator;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,7 +47,7 @@ class TicketsControllerApiImplTest {
 
     @Mock private TicketsService ticketsService;
     @Mock private JwtCurrentUserService jwtCurrentUserService;
-    @Mock private TicketPdfService ticketPdfService;
+    @Mock private TicketPdfGenerator ticketPdfGenerator;
 
     @InjectMocks
     private TicketsControllerApiImpl controller;
@@ -226,7 +226,7 @@ class TicketsControllerApiImplTest {
         void shouldReturn200OkWithPdf() {
             when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
             when(ticketsService.findById(ticketId)).thenReturn(ticket);
-            when(ticketPdfService.generatePdf(ticket)).thenReturn(pdfBytes);
+            when(ticketPdfGenerator.generatePdf(ticket)).thenReturn(pdfBytes);
 
             ResponseEntity<Resource> response = controller.downloadTicketPdf(ticketId);
 
@@ -251,7 +251,7 @@ class TicketsControllerApiImplTest {
                     .isInstanceOf(AccessDeniedException.class)
                     .hasMessage("Это не ваш билет");
 
-            verifyNoInteractions(ticketPdfService);
+            verifyNoInteractions(ticketPdfGenerator);
         }
 
         @Test
@@ -265,7 +265,7 @@ class TicketsControllerApiImplTest {
                     .isInstanceOf(AccessDeniedException.class)
                     .hasMessage("Это не ваш билет");
 
-            verifyNoInteractions(ticketPdfService);
+            verifyNoInteractions(ticketPdfGenerator);
         }
 
         @Test
@@ -277,7 +277,7 @@ class TicketsControllerApiImplTest {
             assertThatThrownBy(() -> controller.downloadTicketPdf(ticketId))
                     .isInstanceOf(TicketNotFoundException.class);
 
-            verifyNoInteractions(ticketPdfService);
+            verifyNoInteractions(ticketPdfGenerator);
         }
     }
 }

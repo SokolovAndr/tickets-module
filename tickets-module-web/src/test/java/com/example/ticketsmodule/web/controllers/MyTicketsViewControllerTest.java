@@ -6,7 +6,7 @@ import com.example.ticketsmodule.domain.ticket.model.Ticket;
 import com.example.ticketsmodule.domain.user.model.User;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
-import com.example.ticketsmodule.impl.tickets.service.TicketPdfService;
+import com.example.ticketsmodule.impl.tickets.pdf.TicketPdfGenerator;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
 import com.example.ticketsmodule.web.tickets.controller.MyTicketsViewController;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +49,7 @@ class MyTicketsViewControllerTest {
     private SessionCurrentUserService sessionCurrentUserService;
 
     @MockBean
-    private TicketPdfService ticketPdfService;
+    private TicketPdfGenerator ticketPdfGenerator;
 
 
     private UUID ticketId;
@@ -130,7 +130,7 @@ class MyTicketsViewControllerTest {
 
         when(sessionCurrentUserService.getCurrentUserId()).thenReturn(userId);
         when(ticketsService.findById(ticketId)).thenReturn(ticket);
-        when(ticketPdfService.generatePdf(ticket)).thenReturn(mockPdf);
+        when(ticketPdfGenerator.generatePdf(ticket)).thenReturn(mockPdf);
 
         // when & then
         mockMvc.perform(get("/my-tickets/{id}/pdf", ticketId))
