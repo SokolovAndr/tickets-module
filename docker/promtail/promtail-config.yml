@@ -1,0 +1,30 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      # Вытаскиваем имя контейнера
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: 'container'
+      # Вытаскиваем имя сервиса из docker-compose (например, 'app', 'postgres')
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: 'compose_service'
+
+    # Парсим логи Spring Boot, чтобы Grafana понимала уровень (INFO, ERROR)
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<date>\S+) (?P<time>\S+) (?P<level>\w+) .*'
+      - labels:
+          level:

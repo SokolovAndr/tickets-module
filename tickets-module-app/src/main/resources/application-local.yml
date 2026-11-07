@@ -21,7 +21,14 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,caches
+        include: health,info,metrics,caches,prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
 
 server:
   port: 8080
@@ -41,3 +48,7 @@ app:
 logging:
   level:
     org.springframework.security: DEBUG
+    org.springframework.security.web.FilterChainProxy: INFO
+    org.springframework.security.web.authentication.AnonymousAuthenticationFilter: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
