@@ -34,7 +34,8 @@ class UserMapperTest {
         @Test
         @DisplayName("should map login")
         void shouldMapLogin() {
-            User entity = baseUser().login("ivan_petrov").build();
+            User entity = baseUser();
+            entity.setLogin("ivan_petrov"); // Используем сеттер вместо билдера
 
             UserResponse response = mapper.toResponse(entity);
 
@@ -44,13 +45,10 @@ class UserMapperTest {
         @Test
         @DisplayName("should map all fields together")
         void shouldMapAllFields() {
-            User entity = baseUser()
-                    .login("admin")
-                    .fullName("Admin Adminov")
-                    .role(UserRoleEnum.ADMIN)
-                    .createdAt(CREATED)
-                    .updatedAt(UPDATED)
-                    .build();
+            User entity = baseUser();
+            entity.setLogin("admin");
+            entity.setFullName("Admin Adminov");
+            entity.setRole(UserRoleEnum.ADMIN);
 
             UserResponse response = mapper.toResponse(entity);
 
@@ -77,10 +75,9 @@ class UserMapperTest {
         @Test
         @DisplayName("should preserve null strings")
         void shouldPreserveNullStrings() {
-            User entity = baseUser()
-                    .login(null)
-                    .fullName(null)
-                    .build();
+            User entity = baseUser();
+            entity.setLogin(null);
+            entity.setFullName(null);
 
             UserResponse response = mapper.toResponse(entity);
 
@@ -90,7 +87,7 @@ class UserMapperTest {
         }
     }
 
-    private User.UserBuilder baseUser() {
+    private User baseUser() {
         return User.builder()
                 .id(USER_ID)
                 .login("testuser")
@@ -98,6 +95,7 @@ class UserMapperTest {
                 .fullName("Test User")
                 .role(UserRoleEnum.USER)
                 .createdAt(CREATED)
-                .updatedAt(UPDATED);
+                .updatedAt(UPDATED)
+                .build();
     }
 }

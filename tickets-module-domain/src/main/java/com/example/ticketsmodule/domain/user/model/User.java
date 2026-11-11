@@ -1,25 +1,18 @@
 package com.example.ticketsmodule.domain.user.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import com.example.ticketsmodule.domain.common.model.CommonModel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class User {
-    private UUID id;
+@SuperBuilder
+public class User extends CommonModel {
     private String login;
     private String password;
     private String fullName;
     private UserRoleEnum role;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }

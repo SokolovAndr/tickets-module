@@ -5,8 +5,9 @@ import com.example.ticketsmodule.api.model.CreateTicketResponse;
 import com.example.ticketsmodule.domain.ticket.model.Ticket;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TicketMapper {
 
     @Mapping(target = "id", ignore = true)

@@ -106,6 +106,32 @@ components:
               type: string
               description: Сообщение для отображения пользователю.
 
+    CommonDto:
+      x-generic-parent: true
+      description: Базовый объект DTO
+      discriminator:
+        propertyName: kind
+      type: object
+      required:
+        - id
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Идентификатор
+        createdAt:
+          title: Дата создания
+          description: Дата создания
+          type: string
+          format: date-time
+        updatedAt:
+          title: Дата обновления
+          description: Дата обновления
+          type: string
+          format: date-time
+
     CreateCarrierRequest:
       type: object
       required:
@@ -128,15 +154,11 @@ components:
     CreateCarrierResponse:
       type: object
       required:
-        - id
         - name
         - phone
+      allOf:
+        - $ref: "#/components/schemas/CommonDto"
       properties:
-        id:
-          title: Идентификатор компании перевозчика
-          description: Идентификатор компании перевозчика
-          type: string
-          format: uuid
         name:
           title: Название компании
           description: Название компании
@@ -145,16 +167,6 @@ components:
           title: Телефон
           description: Телефон
           type: string
-        createdAt:
-          title: Дата создания
-          description: Дата создания
-          type: string
-          format: date-time
-        updatedAt:
-          title: Дата обновления
-          description: Дата обновления
-          type: string
-          format: date-time
 
     CreateRouteRequest:
       type: object
@@ -203,19 +215,15 @@ components:
     CreateRouteResponse:
       type: object
       required:
-        - id
         - departurePoint
         - destinationPoint
         - departureAt
         - destinationAt
         - carrierId
         - durationMinutes
+      allOf:
+        - $ref: "#/components/schemas/CommonDto"
       properties:
-        id:
-          title: Идентификатор маршрута
-          description: Идентификатор маршрута
-          type: string
-          format: uuid
         departurePoint:
           title: Пункт отправления
           description: Пункт отправления
@@ -248,16 +256,6 @@ components:
           description: Длительность в минутах
           type: integer
           format: int32
-        createdAt:
-          title: Дата создания
-          description: Дата создания
-          type: string
-          format: date-time
-        updatedAt:
-          title: Дата обновления
-          description: Дата обновления
-          type: string
-          format: date-time
 
     Pageable:
       description: Типовой объект постраничного запроса
@@ -308,17 +306,13 @@ components:
     CreateTicketResponse:
       type: object
       required:
-        - id
         - routeId
         - seatNumber
         - price
         - isPurchased
+      allOf:
+        - $ref: "#/components/schemas/CommonDto"
       properties:
-        id:
-          title: Идентификатор билета
-          description: Уникальный идентификатор билета
-          type: string
-          format: uuid
         routeId:
           title: Идентификатор маршрута
           description: Идентификатор маршрута, к которому относится билет
@@ -350,16 +344,6 @@ components:
           type: string
           format: date-time
           nullable: true
-        createdAt:
-          title: Дата создания
-          description: Дата и время создания записи билета
-          type: string
-          format: date-time
-        updatedAt:
-          title: Дата обновления
-          description: Дата и время последнего обновления записи билета
-          type: string
-          format: date-time
 
     TicketsSearchRequest:
       type: object
@@ -593,8 +577,8 @@ components:
         - login
         - fullName
         - role
-        - createdAt
-        - updatedAt
+      allOf:
+        - $ref: "#/components/schemas/CommonDto"
       properties:
         login:
           title: Логин
@@ -609,16 +593,6 @@ components:
           description: Роль пользователя в системе
           type: string
           enum: [ USER, ADMIN ]
-        createdAt:
-          title: Дата создания
-          description: Дата создания
-          type: string
-          format: date-time
-        updatedAt:
-          title: Дата обновления
-          description: Дата обновления
-          type: string
-          format: date-time
 
     ChangePasswordRequest:
       type: object

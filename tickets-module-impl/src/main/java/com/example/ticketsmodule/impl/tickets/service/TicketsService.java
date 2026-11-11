@@ -27,6 +27,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -151,16 +152,7 @@ public class TicketsService {
 
         List<Ticket> ticketsToSave = IntStream.rangeClosed(1, request.getSeatCount())
                 .filter(seat -> !occupiedSeats.contains(seat))
-                .mapToObj(seat -> Ticket.builder()
-                        .route(route)
-                        .seatNumber(seat)
-                        .price(request.getPrice())
-                        .purchased(false)
-                        .user(null)
-                        .purchasedAt(null)
-                        .createdAt(LocalDateTime.now())
-                        .updatedAt(LocalDateTime.now())
-                        .build())
+                .mapToObj(seat -> buildTicket(route, seat, request.getPrice()))
                 .toList();
 
         if (ticketsToSave.isEmpty()) {
@@ -200,6 +192,19 @@ public class TicketsService {
                 .purchasedById(req.getPurchasedById())
                 .createdDateFrom(req.getCreatedDateFrom())
                 .createdDateTo(req.getCreatedDateTo())
+                .build();
+    }
+
+    private Ticket buildTicket(Route route, int seat, BigDecimal price) {
+        return Ticket.builder()
+                .route(route)
+                .seatNumber(seat)
+                .price(price)
+                .purchased(false)
+                .user(null)
+                .purchasedAt(null)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
     }
 }
