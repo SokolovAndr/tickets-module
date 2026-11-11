@@ -1,23 +1,16 @@
 package com.example.ticketsmodule.domain.carrier.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import com.example.ticketsmodule.domain.common.model.CommonModel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class Carrier {
-    private UUID id;
+@SuperBuilder
+public class Carrier extends CommonModel {
     private String name;
     private String phone;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }
