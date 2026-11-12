@@ -19,7 +19,7 @@ public class Ticket extends CommonModel {
     private Route route;
     private int seatNumber;
     private BigDecimal price;
-    private boolean purchased;
     private User user;
     private LocalDateTime purchasedAt;
+    private TicketStatusEnum ticketStatus;
 }

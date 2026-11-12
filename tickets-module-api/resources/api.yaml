@@ -564,16 +564,129 @@ paths:
         403:
           description: Пользователь не имеет ни одной из необходимых ролей
 
-  /api/tickets/{id}/buy:
+  /api/orders:
     post:
-      description: Метод покупки билета по id
-      operationId: buyTicket
+      description: Метод создания заказа
+      operationId: createOrder
       tags:
-        - TicketsController
+        - OrdersController
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "types.yaml#/components/schemas/CreateOrderRequest"
+      responses:
+        201:
+          description: Заказ создан, билет зарезервирован
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/CreateOrderResponse"
+        400:
+          description: Переданы не корректные параметры запроса
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        401:
+          description: Отсутствует или невалиден JWT-токен
+        403:
+          description: Пользователь не имеет ни одной из необходимых ролей
+        404:
+          description: Объект не найден
+        409:
+          description: Билет уже зарезервирован или куплен
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        500:
+          description: Ошибка сервера/сервиса/БД
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+    get:
+      description: Метод предоставления списка заказов
+      operationId: getAllOrders
+      tags:
+        - OrdersController
+      parameters:
+        - in: query
+          name: pageable
+          required: false
+          schema:
+            $ref: "types.yaml#/components/schemas/Pageable"
+        - in: query
+          name: searchParam
+          required: false
+          schema:
+            $ref: "types.yaml#/components/schemas/OrdersSearchRequest"
+      responses:
+        200:
+          description: Поиск выполнен успешно
+          headers:
+            X-Total-Count:
+              description: Общее количество элементов при постраничном отображении
+              schema:
+                type: integer
+                format: int32
+                example: 100
+            Link:
+              description: Ссылки на страницы
+              schema:
+                type: string
+                format: uri
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/Page"
+        400:
+          description: Ошибка в параметрах запроса
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        401:
+          description: Отсутствует или невалиден JWT-токен
+        404:
+          description: Объекты не найдены
+        500:
+          description: Внутренняя ошибка сервера
+
+  /api/orders/my:
+    get:
+      description: Метод получения заказов пользователя
+      operationId: getAllMyOrders
+      tags:
+        - OrdersController
+      responses:
+        200:
+          description: Список заказов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "types.yaml#/components/schemas/CreateOrderResponse"
+        401:
+          description: Отсутствует или невалиден JWT-токен
+        404:
+          description: Объекты не найдены
+        500:
+          description: Внутренняя ошибка сервера
+
+  /api/orders/{id}:
+    get:
+      description: Метод предоставления заказа по id
+      operationId: getOrder
+      tags:
+        - OrdersController
       parameters:
         - name: id
           in: path
-          description: Идентификатор билета
+          description: Идентификатор заказа
           required: true
           schema:
             type: string
@@ -584,7 +697,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "types.yaml#/components/schemas/CreateTicketResponse"
+                $ref: "types.yaml#/components/schemas/CreateOrderResponse"
         400:
           description: Переданы не корректные параметры запроса
           content:
@@ -604,16 +717,16 @@ paths:
               schema:
                 $ref: "types.yaml#/components/schemas/ErrorResponse"
 
-  /api/tickets/{id}/return:
+  /api/orders/{id}/cancel:
     post:
-      description: Метод возврата билета по id
-      operationId: returnTicket
+      description: Метод отмены заказа по id (до оплаты) и возврата билета
+      operationId: cancelOrder
       tags:
-        - TicketsController
+        - OrdersController
       parameters:
         - name: id
           in: path
-          description: Идентификатор билета
+          description: Идентификатор заказа
           required: true
           schema:
             type: string
@@ -624,7 +737,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "types.yaml#/components/schemas/CreateTicketResponse"
+                $ref: "types.yaml#/components/schemas/CreateOrderResponse"
         400:
           description: Переданы не корректные параметры запроса
           content:
@@ -637,6 +750,104 @@ paths:
           description: Пользователь не имеет ни одной из необходимых ролей
         404:
           description: Объект не найден
+        422:
+          description: Заказ в статусе PAID не может быть отменён, используйте /refund
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        500:
+          description: Ошибка сервера/сервиса/БД
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+
+  /api/orders/{id}/refund:
+    post:
+      description: Метод возврата заказа по id (после оплаты) и возврата билета
+      operationId: refundOrder
+      tags:
+        - OrdersController
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор заказа
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Операция обработана успешно, результат предоставлен
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/CreateOrderResponse"
+        400:
+          description: Переданы не корректные параметры запроса
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        401:
+          description: Отсутствует или невалиден JWT-токен
+        403:
+          description: Пользователь не имеет ни одной из необходимых ролей
+        404:
+          description: Объект не найден
+        422:
+          description: Заказ не в статусе PAID
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        500:
+          description: Ошибка сервера/сервиса/БД
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+
+  /api/orders/{id}/pay:
+    post:
+      description: Метод оплаты заказа по id
+      operationId: payOrder
+      tags:
+        - OrdersController
+      parameters:
+        - name: id
+          in: path
+          description: Идентификатор заказа
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Операция обработана успешно, результат предоставлен
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/CreateOrderResponse"
+        400:
+          description: Переданы не корректные параметры запроса
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
+        401:
+          description: Отсутствует или невалиден JWT-токен
+        403:
+          description: Пользователь не имеет ни одной из необходимых ролей
+        404:
+          description: Объект не найден
+        422:
+          description: Заказ не в статусе WAITING или истекло время бронирования
+          content:
+            application/json:
+              schema:
+                $ref: "types.yaml#/components/schemas/ErrorResponse"
         500:
           description: Ошибка сервера/сервиса/БД
           content:

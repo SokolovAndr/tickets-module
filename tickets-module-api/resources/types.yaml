@@ -309,7 +309,7 @@ components:
         - routeId
         - seatNumber
         - price
-        - isPurchased
+        - ticketStatus
       allOf:
         - $ref: "#/components/schemas/CommonDto"
       properties:
@@ -328,10 +328,8 @@ components:
           description: Цена билета
           type: number
           format: double
-        isPurchased:
-          title: Признак занятости
-          description: Признак, куплен ли билет (оплачен)
-          type: boolean
+        ticketStatus:
+          $ref: "#/components/schemas/TicketStatusEnum"
         purchasedById:
           title: Идентификатор пользователя
           description: Идентификатор пользователя, купившего билет (если куплен)
@@ -344,6 +342,123 @@ components:
           type: string
           format: date-time
           nullable: true
+
+    CreateOrderRequest:
+      type: object
+      required:
+        - ticketId
+      properties:
+        ticketId:
+          title: Идентификатор билета
+          description: Билет, который резервируется в этом заказе
+          type: string
+          format: uuid
+
+    CreateOrderResponse:
+      type: object
+      required:
+        - ticket
+        - user
+        - status
+        - reservedUntil
+      allOf:
+        - $ref: "#/components/schemas/CommonDto"
+      properties:
+        ticket:
+          $ref: "#/components/schemas/CreateTicketResponse"
+        user:
+          $ref: "#/components/schemas/UserResponse"
+        status:
+          $ref: "#/components/schemas/OrderStatusEnum"
+        reservedUntil:
+          title: Крайние дата и время оплаты заказа
+          description: Крайние дата и время оплаты заказа
+          type: string
+          format: date-time
+        paidAt:
+          title: Дата и время оплаты заказа
+          description: Дата и время оплаты заказа
+          type: string
+          format: date-time
+          nullable: true
+        canceledAt:
+          title: Дата и время отмены заказа
+          description: Дата и время отмены заказа
+          type: string
+          format: date-time
+          nullable: true
+        refundedAt:
+          title: Дата и время возврата заказа
+          description: Дата и время возврата заказа
+          type: string
+          format: date-time
+          nullable: true
+
+    OrdersSearchRequest:
+      type: object
+      properties:
+        ticketId:
+          title: Идентификатор билета
+          description: Идентификатор билета
+          type: string
+          format: uuid
+        userId:
+          title: Идентификатор покупателя
+          description: Идентификатор покупателя
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/OrderStatusEnum"
+        createdDateFrom:
+          title: Дата создания с
+          description: Дата создания с
+          type: string
+          format: date
+        createdDateTo:
+          title: Дата создания по
+          description: Дата создания по
+          type: string
+          format: date
+        reservedUntilFrom:
+          title: Зарезервирован с
+          description: Зарезервирован с
+          type: string
+          format: date
+        reservedUntilTo:
+          title: Зарезервирован по
+          description: Зарезервирован по
+          type: string
+          format: date
+        paidDateFrom:
+          title: Оплачен с
+          description: Оплачен с
+          type: string
+          format: date
+        paidDateTo:
+          title: Оплачен по
+          description: Оплачен по
+          type: string
+          format: date
+        canceledDateFrom:
+          title: Отменен с
+          description: Отменен с
+          type: string
+          format: date
+        canceledDateTo:
+          title: Отменен по
+          description: Отменен по
+          type: string
+          format: date
+        refundedDateFrom:
+          title: Возвращен с
+          description: Возвращен с
+          type: string
+          format: date
+        refundedDateTo:
+          title: Возвращен по
+          description: Возвращен по
+          type: string
+          format: date
 
     TicketsSearchRequest:
       type: object
@@ -374,10 +489,8 @@ components:
           type: number
           format: double
           minimum: 0
-        isPurchased:
-          title: Признак занятости
-          description: Признак, куплен ли билет
-          type: boolean
+        ticketStatus:
+          $ref: "#/components/schemas/TicketStatusEnum"
         purchasedById:
           title: Идентификатор пользователя
           description: Идентификатор пользователя, купившего билет
@@ -613,3 +726,31 @@ components:
           format: password
           minLength: 5
           example: newPass123
+
+    OrderStatusEnum:
+      type: string
+      enum:
+        - WAITING
+        - TIME_OUT
+        - PAID
+        - CANCELED
+        - REFUNDED
+      description: Статус заказа
+      x-enum-descriptions:
+        - Ожидание оплаты
+        - Время на оплату истекло
+        - Оплачен
+        - Отменен до оплаты
+        - Возвращен после оплаты
+
+    TicketStatusEnum:
+      type: string
+      enum:
+        - AVAILABLE
+        - RESERVED
+        - PURCHASED
+      description: Статус билета
+      x-enum-descriptions:
+        - Доступен для покупки
+        - Зарезервирован
+        - Куплен

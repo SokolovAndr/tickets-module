@@ -36,7 +36,7 @@
             <column name="route_id" type="UUID"/>
             <column name="seat_number" type="NUMERIC"/>
             <column name="price" type="NUMERIC"/>
-            <column name="is_purchased" type="BOOLEAN"/>
+            <column name="ticket_status" type="STRING"/>
             <column name="purchased_by" type="UUID"/>
             <column name="purchased_at" type="DATETIME"/>
             <column name="created_at" type="DATETIME"/>
