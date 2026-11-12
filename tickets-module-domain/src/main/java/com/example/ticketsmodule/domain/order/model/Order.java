@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -18,6 +19,7 @@ public class Order extends CommonModel {
     private Ticket ticket;
     private User user;
     private OrderStatusEnum status;
+    private BigDecimal price;
 
     private LocalDateTime reservedUntil;
     private LocalDateTime paidAt;

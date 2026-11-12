@@ -17,10 +17,6 @@
                 <constraints primaryKey="true" nullable="false"/>
             </column>
 
-            <column name="version" type="BIGINT" defaultValueNumeric="0">
-                <constraints nullable="false"/>
-            </column>
-
             <column name="ticket_id" type="UUID">
                 <constraints nullable="false" foreignKeyName="fk_order_ticket" references="tickets(id)"/>
             </column>

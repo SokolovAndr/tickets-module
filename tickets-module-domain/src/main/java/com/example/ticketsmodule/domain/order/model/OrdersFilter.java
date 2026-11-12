@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -17,6 +18,7 @@ import java.util.UUID;
 public class OrdersFilter {
     private UUID ticketId;
     private UUID userId;
+    private BigDecimal price;
     private OrderStatusEnum status;
     private LocalDate createdDateFrom;
     private LocalDate createdDateTo;
