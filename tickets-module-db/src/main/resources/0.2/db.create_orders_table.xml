@@ -44,6 +44,10 @@
                 <constraints nullable="false"/>
             </column>
 
+            <column name="price" type="DECIMAL(10,2)" remarks="Цена заказа (снимок на момент создания)">
+                <constraints nullable="false"/>
+            </column>
+
             <column name="paid_at" type="TIMESTAMP" remarks="Дата и время оплаты"/>
 
             <column name="canceled_at" type="TIMESTAMP" remarks="Дата и время отмены"/>

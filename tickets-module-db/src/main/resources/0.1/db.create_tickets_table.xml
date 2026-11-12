@@ -16,6 +16,9 @@
                     defaultValueComputed="gen_random_uuid()">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
+            <column name="version" type="BIGINT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
             <column name="route_id" type="UUID">
                 <constraints nullable="false" foreignKeyName="fk_ticket_route" references="routes(id)"/>
             </column>

@@ -26,8 +26,6 @@ public interface TicketSpringDataRepository extends JpaRepository<TicketJpaEntit
     @Query("SELECT t.seatNumber FROM TicketJpaEntity t WHERE t.route.id = :routeId")
     Set<Integer> findSeatNumbersByRouteId(@Param("routeId") UUID routeId);
 
-    List<TicketJpaEntity> findByRouteId(UUID routeId);
-
     @Query("SELECT t FROM TicketJpaEntity t WHERE t.user.id = :userId AND t.ticketStatus = 'PURCHASED' ORDER BY t.purchasedAt DESC")
     @EntityGraph(attributePaths = {"route", "route.carrier", "user"})
     List<TicketJpaEntity> findPurchasedByUserId(@Param("userId") UUID userId);

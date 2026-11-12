@@ -97,10 +97,12 @@ public class TicketJpaRepositoryAdapter implements TicketsRepositoryPort {
                 if (f.getRouteId() != null) predicates.add(cb.equal(root.get("route").get("id"), f.getRouteId()));
                 if (f.getPriceFrom() != null) predicates.add(cb.greaterThanOrEqualTo(root.get("price"), f.getPriceFrom()));
                 if (f.getPriceTo() != null) predicates.add(cb.lessThanOrEqualTo(root.get("price"), f.getPriceTo()));
-                if (f.getIsPurchased() != null) predicates.add(cb.equal(root.get("purchased"), f.getIsPurchased()));
+                if (f.getTicketStatus() != null) predicates.add(cb.equal(root.get("ticketStatus"), f.getTicketStatus()));
                 if (f.getSeatNumber() != null) predicates.add(cb.equal(root.get("seatNumber"), f.getSeatNumber()));
                 if (f.getCreatedDateFrom() != null) predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), f.getCreatedDateFrom().atStartOfDay()));
                 if (f.getCreatedDateTo() != null) predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), f.getCreatedDateTo().atTime(LocalTime.MAX)));
+                if (f.getPurchasedById() != null) { predicates.add(cb.equal(root.get("user").get("id"), f.getPurchasedById()));
+                }
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
