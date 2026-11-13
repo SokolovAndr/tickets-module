@@ -208,6 +208,7 @@ public class OrdersService {
             ticket.setTicketStatus(AVAILABLE);
             ticket.setUser(null);
             ticket.setPurchasedAt(null);
+            ticket.setUpdatedAt(LocalDateTime.now());
             ticketsRepositoryPort.save(ticket);
             ordersRepositoryPort.save(order);
         }
