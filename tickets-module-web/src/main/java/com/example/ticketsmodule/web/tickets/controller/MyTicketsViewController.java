@@ -5,6 +5,7 @@ import com.example.ticketsmodule.domain.route.model.Route;
 import com.example.ticketsmodule.domain.ticket.model.Ticket;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
 
+import com.example.ticketsmodule.impl.order.service.OrdersService;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.pdf.TicketPdfGenerator;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
@@ -38,6 +39,7 @@ public class MyTicketsViewController {
 
     private final TicketsService ticketsService;
     private final RoutesService routesService;
+    private final OrdersService ordersService;
     private final SessionCurrentUserService sessionCurrentUserService;
     private final TicketPdfGenerator ticketPdfGenerator;
 
@@ -73,17 +75,16 @@ public class MyTicketsViewController {
         return "my-tickets";
     }
 
-    @PostMapping("/my-tickets/{id}/return")
-    public String returnTicket(@PathVariable UUID id, RedirectAttributes ra) {
+    @PostMapping("/my-orders/{id}/refund")
+    public String refund(@PathVariable UUID id, RedirectAttributes ra) {
         UUID userId = sessionCurrentUserService.getCurrentUserId();
         try {
-            ticketsService.returnTicket(id, userId);
-            ra.addFlashAttribute("successMessage", "Билет успешно возвращён");
+            ordersService.refundOrder(id, userId);
+            ra.addFlashAttribute("successMessage", "Билет возвращён");
         } catch (Exception e) {
-            log.warn("Failed to return ticket {}: {}", id, e.getMessage());
             ra.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/my-tickets";
+        return "redirect:/my-orders";
     }
 
     @GetMapping("/my-tickets/{id}/pdf")

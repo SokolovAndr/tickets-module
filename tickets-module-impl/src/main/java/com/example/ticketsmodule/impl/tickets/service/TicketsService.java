@@ -22,6 +22,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -120,6 +121,7 @@ public class TicketsService {
                 .routeId(request.getRouteId());
     }
 
+    @Cacheable(value = "userTickets", key = "#userId")
     @Transactional(readOnly = true)
     public List<CreateTicketResponse> findAllMyTickets(UUID userId) {
         return ticketRepository.findPurchasedByUserId(userId).stream().map(ticketMapper::toResponse).toList();

@@ -1,0 +1,42 @@
+<section th:if="${!#lists.isEmpty(waiting)}">
+    <h2>Ожидают оплаты</h2>
+    <div th:each="o : ${waiting}" class="order-card">
+        <span>Место <b th:text="${o.ticket.seatNumber}">1</b>
+            · <span th:text="${o.ticket.price}">150</span> ₽</span>
+        <span class="timer"
+              th:attr="data-until=${#temporals.format(o.reservedUntil, 'yyyy-MM-dd''T''HH:mm:ss')}">
+            ...
+        </span>
+        <form th:action="@{'/my-orders/' + ${o.id} + '/pay'}" method="post">
+            <button type="submit">Оплатить</button>
+        </form>
+        <form th:action="@{'/my-orders/' + ${o.id} + '/cancel'}" method="post">
+            <button type="submit">Отменить</button>
+        </form>
+    </div>
+</section>
+
+<section th:if="${!#lists.isEmpty(paid)}">
+    <h2>Купленные билеты</h2>
+    <!-- PDF + вернуть -->
+</section>
+
+<section th:if="${!#lists.isEmpty(history)}">
+    <h2>История</h2>
+    <!-- только чтение -->
+</section>
+
+<script>
+    document.querySelectorAll('.timer').forEach(el => {
+        const until = new Date(el.dataset.until).getTime();
+        const tick = () => {
+            const left = Math.max(0, until - Date.now());
+            if (left === 0) { el.textContent = 'истекло'; el.classList.add('expired'); return; }
+            const m = Math.floor(left / 60000);
+            const s = Math.floor((left % 60000) / 1000);
+            el.textContent = `${m}:${String(s).padStart(2,'0')}`;
+        };
+        tick();
+        setInterval(tick, 1000);
+    });
+</script>

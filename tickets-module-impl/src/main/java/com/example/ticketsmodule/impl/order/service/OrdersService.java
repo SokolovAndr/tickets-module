@@ -48,9 +48,6 @@ public class OrdersService {
     private final UsersService usersService;
     private final OrderMapper orderMapper;
 
-    /*@Value("${app.orders.reservation-ttl:PT15M}")
-    private Duration reservationTtl;*/
-
     private static final String USER_TICKETS_CACHE = "userTickets";
 
     @Transactional
@@ -173,7 +170,6 @@ public class OrdersService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = USER_TICKETS_CACHE, key = "#userId")
     public List<CreateOrderResponse> findAllMyOrders(UUID userId) {
         return ordersRepositoryPort.findByUserId(userId).stream()
                 .map(orderMapper::toResponse)

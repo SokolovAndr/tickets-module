@@ -282,7 +282,7 @@
 
     <div th:unless="${#lists.isEmpty(seats)}" class="seats">
         <form th:each="s : ${seats}"
-              th:action="@{'/routes/' + ${route.id} + '/tickets/' + ${s.id} + '/buy'}"
+              th:action="@{'/routes/' + ${route.id} + '/tickets/' + ${s.id} + '/reserve'}"
               method="post">
             <button type="submit" class="seat">
                 <span class="seat-num" th:text="${s.seatNumber}">1</span>
