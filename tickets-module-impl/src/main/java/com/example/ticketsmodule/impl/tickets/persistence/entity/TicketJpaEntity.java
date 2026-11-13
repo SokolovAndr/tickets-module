@@ -80,6 +80,7 @@ public class TicketJpaEntity {
     /**
      * Статус
      */
+    @Comment("Статус")
     @Enumerated(EnumType.STRING)
     @Column(name = "ticket_status", nullable = false)
     private TicketStatusEnum ticketStatus;

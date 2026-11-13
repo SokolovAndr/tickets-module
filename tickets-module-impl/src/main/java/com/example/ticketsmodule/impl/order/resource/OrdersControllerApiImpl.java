@@ -1,17 +1,18 @@
 package com.example.ticketsmodule.impl.order.resource;
 
 import com.example.ticketsmodule.api.controller.OrdersControllerApi;
-import com.example.ticketsmodule.api.model.CreateCarrierResponse;
 import com.example.ticketsmodule.api.model.CreateOrderRequest;
 import com.example.ticketsmodule.api.model.CreateOrderResponse;
 import com.example.ticketsmodule.api.model.OrdersSearchRequest;
-import com.example.ticketsmodule.impl.carriers.service.CarriersService;
+import com.example.ticketsmodule.domain.common.PageRequest;
+import com.example.ticketsmodule.domain.common.PageResult;
 import com.example.ticketsmodule.impl.oauth.service.JwtCurrentUserService;
 import com.example.ticketsmodule.impl.order.service.OrdersService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -84,7 +85,7 @@ public class OrdersControllerApiImpl implements OrdersControllerApi {
      */
     @Override
     public ResponseEntity<List<CreateOrderResponse>> getAllMyOrders() {
-        return ResponseEntity.ok(ordersService.findAllMyTickets(getCurrentUserId()));
+        return ResponseEntity.ok(ordersService.findAllMyOrders(getCurrentUserId()));
     }
 
     /**
@@ -96,7 +97,15 @@ public class OrdersControllerApiImpl implements OrdersControllerApi {
      */
     @Override
     public ResponseEntity<Page> getAllOrders(@Nullable Pageable pageable, @Nullable OrdersSearchRequest searchParam) {
-        return null;
+        Pageable p = pageable == null
+                ? org.springframework.data.domain.PageRequest.of(0, 20)
+                : pageable;
+        PageRequest domainPage = PageRequest.builder()
+                .page(p.getPageNumber())
+                .size(p.getPageSize())
+                .build();
+        PageResult<CreateOrderResponse> result = ordersService.findAll(searchParam, domainPage);
+        return ResponseEntity.ok(new PageImpl<>(result.getContent(), p, result.getTotalElements()));
     }
 
     /**
@@ -107,7 +116,7 @@ public class OrdersControllerApiImpl implements OrdersControllerApi {
      */
     @Override
     public ResponseEntity<CreateOrderResponse> getOrder(UUID id) {
-        CreateOrderResponse result = ordersService.findResponseById(id);
+        CreateOrderResponse result = ordersService.findResponseById(id, getCurrentUserId());
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
 

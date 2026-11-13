@@ -33,6 +33,7 @@ public class ApiSecurityConfiguration {
     private static final String REGISTER_PATH = "/register";
     private static final String TOKEN_PATH = "/token";
     private static final String TICKETS_PATH = "/tickets";
+    private static final String ORDERS_PATH = "/orders";
     private static final String USERS_ME_PATH = "/users/me";
 
     private static final String CONTENT_TYPE = "application/json; charset=UTF-8";
@@ -52,10 +53,13 @@ public class ApiSecurityConfiguration {
                                 API+TOKEN_PATH,
                                 API+REGISTER_PATH)
                         .permitAll()
+                        .requestMatchers(HttpMethod.GET, API + ORDERS_PATH).hasRole(ROLE_ADMIN)
                         .requestMatchers(HttpMethod.POST,
-                                API+TICKETS_PATH+"/{id}/buy",
-                                API+TICKETS_PATH+"/{id}/return",
-                                API+USERS_ME_PATH+"/password")
+                                API + ORDERS_PATH,
+                                API + ORDERS_PATH+"/{id}/pay",
+                                API + ORDERS_PATH+"/{id}/cancel",
+                                API + ORDERS_PATH+"/{id}/refund",
+                                API + USERS_ME_PATH + "/password")
                         .hasAnyRole(ROLE_USER, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.PATCH, API+USERS_ME_PATH).hasAnyRole(ROLE_USER, ROLE_ADMIN)
                         .requestMatchers(HttpMethod.GET).hasAnyRole(ROLE_USER, ROLE_ADMIN)

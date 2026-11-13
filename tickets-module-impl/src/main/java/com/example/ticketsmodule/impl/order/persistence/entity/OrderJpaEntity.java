@@ -6,6 +6,8 @@ import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -53,19 +55,17 @@ public class OrderJpaEntity {
     /**
      * Идентификатор билета
      */
-    @Fetch(FetchMode.JOIN)
     @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.REFRESH})
-    @JoinColumn(name = "ticket_id")
+    @JoinColumn(name = "ticket_id", nullable = false)
     @ToString.Exclude
-    @Comment("Идентификатор пользователя")
+    @Comment("Идентификатор билета")
     private TicketJpaEntity ticket;
 
     /**
      * Идентификатор пользователя
      */
-    @Fetch(FetchMode.JOIN)
     @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.REFRESH})
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     @ToString.Exclude
     @Comment("Идентификатор пользователя")
     private UserJpaEntity user;
@@ -78,9 +78,10 @@ public class OrderJpaEntity {
     private BigDecimal price;
 
     /**
-     * Цена
+     * Статус
      */
-    @Comment("Цена")
+    @Comment("Статус")
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private OrderStatusEnum status;
 
@@ -101,7 +102,7 @@ public class OrderJpaEntity {
     /**
      * Дата отмены
      */
-    @Comment("Дата оплаты")
+    @Comment("Дата отмены")
     @Column(name = "canceled_at")
     private LocalDateTime canceledAt;
 

@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +36,7 @@ public class OrderJpaRepositoryAdapter implements OrdersRepositoryPort {
     private static final List<OrderStatusEnum> activeStatuses = List.of(OrderStatusEnum.WAITING, OrderStatusEnum.PAID);
 
     @Override
+    @Transactional
     public Order save(Order order) {
         OrderJpaEntity saved = springRepo.save(mapper.toEntity(order));
         return mapper.toDomain(saved);
@@ -92,7 +94,8 @@ public class OrderJpaRepositoryAdapter implements OrdersRepositoryPort {
      */
     @Override
     public List<Order> findExpiredWaiting(LocalDateTime now) {
-        return List.of();
+        return mapper.toDomainList(
+                springRepo.findExpiredWaiting(OrderStatusEnum.WAITING, now));
     }
 
     /**
@@ -132,11 +135,52 @@ public class OrderJpaRepositoryAdapter implements OrdersRepositoryPort {
 
     private Specification<OrderJpaEntity> buildSpecification(OrdersFilter f) {
         return (root, query, cb) -> {
-            final List<Predicate> predicates = new ArrayList<>();
-            if (f != null) {
-               //TODO(): реализовать фильтры
+            if (Long.class != query.getResultType() && long.class != query.getResultType()) {
+                root.fetch("ticket", jakarta.persistence.criteria.JoinType.LEFT)
+                        .fetch("route", jakarta.persistence.criteria.JoinType.LEFT)
+                        .fetch("carrier", jakarta.persistence.criteria.JoinType.LEFT);
+                root.fetch("user", jakarta.persistence.criteria.JoinType.LEFT);
             }
-            return cb.and(predicates.toArray(new Predicate[0]));
+            final List<Predicate> p = new ArrayList<>();
+            if (f != null) {
+                if (f.getTicketId() != null)
+                    p.add(cb.equal(root.get("ticket").get("id"), f.getTicketId()));
+                if (f.getUserId() != null)
+                    p.add(cb.equal(root.get("user").get("id"), f.getUserId()));
+                if (f.getStatus() != null)
+                    p.add(cb.equal(root.get("status"), f.getStatus()));
+                if (f.getCreatedDateFrom() != null)
+                    p.add(cb.greaterThanOrEqualTo(root.get("createdAt"),
+                            f.getCreatedDateFrom().atStartOfDay()));
+                if (f.getCreatedDateTo() != null)
+                    p.add(cb.lessThanOrEqualTo(root.get("createdAt"),
+                            f.getCreatedDateTo().atTime(LocalTime.MAX)));
+                if (f.getReservedUntilFrom() != null)
+                    p.add(cb.greaterThanOrEqualTo(root.get("reservedUntil"),
+                            f.getReservedUntilFrom().atStartOfDay()));
+                if (f.getReservedUntilTo() != null)
+                    p.add(cb.lessThanOrEqualTo(root.get("reservedUntil"),
+                            f.getReservedUntilTo().atTime(LocalTime.MAX)));
+                if (f.getPaidDateFrom() != null)
+                    p.add(cb.greaterThanOrEqualTo(root.get("paidAt"),
+                            f.getPaidDateFrom().atStartOfDay()));
+                if (f.getPaidDateTo() != null)
+                    p.add(cb.lessThanOrEqualTo(root.get("paidAt"),
+                            f.getPaidDateTo().atTime(LocalTime.MAX)));
+                if (f.getCanceledDateFrom() != null)
+                    p.add(cb.greaterThanOrEqualTo(root.get("canceledAt"),
+                            f.getCanceledDateFrom().atStartOfDay()));
+                if (f.getCanceledDateTo() != null)
+                    p.add(cb.lessThanOrEqualTo(root.get("canceledAt"),
+                            f.getCanceledDateTo().atTime(LocalTime.MAX)));
+                if (f.getRefundedDateFrom() != null)
+                    p.add(cb.greaterThanOrEqualTo(root.get("refundedAt"),
+                            f.getRefundedDateFrom().atStartOfDay()));
+                if (f.getRefundedDateTo() != null)
+                    p.add(cb.lessThanOrEqualTo(root.get("refundedAt"),
+                            f.getRefundedDateTo().atTime(LocalTime.MAX)));
+            }
+            return cb.and(p.toArray(new Predicate[0]));
         };
     }
 }

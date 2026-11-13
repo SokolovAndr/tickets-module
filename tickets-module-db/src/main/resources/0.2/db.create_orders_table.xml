@@ -30,7 +30,6 @@
                 <constraints nullable="false"/>
             </column>
 
-
             <column name="created_at" type="TIMESTAMP" remarks="Дата и время создания"
                     defaultValueComputed="CURRENT_TIMESTAMP">
                 <constraints nullable="false"/>
