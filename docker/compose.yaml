@@ -32,7 +32,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=local
 #     НИЖЕ НУЖНО ЗАДАТЬ JWT_SECRET
-      - JWT_SECRET=JWT_SECRET
+      - JWT_SECRET=JWT_SECRET="4S88ycXBHo/+NzRvXbzFHLHBPTocP3BNdMM1CmZTKjQ="
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/tickets_module_db
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATASOURCE_USERNAME=postgres

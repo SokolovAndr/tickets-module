@@ -110,13 +110,12 @@ public class RoutesViewController {
                           RedirectAttributes ra) {
         UUID userId = sessionCurrentUserService.getCurrentUserId();
         try {
-            CreateOrderRequest req = new CreateOrderRequest().ticketId(ticketId);
-            CreateOrderResponse order = ordersService.create(req, userId);
-            ra.addFlashAttribute("successMessage",
-                    "Билет забронирован. Оплатите до " +
-                            order.getReservedUntil().toLocalTime());
+            CreateOrderRequest req = new CreateOrderRequest();
+            req.setTicketId(ticketId);
+            ordersService.create(req, userId);
+            ra.addFlashAttribute("successMessage", "Билет забронирован на 15 минут");
             return "redirect:/my-orders";
-        } catch (TicketNotAvailableException e) {
+        } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Место уже занято");
             return "redirect:/routes/" + routeId;
         }

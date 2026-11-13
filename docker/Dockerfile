@@ -18,7 +18,7 @@ RUN mvn dependency:go-offline -B
 COPY . .
 
 # Собираем все модули
-RUN mvn clean package -DskipTests
+RUN mvn clean package -Dmaven.test.skip=true
 
 # Этап 2: Запуск
 FROM eclipse-temurin:17-jre-jammy
