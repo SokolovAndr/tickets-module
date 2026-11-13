@@ -62,10 +62,11 @@ public class OrdersService {
             throw new TicketNotAvailableException(ticket.getId(), ticket.getTicketStatus());
         }
 
-        ticket.setTicketStatus(TicketStatusEnum.RESERVED);
-        ticketsRepositoryPort.save(ticket);
-
         final LocalDateTime now = LocalDateTime.now();
+
+        ticket.setTicketStatus(TicketStatusEnum.RESERVED);
+        ticket.setUpdatedAt(now);
+        ticketsRepositoryPort.save(ticket);
 
         final Order order = new Order();
 
@@ -99,6 +100,7 @@ public class OrdersService {
         ticket.setTicketStatus(TicketStatusEnum.PURCHASED);
         ticket.setUser(order.getUser());
         ticket.setPurchasedAt(now);
+        ticket.setUpdatedAt(now);
         ticketsRepositoryPort.save(ticket);
 
         order.setTicket(ticket);
@@ -117,14 +119,14 @@ public class OrdersService {
         if (order.getStatus() != OrderStatusEnum.WAITING) {
             throw new OrderInvalidStatusException(id, order.getStatus(), OrderStatusEnum.CANCELED.getDescription());
         }
+        final LocalDateTime now = LocalDateTime.now();
 
         final Ticket ticket = order.getTicket();
         ticket.setTicketStatus(AVAILABLE);
         ticket.setUser(null);
         ticket.setPurchasedAt(null);
+        ticket.setUpdatedAt(now);
         ticketsRepositoryPort.save(ticket);
-
-        final LocalDateTime now = LocalDateTime.now();
 
         order.setTicket(ticket);
         order.setStatus(OrderStatusEnum.CANCELED);
@@ -152,6 +154,7 @@ public class OrdersService {
         ticket.setTicketStatus(AVAILABLE);
         ticket.setUser(null);
         ticket.setPurchasedAt(null);
+        ticket.setUpdatedAt(LocalDateTime.now());
         ticketsRepositoryPort.save(ticket);
 
         final LocalDateTime now = LocalDateTime.now();

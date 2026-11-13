@@ -3,9 +3,11 @@ package com.example.ticketsmodule.web.orders.controller;
 import com.example.ticketsmodule.api.model.CreateOrderResponse;
 import com.example.ticketsmodule.api.model.OrderStatusEnum;
 import com.example.ticketsmodule.domain.order.exception.OrderExpiredException;
+import com.example.ticketsmodule.domain.route.model.Route;
 import com.example.ticketsmodule.domain.ticket.model.Ticket;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
 import com.example.ticketsmodule.impl.order.service.OrdersService;
+import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.pdf.TicketPdfGenerator;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
 import lombok.RequiredArgsConstructor;
@@ -23,21 +25,34 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Controller
 @RequiredArgsConstructor
 public class MyOrdersViewController {
 
     private final OrdersService ordersService;
-    private final TicketsService ticketsService; // Добавили
-    private final TicketPdfGenerator ticketPdfGenerator; // Добавили
+    private final TicketsService ticketsService;
+    private final TicketPdfGenerator ticketPdfGenerator;
     private final SessionCurrentUserService sessionCurrentUserService;
+    private final RoutesService routesService;
 
     @GetMapping("/my-orders")
     public String list(Model model) {
         UUID userId = sessionCurrentUserService.getCurrentUserId();
         List<CreateOrderResponse> orders = ordersService.findAllMyOrders(userId);
+
+        Set<UUID> routeIds = orders.stream()
+                .map(o -> o.getTicket().getRouteId())
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        Map<UUID, Route> routesMap = routesService.findAllByIds(routeIds);
+        model.addAttribute("routes", routesMap); // Передаем в шаблон
 
         model.addAttribute("waiting",
                 orders.stream().filter(o -> o.getStatus() == OrderStatusEnum.WAITING).toList());
