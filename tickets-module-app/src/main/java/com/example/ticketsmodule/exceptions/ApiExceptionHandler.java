@@ -3,6 +3,10 @@ package com.example.ticketsmodule.exceptions;
 import com.example.ticketsmodule.api.model.ErrorResponse;
 import com.example.ticketsmodule.domain.carrier.exception.CarrierNameAlreadyExistsException;
 import com.example.ticketsmodule.domain.carrier.exception.CarrierNotFoundException;
+import com.example.ticketsmodule.domain.order.exception.OrderAccessDeniedException;
+import com.example.ticketsmodule.domain.order.exception.OrderExpiredException;
+import com.example.ticketsmodule.domain.order.exception.OrderInvalidStatusException;
+import com.example.ticketsmodule.domain.order.exception.TicketNotAvailableException;
 import com.example.ticketsmodule.domain.route.exception.RouteNotFoundException;
 import com.example.ticketsmodule.domain.ticket.exception.TicketAlreadyPurchasedException;
 import com.example.ticketsmodule.domain.ticket.exception.TicketNotFoundException;
@@ -112,6 +116,36 @@ public class ApiExceptionHandler {
             responseDto.setUserMessage(apiEx.getUserMessage());
         }
         return responseDto;
+    }
+
+    @ExceptionHandler(TicketNotAvailableException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseBody
+    public ErrorResponse handleTicketNotAvailable(TicketNotAvailableException ex) {
+        ErrorResponse body = new ErrorResponse();
+        body.setMessage(ex.getMessage());
+        body.setUserMessage("Билет недоступен для покупки");
+        return body;
+    }
+
+    @ExceptionHandler({OrderInvalidStatusException.class, OrderExpiredException.class})
+    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    @ResponseBody
+    public ErrorResponse handleOrderInvalidState(RuntimeException ex) {
+        ErrorResponse body = new ErrorResponse();
+        body.setMessage(ex.getMessage());
+        body.setUserMessage("Заказ нельзя обработать в текущем статусе");
+        return body;
+    }
+
+    @ExceptionHandler(OrderAccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ResponseBody
+    public ErrorResponse handleOrderAccessDenied(OrderAccessDeniedException ex) {
+        ErrorResponse body = new ErrorResponse();
+        body.setMessage(ex.getMessage());
+        body.setUserMessage("Нет доступа к заказу");
+        return body;
     }
 
     private HttpStatus getStatus(Exception exception) {

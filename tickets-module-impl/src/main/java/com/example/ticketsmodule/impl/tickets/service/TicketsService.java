@@ -9,20 +9,19 @@ import com.example.ticketsmodule.api.model.TicketsSearchRequest;
 import com.example.ticketsmodule.domain.common.PageRequest;
 import com.example.ticketsmodule.domain.common.PageResult;
 import com.example.ticketsmodule.domain.route.model.Route;
-import com.example.ticketsmodule.domain.ticket.exception.TicketAlreadyPurchasedException;
 import com.example.ticketsmodule.domain.ticket.exception.TicketNotFoundException;
 import com.example.ticketsmodule.domain.ticket.model.Ticket;
 import com.example.ticketsmodule.domain.ticket.model.TicketFilter;
+import com.example.ticketsmodule.domain.ticket.model.TicketStatusEnum;
 import com.example.ticketsmodule.domain.ticket.repository.TicketsRepositoryPort;
-import com.example.ticketsmodule.domain.user.model.User;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.conversion.TicketMapper;
-import com.example.ticketsmodule.impl.users.service.UsersService;
+import com.example.ticketsmodule.impl.tickets.conversion.TicketStatusMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
+
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,16 +40,15 @@ public class TicketsService {
 
     private final TicketsRepositoryPort ticketRepository;
     private final TicketMapper ticketMapper;
+    private final TicketStatusMapper ticketStatusMapper;
     private final RoutesService routesService;
-    private final UsersService usersService;
-
-    private static final String USER_TICKETS_CACHE = "userTickets";
 
     @Transactional
     public CreateTicketResponse create(CreateTicketRequest createTicketRequest) {
         final Route route = routesService.findOneById(createTicketRequest.getRouteId());
         final Ticket ticket = ticketMapper.toDomain(createTicketRequest);
         ticket.setRoute(route);
+        ticket.setTicketStatus(TicketStatusEnum.AVAILABLE);
         ticket.setCreatedAt(LocalDateTime.now());
         ticket.setUpdatedAt(LocalDateTime.now());
         return ticketMapper.toResponse(ticketRepository.save(ticket));
@@ -90,53 +88,8 @@ public class TicketsService {
         if (req.getRouteId() != null) ticket.setRoute(routesService.findOneById(req.getRouteId()));
         if (req.getSeatNumber() != null) ticket.setSeatNumber(req.getSeatNumber());
         if (req.getPrice() != null) ticket.setPrice(req.getPrice());
-        if (req.getIsPurchased() != null) ticket.setPurchased(req.getIsPurchased());
-
-        if (req.getPurchasedById() != null) {
-            User user = usersService.findOneById(req.getPurchasedById());
-            ticket.setUser(user);
-            ticket.setPurchased(true);
-            ticket.setPurchasedAt(req.getPurchasedAt() != null ? req.getPurchasedAt() : LocalDateTime.now());
-        } else if (req.getPurchasedAt() != null) {
-            ticket.setPurchasedAt(req.getPurchasedAt());
-        }
 
         ticket.setUpdatedAt(LocalDateTime.now());
-        return ticketMapper.toResponse(ticketRepository.save(ticket));
-    }
-
-    @CacheEvict(value = USER_TICKETS_CACHE, key = "#userId")
-    @Transactional
-    public CreateTicketResponse buyTicket(@NotNull UUID id, @NotNull UUID userId) {
-        User currentUser = usersService.findOneById(userId);
-        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new TicketNotFoundException(id));
-
-        if (ticket.isPurchased()) throw new TicketAlreadyPurchasedException(id);
-        if (ticket.getRoute().getDepartureAt().isBefore(LocalDateTime.now())) throw new IllegalStateException("Cannot buy ticket for past departure");
-
-        ticket.setUser(currentUser);
-        ticket.setPurchasedAt(LocalDateTime.now());
-        ticket.setUpdatedAt(LocalDateTime.now());
-        ticket.setPurchased(true);
-
-        return ticketMapper.toResponse(ticketRepository.save(ticket));
-    }
-
-    @CacheEvict(value = USER_TICKETS_CACHE, key = "#userId")
-    @Transactional
-    public CreateTicketResponse returnTicket(@NotNull UUID id, @NotNull UUID userId) {
-        User currentUser = usersService.findOneById(userId);
-        Ticket ticket = ticketRepository.findById(id).orElseThrow(() -> new TicketNotFoundException(id));
-
-        if (!ticket.isPurchased()) throw new IllegalStateException("Ticket is not purchased");
-        if (ticket.getRoute().getDepartureAt().isBefore(LocalDateTime.now())) throw new IllegalStateException("Cannot return ticket after departure");
-        if (!currentUser.getId().equals(ticket.getUser().getId())) throw new IllegalStateException("Users are different");
-
-        ticket.setUser(null);
-        ticket.setPurchasedAt(null);
-        ticket.setPurchased(false);
-        ticket.setUpdatedAt(LocalDateTime.now());
-
         return ticketMapper.toResponse(ticketRepository.save(ticket));
     }
 
@@ -168,7 +121,7 @@ public class TicketsService {
                 .routeId(request.getRouteId());
     }
 
-    @Cacheable(value = USER_TICKETS_CACHE, key = "#userId")
+    @Cacheable(value = "userTickets", key = "#userId")
     @Transactional(readOnly = true)
     public List<CreateTicketResponse> findAllMyTickets(UUID userId) {
         return ticketRepository.findPurchasedByUserId(userId).stream().map(ticketMapper::toResponse).toList();
@@ -188,7 +141,7 @@ public class TicketsService {
                 .seatNumber(req.getSeatNumber())
                 .priceFrom(req.getPriceFrom())
                 .priceTo(req.getPriceTo())
-                .isPurchased(req.getIsPurchased())
+                .ticketStatus(ticketStatusMapper.toDomain(req.getTicketStatus()))
                 .purchasedById(req.getPurchasedById())
                 .createdDateFrom(req.getCreatedDateFrom())
                 .createdDateTo(req.getCreatedDateTo())
@@ -200,7 +153,7 @@ public class TicketsService {
                 .route(route)
                 .seatNumber(seat)
                 .price(price)
-                .purchased(false)
+                .ticketStatus(TicketStatusEnum.AVAILABLE)
                 .user(null)
                 .purchasedAt(null)
                 .createdAt(LocalDateTime.now())

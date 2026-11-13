@@ -1,10 +1,13 @@
 package com.example.ticketsmodule.impl.tickets.persistence.entity;
 
+import com.example.ticketsmodule.domain.ticket.model.TicketStatusEnum;
 import com.example.ticketsmodule.impl.routes.persistence.entity.RouteJpaEntity;
 import com.example.ticketsmodule.impl.users.persistence.entity.UserJpaEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -75,11 +78,12 @@ public class TicketJpaEntity {
     private BigDecimal price;
 
     /**
-     * Признак занятости
+     * Статус
      */
-    @Comment("Признак занятости")
-    @Column(name = "is_purchased", nullable = false)
-    private boolean purchased;
+    @Comment("Статус")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ticket_status", nullable = false)
+    private TicketStatusEnum ticketStatus;
 
     /**
      * Идентификатор пользователя

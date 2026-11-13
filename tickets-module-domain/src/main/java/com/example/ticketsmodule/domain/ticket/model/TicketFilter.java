@@ -21,7 +21,7 @@ public class TicketFilter {
     private Integer seatNumber;
     private BigDecimal priceFrom;
     private BigDecimal priceTo;
-    private Boolean isPurchased;
+    private TicketStatusEnum ticketStatus;
     private UUID purchasedById;
     private LocalDate purchasedDateFrom;
     private LocalDate purchasedDateTo;

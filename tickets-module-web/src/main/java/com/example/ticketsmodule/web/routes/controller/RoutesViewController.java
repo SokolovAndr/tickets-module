@@ -1,9 +1,13 @@
 package com.example.ticketsmodule.web.routes.controller;
 
+import com.example.ticketsmodule.api.model.CreateOrderRequest;
+import com.example.ticketsmodule.api.model.CreateOrderResponse;
 import com.example.ticketsmodule.api.model.CreateRouteResponse;
 import com.example.ticketsmodule.api.model.CreateTicketResponse;
 import com.example.ticketsmodule.api.model.RoutesSearchRequest;
+import com.example.ticketsmodule.domain.order.exception.TicketNotAvailableException;
 import com.example.ticketsmodule.impl.oauth.service.SessionCurrentUserService;
+import com.example.ticketsmodule.impl.order.service.OrdersService;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.service.TicketsService;
 import com.example.ticketsmodule.domain.common.PageRequest;
@@ -35,6 +39,7 @@ public class RoutesViewController {
 
     private final RoutesService routesService;
     private final TicketsService ticketsService;
+    private final OrdersService ordersService;
     private final SessionCurrentUserService sessionCurrentUserService;
 
     @GetMapping("/routes")
@@ -99,18 +104,19 @@ public class RoutesViewController {
         return "routes/details";
     }
 
-    @PostMapping("/routes/{routeId}/tickets/{ticketId}/buy")
-    public String buy(@PathVariable UUID routeId,
-                      @PathVariable UUID ticketId,
-                      RedirectAttributes ra) {
+    @PostMapping("/routes/{routeId}/tickets/{ticketId}/reserve")
+    public String reserve(@PathVariable UUID routeId,
+                          @PathVariable UUID ticketId,
+                          RedirectAttributes ra) {
         UUID userId = sessionCurrentUserService.getCurrentUserId();
         try {
-            ticketsService.buyTicket(ticketId, userId);
-            ra.addFlashAttribute("successMessage", "Билет успешно куплен");
-            return "redirect:/my-tickets";
+            CreateOrderRequest req = new CreateOrderRequest();
+            req.setTicketId(ticketId);
+            ordersService.create(req, userId);
+            ra.addFlashAttribute("successMessage", "Билет забронирован на 15 минут");
+            return "redirect:/my-orders";
         } catch (Exception e) {
-            log.warn("Failed to buy ticket {}: {}", ticketId, e.getMessage());
-            ra.addFlashAttribute("errorMessage", e.getMessage());
+            ra.addFlashAttribute("errorMessage", "Место уже занято");
             return "redirect:/routes/" + routeId;
         }
     }
