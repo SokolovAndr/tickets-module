@@ -381,6 +381,13 @@ components:
           type: string
           format: date-time
           nullable: true
+        price:
+          title: Стоимость заказа
+          description: Стоимость заказа
+          type: number
+          format: double
+          minimum: 0
+          example: 1250.50
         canceledAt:
           title: Дата и время отмены заказа
           description: Дата и время отмены заказа

@@ -6,6 +6,7 @@ import com.example.ticketsmodule.domain.carrier.exception.CarrierNotFoundExcepti
 import com.example.ticketsmodule.domain.order.exception.OrderAccessDeniedException;
 import com.example.ticketsmodule.domain.order.exception.OrderExpiredException;
 import com.example.ticketsmodule.domain.order.exception.OrderInvalidStatusException;
+import com.example.ticketsmodule.domain.order.exception.OrderNotFoundException;
 import com.example.ticketsmodule.domain.order.exception.TicketNotAvailableException;
 import com.example.ticketsmodule.domain.route.exception.RouteNotFoundException;
 import com.example.ticketsmodule.domain.ticket.exception.TicketAlreadyPurchasedException;
@@ -58,7 +59,8 @@ public class ApiExceptionHandler {
             CarrierNotFoundException.class,
             RouteNotFoundException.class,
             TicketNotFoundException.class,
-            UserNotFoundException.class
+            UserNotFoundException.class,
+            OrderNotFoundException.class
     })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
@@ -147,6 +149,7 @@ public class ApiExceptionHandler {
         body.setUserMessage("Нет доступа к заказу");
         return body;
     }
+
 
     private HttpStatus getStatus(Exception exception) {
         if (exception instanceof ApiException) {

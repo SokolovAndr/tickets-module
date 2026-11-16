@@ -14,6 +14,7 @@ import com.example.ticketsmodule.domain.order.model.Order;
 import com.example.ticketsmodule.domain.order.model.OrderStatusEnum;
 import com.example.ticketsmodule.domain.order.model.OrdersFilter;
 import com.example.ticketsmodule.domain.order.repository.OrdersRepositoryPort;
+import com.example.ticketsmodule.domain.ticket.exception.TicketNotFoundException;
 import com.example.ticketsmodule.domain.ticket.model.Ticket;
 import com.example.ticketsmodule.domain.ticket.model.TicketStatusEnum;
 import com.example.ticketsmodule.domain.ticket.repository.TicketsRepositoryPort;
@@ -56,7 +57,7 @@ public class OrdersService {
         final User user = usersService.findOneById(userId);
 
         final Ticket ticket = ticketsRepositoryPort.findById(req.getTicketId())
-                .orElseThrow(() -> new TicketNotAvailableException(req.getTicketId(), null));
+                .orElseThrow(() -> new TicketNotFoundException(req.getTicketId()));
 
         if (ticket.getTicketStatus() != AVAILABLE) {
             throw new TicketNotAvailableException(ticket.getId(), ticket.getTicketStatus());

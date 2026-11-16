@@ -1,6 +1,7 @@
 package com.example.ticketsmodule.support;
 
 import com.example.ticketsmodule.impl.carriers.persistence.repository.CarrierSpringDataRepository;
+import com.example.ticketsmodule.impl.order.persistence.repository.OrderSpringDataRepository;
 import com.example.ticketsmodule.impl.routes.persistence.repository.RouteSpringDataRepository;
 import com.example.ticketsmodule.impl.tickets.persistence.repository.TicketSpringDataRepository;
 import com.example.ticketsmodule.impl.users.persistence.repository.UserSpringDataRepository;
@@ -34,12 +35,14 @@ public abstract class AbstractIntegrationTest {
         Runtime.getRuntime().addShutdownHook(new Thread(POSTGRES::stop));
     }
 
+    @Autowired protected OrderSpringDataRepository orderSpringDataRepository;
     @Autowired protected TicketSpringDataRepository ticketSpringDataRepository;
     @Autowired protected RouteSpringDataRepository routeSpringDataRepository;
     @Autowired protected CarrierSpringDataRepository carrierSpringDataRepository;
     @Autowired protected UserSpringDataRepository userSpringDataRepository;
 
     protected void cleanDatabase() {
+        orderSpringDataRepository.deleteAll();
         ticketSpringDataRepository.deleteAll();
         routeSpringDataRepository.deleteAll();
         carrierSpringDataRepository.deleteAll();

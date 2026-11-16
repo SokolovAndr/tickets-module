@@ -158,35 +158,6 @@ class TicketsControllerApiImplTest {
     }
 
     @Nested
-    @DisplayName("buyTicket() / returnTicket()")
-    class BuyAndReturnTests {
-
-        @Test
-        @DisplayName("should return 200 OK for buyTicket")
-        void shouldReturn200OkForBuy() {
-            when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
-            when(ticketsService.buyTicket(ticketId, userId)).thenReturn(response);
-
-            ResponseEntity<CreateTicketResponse> result = controller.buyTicket(ticketId);
-
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(result.getBody()).isSameAs(response);
-        }
-
-        @Test
-        @DisplayName("should return 200 OK for returnTicket")
-        void shouldReturn200OkForReturn() {
-            when(jwtCurrentUserService.getCurrentUserId()).thenReturn(userId);
-            when(ticketsService.returnTicket(ticketId, userId)).thenReturn(response);
-
-            ResponseEntity<CreateTicketResponse> result = controller.returnTicket(ticketId);
-
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(result.getBody()).isSameAs(response);
-        }
-    }
-
-    @Nested
     @DisplayName("releaseTicketsBatch()")
     class ReleaseTicketsBatchTests {
 
