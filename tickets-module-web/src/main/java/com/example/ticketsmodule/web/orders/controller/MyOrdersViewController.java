@@ -41,7 +41,7 @@ public class MyOrdersViewController {
     private final SessionCurrentUserService sessionCurrentUserService;
     private final RoutesService routesService;
 
-    @GetMapping("/my-orders")
+    @GetMapping("/my-tickets")
     public String list(Model model) {
         UUID userId = sessionCurrentUserService.getCurrentUserId();
         List<CreateOrderResponse> orders = ordersService.findAllMyOrders(userId);
@@ -61,10 +61,10 @@ public class MyOrdersViewController {
         model.addAttribute("history",
                 orders.stream().filter(o -> o.getStatus() != OrderStatusEnum.WAITING
                         && o.getStatus() != OrderStatusEnum.PAID).toList());
-        return "my-orders";
+        return "my-tickets";
     }
 
-    @PostMapping("/my-orders/{id}/pay")
+    @PostMapping("/my-tickets/{id}/pay")
     public String pay(@PathVariable UUID id, RedirectAttributes ra) {
         try {
             ordersService.payOrder(id, sessionCurrentUserService.getCurrentUserId());
@@ -74,10 +74,10 @@ public class MyOrdersViewController {
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/my-orders";
+        return "redirect:/my-tickets";
     }
 
-    @PostMapping("/my-orders/{id}/cancel")
+    @PostMapping("/my-tickets/{id}/cancel")
     public String cancel(@PathVariable UUID id, RedirectAttributes ra) {
         try {
             ordersService.cancelOrder(id, sessionCurrentUserService.getCurrentUserId());
@@ -85,10 +85,10 @@ public class MyOrdersViewController {
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/my-orders";
+        return "redirect:/my-tickets";
     }
 
-    @PostMapping("/my-orders/{id}/refund")
+    @PostMapping("/my-tickets/{id}/refund")
     public String refund(@PathVariable UUID id, RedirectAttributes ra) {
         try {
             ordersService.refundOrder(id, sessionCurrentUserService.getCurrentUserId());
@@ -96,11 +96,10 @@ public class MyOrdersViewController {
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/my-orders";
+        return "redirect:/my-tickets";
     }
 
-    // --- НОВЫЙ МЕТОД ДЛЯ PDF ---
-    @GetMapping("/my-orders/{ticketId}/pdf")
+    @GetMapping("/my-tickets/{ticketId}/pdf")
     public ResponseEntity<Resource> downloadTicketPdf(@PathVariable UUID ticketId) {
         UUID currentUserId = sessionCurrentUserService.getCurrentUserId();
 

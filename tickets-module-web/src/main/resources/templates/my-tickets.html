@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мои заказы — Система билетов</title>
+    <title>Мои билеты — Система билетов</title>
     <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -277,7 +277,7 @@
     </a>
     <div class="header-actions">
         <a th:href="@{/routes}" class="nav-link">Маршруты</a>
-        <a th:href="@{/my-orders}" class="nav-link active">Мои заказы</a>
+        <a th:href="@{/my-tickets}" class="nav-link active">Мои билеты</a>
         <a th:href="@{/profile}" class="nav-link">Профиль</a>
         <form th:action="@{/logout}" method="post">
             <button type="submit" class="logout-btn">
@@ -293,7 +293,7 @@
 
 <main class="main">
     <div class="page-head">
-        <h1>Мои заказы</h1>
+        <h1>Мои билеты</h1>
         <p>Управляйте бронированиями и купленными билетами.</p>
     </div>
 
@@ -377,7 +377,7 @@
                 </div>
 
                 <div class="order-actions">
-                    <form th:id="'pay-form-' + ${o.id}" th:action="@{'/my-orders/' + ${o.id} + '/pay'}" method="post" style="margin: 0;">
+                    <form th:id="'pay-form-' + ${o.id}" th:action="@{'/my-tickets/' + ${o.id} + '/pay'}" method="post" style="margin: 0;">
                         <button type="button" class="btn-pay"
                                 th:attr="data-form-id='pay-form-' + ${o.id}, data-seat=${o.ticket.seatNumber}"
                                 onclick="openConfirmModal(this, 'Оплата билета', 'Вы уверены, что хотите оплатить место', 'Оплатить', 'pay')">
@@ -387,7 +387,7 @@
                             Оплатить
                         </button>
                     </form>
-                    <form th:id="'cancel-form-' + ${o.id}" th:action="@{'/my-orders/' + ${o.id} + '/cancel'}" method="post" style="margin: 0;">
+                    <form th:id="'cancel-form-' + ${o.id}" th:action="@{'/my-tickets/' + ${o.id} + '/cancel'}" method="post" style="margin: 0;">
                         <button type="button" class="btn-return"
                                 th:attr="data-form-id='cancel-form-' + ${o.id}, data-seat=${o.ticket.seatNumber}"
                                 onclick="openConfirmModal(this, 'Отмена брони', 'Вы уверены, что хотите отменить бронирование места', 'Отменить', 'danger')">
@@ -452,13 +452,13 @@
                     </div>
                 </div>
                 <div class="order-actions">
-                    <a th:href="@{'/my-orders/' + ${o.ticket.id} + '/pdf'}" class="btn-download" title="Скачать билет">
+                    <a th:href="@{'/my-tickets/' + ${o.ticket.id} + '/pdf'}" class="btn-download" title="Скачать билет">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                         </svg>
                         PDF
                     </a>
-                    <form th:id="'refund-form-' + ${o.id}" th:action="@{'/my-orders/' + ${o.id} + '/refund'}" method="post" style="margin: 0;">
+                    <form th:id="'refund-form-' + ${o.id}" th:action="@{'/my-tickets/' + ${o.id} + '/refund'}" method="post" style="margin: 0;">
                         <button type="button" class="btn-return"
                                 th:attr="data-form-id='refund-form-' + ${o.id}, data-seat=${o.ticket.seatNumber}"
                                 onclick="openConfirmModal(this, 'Возврат билета', 'Вы уверены, что хотите вернуть билет на место', 'Вернуть', 'danger')">
