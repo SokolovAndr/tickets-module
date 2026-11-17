@@ -76,7 +76,7 @@ public class OrdersService {
         order.setPrice(ticket.getPrice());
         order.setStatus(OrderStatusEnum.WAITING);
         order.setCreatedAt(now);
-        order.setReservedUntil(now.plusMinutes(15));
+        order.setReservedUntil(now.plusMinutes(1));
         order.setUpdatedAt(now);
 
         return orderMapper.toResponse(ordersRepositoryPort.save(order));

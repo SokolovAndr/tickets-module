@@ -369,7 +369,7 @@
                 </div>
 
                 <!-- Таймер -->
-                <div class="timer" th:attr="data-until=${#temporals.format(o.reservedUntil, 'yyyy-MM-dd''T''HH:mm:ss') + 'Z'}">
+                <div class="timer" th:attr="data-until=${#temporals.format(o.reservedUntil, 'yyyy-MM-dd''T''HH:mm:ss')}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                     </svg>
@@ -563,19 +563,45 @@
             if (left === 0) {
                 textSpan.textContent = 'истекло';
                 el.classList.add('expired');
-                clearInterval(intervalId);
-                return;
+
+                // Находим карточку этого заказа
+                const card = el.closest('.order-card');
+                if (card) {
+                    const payBtn = card.querySelector('.btn-pay');
+                    const cancelBtn = card.querySelector('.btn-return');
+
+                    if (payBtn) {
+                        payBtn.disabled = true;
+                        payBtn.style.opacity = '0.5';
+                        payBtn.style.cursor = 'not-allowed';
+                    }
+                    if (cancelBtn) {
+                        cancelBtn.disabled = true;
+                        cancelBtn.style.opacity = '0.5';
+                        cancelBtn.style.cursor = 'not-allowed';
+                    }
+                }
+                return true; // Сообщаем, что таймер завершил работу
             }
+
             const m = Math.floor(left / 60000);
             const s = Math.floor((left % 60000) / 1000);
             textSpan.textContent = `${m}:${String(s).padStart(2, '0')}`;
+            return false;
         };
 
-        tick();
-        const intervalId = setInterval(tick, 1000);
+        // Первая проверка (если время уже истекло на момент загрузки страницы)
+        if (tick()) return;
+
+        // Запуск интервала для тиканья
+        const intervalId = setInterval(() => {
+            if (tick()) {
+                clearInterval(intervalId); // Останавливаем интервал, когда время вышло
+            }
+        }, 1000);
     });
 
-    // --- 2. Логика модального окна ---
+    // --- 2. Логика модального окна (без изменений) ---
     let actionFormToSubmit = null;
     const modal = document.getElementById('actionModal');
     const confirmBtn = document.getElementById('modalConfirmBtn');

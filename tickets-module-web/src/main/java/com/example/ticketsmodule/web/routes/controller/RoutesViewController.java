@@ -113,7 +113,7 @@ public class RoutesViewController {
             CreateOrderRequest req = new CreateOrderRequest();
             req.setTicketId(ticketId);
             ordersService.create(req, userId);
-            ra.addFlashAttribute("successMessage", "Билет забронирован на 15 минут");
+            ra.addFlashAttribute("successMessage", "Билет забронирован на 1 мин");
             return "redirect:/my-tickets";
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", "Место уже занято");

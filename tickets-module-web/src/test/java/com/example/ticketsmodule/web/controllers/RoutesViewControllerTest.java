@@ -193,9 +193,8 @@ class RoutesViewControllerTest {
             mockMvc.perform(post("/routes/{routeId}/tickets/{ticketId}/reserve", routeId, ticketId))
                     .andExpect(status().is3xxRedirection())
                     .andExpect(redirectedUrl("/my-tickets"))
-                    .andExpect(flash().attribute("successMessage", "Билет забронирован на 15 минут"));
+                    .andExpect(flash().attribute("successMessage", "Билет забронирован на 1 мин"));
 
-            // Проверяем, что контроллер передал правильный ticketId
             var captor = org.mockito.ArgumentCaptor.forClass(CreateOrderRequest.class);
             verify(ordersService).create(captor.capture(), eq(userId));
             assertThat(captor.getValue().getTicketId()).isEqualTo(ticketId);
