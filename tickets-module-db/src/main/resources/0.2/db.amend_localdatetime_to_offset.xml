@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="amend_localdatetime_to_offset_carriers_table" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+                <tableExists tableName="carriers"/>
+            <columnExists tableName="carriers" columnName="created_at"/>
+            <columnExists tableName="carriers" columnName="updated_at"/>
+        </preConditions>
+
+        <modifyDataType tableName="carriers" columnName="created_at" newDataType="TIMESTAMPTZ"/>
+        <modifyDataType tableName="carriers" columnName="updated_at" newDataType="TIMESTAMPTZ"/>
+    </changeSet>
+
+    <changeSet id="amend_localdatetime_to_offset_users_table" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+            <tableExists tableName="users"/>
+            <columnExists tableName="users" columnName="created_at"/>
+            <columnExists tableName="users" columnName="updated_at"/>
+        </preConditions>
+
+        <modifyDataType tableName="users" columnName="created_at" newDataType="TIMESTAMPTZ"/>
+        <modifyDataType tableName="users" columnName="updated_at" newDataType="TIMESTAMPTZ"/>
+    </changeSet>
+
+    <changeSet id="amend_localdatetime_to_offset_routes_table" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+            <tableExists tableName="routes"/>
+            <columnExists tableName="routes" columnName="created_at"/>
+            <columnExists tableName="routes" columnName="updated_at"/>
+            <columnExists tableName="routes" columnName="departure_at"/>
+            <columnExists tableName="routes" columnName="destination_at"/>
+        </preConditions>
+
+        <modifyDataType tableName="routes" columnName="created_at" newDataType="TIMESTAMPTZ"/>
+        <modifyDataType tableName="routes" columnName="updated_at" newDataType="TIMESTAMPTZ"/>
+        <modifyDataType tableName="routes" columnName="departure_at" newDataType="TIMESTAMPTZ"/>
+        <modifyDataType tableName="routes" columnName="destination_at" newDataType="TIMESTAMPTZ"/>
+    </changeSet>
+
+    <changeSet id="amend_localdatetime_to_offset_tickets_table" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+            <tableExists tableName="tickets"/>
+            <columnExists tableName="tickets" columnName="created_at"/>
+            <columnExists tableName="tickets" columnName="updated_at"/>
+            <columnExists tableName="tickets" columnName="purchased_at"/>
+        </preConditions>
+
+        <modifyDataType tableName="tickets" columnName="created_at" newDataType="TIMESTAMPTZ"/>
+        <modifyDataType tableName="tickets" columnName="updated_at" newDataType="TIMESTAMPTZ"/>
+        <modifyDataType tableName="tickets" columnName="purchased_at" newDataType="TIMESTAMPTZ"/>
+    </changeSet>
+
+    <changeSet id="amend_localdatetime_to_offset_orders_table" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+            <tableExists tableName="orders"/>
+            <columnExists tableName="orders" columnName="created_at"/>
+            <columnExists tableName="orders" columnName="updated_at"/>
+            <columnExists tableName="orders" columnName="reserved_until"/>
+            <columnExists tableName="orders" columnName="paid_at"/>
+            <columnExists tableName="orders" columnName="canceled_at"/>
+            <columnExists tableName="orders" columnName="refunded_at"/>
+        </preConditions>
+
+        <modifyDataType tableName="orders" columnName="created_at" newDataType="TIMESTAMPTZ"/>
+        <modifyDataType tableName="orders" columnName="updated_at" newDataType="TIMESTAMPTZ"/>
+        <modifyDataType tableName="orders" columnName="reserved_until" newDataType="TIMESTAMPTZ"/>
+        <modifyDataType tableName="orders" columnName="paid_at" newDataType="TIMESTAMPTZ"/>
+        <modifyDataType tableName="orders" columnName="canceled_at" newDataType="TIMESTAMPTZ"/>
+        <modifyDataType tableName="orders" columnName="refunded_at" newDataType="TIMESTAMPTZ"/>
+    </changeSet>
+
+
+</databaseChangeLog>

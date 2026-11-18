@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -18,6 +18,6 @@ public class Route extends CommonModel {
     private String destinationPoint;
     private Carrier carrier;
     private int durationMinutes;
-    private LocalDateTime departureAt;
-    private LocalDateTime destinationAt;
+    private OffsetDateTime departureAt;
+    private OffsetDateTime destinationAt;
 }

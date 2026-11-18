@@ -22,11 +22,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.Comment;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
@@ -90,40 +88,40 @@ public class OrderJpaEntity {
      */
     @Comment("Забронировано до")
     @Column(name = "reserved_until")
-    private LocalDateTime reservedUntil;
+    private OffsetDateTime reservedUntil;
 
     /**
      * Дата оплаты
      */
     @Comment("Дата оплаты")
     @Column(name = "paid_at")
-    private LocalDateTime paidAt;
+    private OffsetDateTime paidAt;
 
     /**
      * Дата отмены
      */
     @Comment("Дата отмены")
     @Column(name = "canceled_at")
-    private LocalDateTime canceledAt;
+    private OffsetDateTime canceledAt;
 
     /**
      * Дата возврата
      */
     @Comment("Дата возврата")
     @Column(name = "refunded_at")
-    private LocalDateTime refundedAt;
+    private OffsetDateTime refundedAt;
 
     /**
      * Дата создания
      */
     @Comment("Дата создания")
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     /**
      * Дата обновления
      */
     @Comment("Дата обновления")
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 }

@@ -18,7 +18,7 @@ import com.example.ticketsmodule.api.model.LoginResponse;
 import com.example.ticketsmodule.api.model.RefreshTokenRequest;
 import com.example.ticketsmodule.api.model.RegisterRequest;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
@@ -64,8 +64,8 @@ public class AuthService {
 
         newUser.setPassword(passwordEncrypted);
         newUser.setRole(UserRoleEnum.USER);
-        newUser.setCreatedAt(LocalDateTime.now());
-        newUser.setUpdatedAt(LocalDateTime.now());
+        newUser.setCreatedAt(OffsetDateTime.now());
+        newUser.setUpdatedAt(OffsetDateTime.now());
 
         User savedUser = usersRepositoryPort.save(newUser);
         return jwtService.createTokenPair(savedUser);

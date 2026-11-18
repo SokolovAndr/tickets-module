@@ -98,7 +98,7 @@
                             <library>spring-boot</library>
                             <generateApis>true</generateApis>
                             <configOptions>
-                                <dateLibrary>java8-localdatetime</dateLibrary>
+                                <dateLibrary>java8</dateLibrary>
                                 <sourceFolder>swagger</sourceFolder>
                                 <interfaceOnly>true</interfaceOnly>
                                 <useBeanValidation>true</useBeanValidation>

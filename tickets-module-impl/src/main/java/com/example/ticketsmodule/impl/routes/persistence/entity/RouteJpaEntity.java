@@ -21,7 +21,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.jspecify.annotations.NonNull;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
@@ -87,26 +87,26 @@ public class RouteJpaEntity {
      */
     @Comment("Дата отправление")
     @Column(name = "departure_at", nullable = false)
-    private LocalDateTime departureAt;
+    private OffsetDateTime departureAt;
 
     /**
      * Дата прибытия
      */
     @Comment("Дата прибытия")
     @Column(name = "destination_at", nullable = false)
-    private LocalDateTime destinationAt;
+    private OffsetDateTime destinationAt;
 
     /**
      * Дата создания
      */
     @Comment("Дата создания")
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     /**
      * Дата обновления
      */
     @Comment("Дата обновления")
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 }

@@ -18,8 +18,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -93,7 +93,7 @@ public class OrderJpaRepositoryAdapter implements OrdersRepositoryPort {
      * @return список заказов
      */
     @Override
-    public List<Order> findExpiredWaiting(LocalDateTime now) {
+    public List<Order> findExpiredWaiting(OffsetDateTime now) {
         return mapper.toDomainList(
                 springRepo.findExpiredWaiting(OrderStatusEnum.WAITING, now));
     }
@@ -150,35 +150,24 @@ public class OrderJpaRepositoryAdapter implements OrdersRepositoryPort {
                 if (f.getStatus() != null)
                     p.add(cb.equal(root.get("status"), f.getStatus()));
                 if (f.getCreatedDateFrom() != null)
-                    p.add(cb.greaterThanOrEqualTo(root.get("createdAt"),
-                            f.getCreatedDateFrom().atStartOfDay()));
+                    p.add(cb.greaterThanOrEqualTo(root.get("createdAt"), f.getCreatedDateFrom()));
                 if (f.getCreatedDateTo() != null)
-                    p.add(cb.lessThanOrEqualTo(root.get("createdAt"),
-                            f.getCreatedDateTo().atTime(LocalTime.MAX)));
+                    p.add(cb.lessThanOrEqualTo(root.get("createdAt"), f.getCreatedDateTo()));
                 if (f.getReservedUntilFrom() != null)
-                    p.add(cb.greaterThanOrEqualTo(root.get("reservedUntil"),
-                            f.getReservedUntilFrom().atStartOfDay()));
+                    p.add(cb.greaterThanOrEqualTo(root.get("reservedUntil"), f.getReservedUntilFrom()));
                 if (f.getReservedUntilTo() != null)
-                    p.add(cb.lessThanOrEqualTo(root.get("reservedUntil"),
-                            f.getReservedUntilTo().atTime(LocalTime.MAX)));
+                    p.add(cb.lessThanOrEqualTo(root.get("reservedUntil"), f.getReservedUntilTo()));
                 if (f.getPaidDateFrom() != null)
-                    p.add(cb.greaterThanOrEqualTo(root.get("paidAt"),
-                            f.getPaidDateFrom().atStartOfDay()));
-                if (f.getPaidDateTo() != null)
-                    p.add(cb.lessThanOrEqualTo(root.get("paidAt"),
-                            f.getPaidDateTo().atTime(LocalTime.MAX)));
+                    p.add(cb.greaterThanOrEqualTo(root.get("paidAt"), f.getPaidDateFrom()));
+                if (f.getPaidDateTo() != null) p.add(cb.lessThanOrEqualTo(root.get("paidAt"), f.getPaidDateTo()));
                 if (f.getCanceledDateFrom() != null)
-                    p.add(cb.greaterThanOrEqualTo(root.get("canceledAt"),
-                            f.getCanceledDateFrom().atStartOfDay()));
+                    p.add(cb.greaterThanOrEqualTo(root.get("canceledAt"), f.getCanceledDateFrom()));
                 if (f.getCanceledDateTo() != null)
-                    p.add(cb.lessThanOrEqualTo(root.get("canceledAt"),
-                            f.getCanceledDateTo().atTime(LocalTime.MAX)));
+                    p.add(cb.lessThanOrEqualTo(root.get("canceledAt"), f.getCanceledDateTo()));
                 if (f.getRefundedDateFrom() != null)
-                    p.add(cb.greaterThanOrEqualTo(root.get("refundedAt"),
-                            f.getRefundedDateFrom().atStartOfDay()));
+                    p.add(cb.greaterThanOrEqualTo(root.get("refundedAt"), f.getRefundedDateFrom()));
                 if (f.getRefundedDateTo() != null)
-                    p.add(cb.lessThanOrEqualTo(root.get("refundedAt"),
-                            f.getRefundedDateTo().atTime(LocalTime.MAX)));
+                    p.add(cb.lessThanOrEqualTo(root.get("refundedAt"), f.getRefundedDateTo()));
             }
             return cb.and(p.toArray(new Predicate[0]));
         };

@@ -12,6 +12,7 @@
     <include file="db.add_unique_constraint_routes.xml" relativeToChangelogFile="true"/>
     <include file="db.add_ticket_status_to_tickets_table_and_drop_is_purchased_column.xml" relativeToChangelogFile="true"/>
     <include file="db.create_orders_table.xml" relativeToChangelogFile="true"/>
+    <include file="db.amend_localdatetime_to_offset.xml" relativeToChangelogFile="true"/>
     <include file="db.load_data_from_csv.xml" relativeToChangelogFile="true"/>
 
 
