@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,11 +62,11 @@ class OrderMapperTest {
         @Test
         @DisplayName("should map direct order fields")
         void shouldMapDirectFields() {
-            LocalDateTime now = LocalDateTime.now();
-            LocalDateTime reserved = now.plusMinutes(15);
-            LocalDateTime paid = now.minusHours(1);
-            LocalDateTime canceled = now.minusHours(2);
-            LocalDateTime refunded = now.minusMinutes(30);
+            OffsetDateTime now = OffsetDateTime.now();
+            OffsetDateTime reserved = now.plusMinutes(15);
+            OffsetDateTime paid = now.minusHours(1);
+            OffsetDateTime canceled = now.minusHours(2);
+            OffsetDateTime refunded = now.minusMinutes(30);
 
             Order order = Order.builder()
                     .id(orderId)

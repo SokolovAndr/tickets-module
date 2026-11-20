@@ -17,7 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -156,7 +156,7 @@ class UsersControllerApiImplIT extends AbstractIntegrationTest {
         @Test
         @DisplayName("should update updatedAt timestamp")
         void shouldUpdateUpdatedAt() throws Exception {
-            LocalDateTime before = usersRepositoryPort.findById(testUser.getId())
+            OffsetDateTime before = usersRepositoryPort.findById(testUser.getId())
                     .orElseThrow().getUpdatedAt();
 
             // Небольшая задержка, чтобы timestamp гарантированно отличался
@@ -306,7 +306,7 @@ class UsersControllerApiImplIT extends AbstractIntegrationTest {
     // ---------- HELPERS ----------
 
     private User createUserInDb(String login, String rawPassword, String fullName, UserRoleEnum role) {
-        LocalDateTime now = LocalDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now();
         return usersRepositoryPort.save(User.builder()
                 .login(login)
                 .password(passwordEncoder.encode(rawPassword))

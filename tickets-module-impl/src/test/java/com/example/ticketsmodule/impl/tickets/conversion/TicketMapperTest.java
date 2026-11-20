@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -97,9 +97,9 @@ class TicketMapperTest {
         @Test
         @DisplayName("should map all fields from domain")
         void shouldMapAllFields() {
-            LocalDateTime now = LocalDateTime.now();
-            LocalDateTime purchasedAt = now.minusHours(1);
-            LocalDateTime created = now.minusDays(1);
+            OffsetDateTime now = OffsetDateTime.now();
+            OffsetDateTime purchasedAt = now.minusHours(1);
+            OffsetDateTime created = now.minusDays(1);
 
             Ticket ticket = Ticket.builder()
                     .id(ticketId)
@@ -237,8 +237,8 @@ class TicketMapperTest {
             Ticket ticket = mapper.toDomain(request);
             ticket.setId(ticketId);
             ticket.setRoute(route);
-            ticket.setCreatedAt(LocalDateTime.now());
-            ticket.setUpdatedAt(LocalDateTime.now());
+            ticket.setCreatedAt(OffsetDateTime.now());
+            ticket.setUpdatedAt(OffsetDateTime.now());
 
             CreateTicketResponse response = mapper.toResponse(ticket);
 

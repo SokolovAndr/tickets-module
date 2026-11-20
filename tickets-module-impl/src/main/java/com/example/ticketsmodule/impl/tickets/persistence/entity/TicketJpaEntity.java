@@ -26,7 +26,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
@@ -100,19 +100,19 @@ public class TicketJpaEntity {
      */
     @Comment("Дата покупки")
     @Column(name = "purchased_at")
-    private LocalDateTime purchasedAt;
+    private OffsetDateTime purchasedAt;
 
     /**
      * Дата создания
      */
     @Comment("Дата создания")
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     /**
      * Дата обновления
      */
     @Comment("Дата обновления")
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 }

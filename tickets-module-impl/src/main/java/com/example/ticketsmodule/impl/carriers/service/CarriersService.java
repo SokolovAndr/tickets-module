@@ -20,7 +20,8 @@ import com.example.ticketsmodule.api.model.CarriersSearchRequest;
 import com.example.ticketsmodule.api.model.CreateCarrierRequest;
 import com.example.ticketsmodule.api.model.CreateCarrierResponse;
 
-import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,8 +46,8 @@ public class CarriersService {
         if (carrier == null) {
             throw new IllegalStateException("Failed to convert carrier entity");
         }
-        carrier.setCreatedAt(LocalDateTime.now());
-        carrier.setUpdatedAt(LocalDateTime.now());
+        carrier.setCreatedAt(OffsetDateTime.now());
+        carrier.setUpdatedAt(OffsetDateTime.now());
         return carrierMapper.toResponse(carriersRepositoryPort.save(carrier));
     }
 
@@ -89,7 +90,7 @@ public class CarriersService {
             if (carrierPatchRequest.getPhone() != null) {
                 carrier.setPhone(carrierPatchRequest.getPhone());
             }
-            carrier.setUpdatedAt(LocalDateTime.now());
+            carrier.setUpdatedAt(OffsetDateTime.now());
 
             return carriersRepositoryPort.save(carrier);
         }).orElseThrow(() -> new CarrierNotFoundException(id));
@@ -103,8 +104,8 @@ public class CarriersService {
                 .query(req.getQuery())
                 .name(req.getName())
                 .phone(req.getPhone())
-                .createDateFrom(req.getCreateDateFrom() != null ? req.getCreateDateFrom().atStartOfDay() : null)
-                .createDateTo(req.getCreateDateTo() != null ? req.getCreateDateTo().atTime(23, 59, 59) : null)
+                .createDateFrom(req.getCreateDateFrom() != null ? req.getCreateDateFrom().atStartOfDay().atOffset(java.time.ZoneOffset.UTC) : null)
+                .createDateTo(req.getCreateDateTo() != null ? req.getCreateDateTo().atTime(LocalTime.MAX).atOffset(java.time.ZoneOffset.UTC) : null)
                 .build();
     }
 }

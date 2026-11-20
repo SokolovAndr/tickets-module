@@ -32,7 +32,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -76,7 +76,7 @@ class OrdersServiceTest {
         user = User.builder().id(userId).login("admin").build();
         route = Route.builder()
                 .id(routeId)
-                .departureAt(LocalDateTime.now().plusDays(1))
+                .departureAt(OffsetDateTime.now().plusDays(1))
                 .build();
         ticket = Ticket.builder()
                 .id(ticketId)
@@ -91,9 +91,9 @@ class OrdersServiceTest {
                 .ticket(ticket)
                 .status(OrderStatusEnum.WAITING)
                 .price(BigDecimal.valueOf(100))
-                .reservedUntil(LocalDateTime.now().plusMinutes(15))
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .reservedUntil(OffsetDateTime.now().plusMinutes(15))
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build();
         expectedResponse = new CreateOrderResponse();
     }
@@ -208,7 +208,7 @@ class OrdersServiceTest {
         @Test
         @DisplayName("should throw OrderExpiredException when reservation expired")
         void shouldThrowWhenExpired() {
-            order.setReservedUntil(LocalDateTime.now().minusMinutes(1));
+            order.setReservedUntil(OffsetDateTime.now().minusMinutes(1));
             when(ordersRepositoryPort.findById(orderId)).thenReturn(Optional.of(order));
 
             assertThatThrownBy(() -> ordersService.payOrder(orderId, userId))
@@ -275,7 +275,7 @@ class OrdersServiceTest {
         @DisplayName("should release ticket and set REFUNDED status")
         void shouldRefundSuccessfully() {
             order.setStatus(OrderStatusEnum.PAID);
-            order.setPaidAt(LocalDateTime.now().minusHours(1));
+            order.setPaidAt(OffsetDateTime.now().minusHours(1));
 
             when(ordersRepositoryPort.findById(orderId)).thenReturn(Optional.of(order));
             when(ticketsRepositoryPort.save(any(Ticket.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -316,7 +316,7 @@ class OrdersServiceTest {
         @DisplayName("should throw when route departure is in the past")
         void shouldThrowWhenAfterDeparture() {
             order.setStatus(OrderStatusEnum.PAID);
-            route.setDepartureAt(LocalDateTime.now().minusDays(1));
+            route.setDepartureAt(OffsetDateTime.now().minusDays(1));
 
             when(ordersRepositoryPort.findById(orderId)).thenReturn(Optional.of(order));
 
@@ -452,10 +452,10 @@ class OrdersServiceTest {
                     .user(user)
                     .ticket(ticket)
                     .status(OrderStatusEnum.WAITING)
-                    .reservedUntil(LocalDateTime.now().minusMinutes(5))
+                    .reservedUntil(OffsetDateTime.now().minusMinutes(5))
                     .build();
 
-            when(ordersRepositoryPort.findExpiredWaiting(any(LocalDateTime.class)))
+            when(ordersRepositoryPort.findExpiredWaiting(any(OffsetDateTime.class)))
                     .thenReturn(List.of(expired));
             when(ticketsRepositoryPort.save(any(Ticket.class))).thenAnswer(inv -> inv.getArgument(0));
             when(ordersRepositoryPort.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -473,7 +473,7 @@ class OrdersServiceTest {
         @Test
         @DisplayName("should do nothing when no expired orders")
         void shouldDoNothingWhenNoneExpired() {
-            when(ordersRepositoryPort.findExpiredWaiting(any(LocalDateTime.class)))
+            when(ordersRepositoryPort.findExpiredWaiting(any(OffsetDateTime.class)))
                     .thenReturn(List.of());
 
             ordersService.timeOutExpired();

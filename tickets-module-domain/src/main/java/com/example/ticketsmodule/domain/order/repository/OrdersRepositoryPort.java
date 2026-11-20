@@ -6,7 +6,7 @@ import com.example.ticketsmodule.domain.order.model.Order;
 import com.example.ticketsmodule.domain.order.model.OrderStatusEnum;
 import com.example.ticketsmodule.domain.order.model.OrdersFilter;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,7 +25,7 @@ public interface OrdersRepositoryPort {
 
     List<Order> findByUserIdAndStatus(UUID userId, OrderStatusEnum status);
 
-    List<Order> findExpiredWaiting(LocalDateTime now);
+    List<Order> findExpiredWaiting(OffsetDateTime now);
 
     PageResult<Order> findAll(OrdersFilter filter, PageRequest page);
 

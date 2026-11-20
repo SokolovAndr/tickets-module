@@ -26,7 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -84,8 +84,8 @@ class MyOrdersViewControllerTest {
                     .id(routeId)
                     .departurePoint("Moscow")
                     .destinationPoint("SPb")
-                    .departureAt(LocalDateTime.now().plusDays(1))
-                    .destinationAt(LocalDateTime.now().plusDays(1).plusHours(2))
+                    .departureAt(OffsetDateTime.now().plusDays(1))
+                    .destinationAt(OffsetDateTime.now().plusDays(1).plusHours(2))
                     .build();
 
             when(sessionCurrentUserService.getCurrentUserId()).thenReturn(userId);
@@ -316,7 +316,7 @@ class MyOrdersViewControllerTest {
         order.setTicket(ticket);
         order.setStatus(status);
         order.setPrice(BigDecimal.TEN);
-        order.setReservedUntil(LocalDateTime.now().plusMinutes(15));
+        order.setReservedUntil(OffsetDateTime.now().plusMinutes(15));
         return order;
     }
 }

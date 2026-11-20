@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -41,5 +41,5 @@ public interface OrderSpringDataRepository extends JpaRepository<OrderJpaEntity,
     @EntityGraph(attributePaths = {"ticket", "ticket.route"})
     List<OrderJpaEntity> findExpiredWaiting(
             @Param("status") OrderStatusEnum status,
-            @Param("now") LocalDateTime now);
+            @Param("now") OffsetDateTime now);
 }

@@ -369,7 +369,7 @@
                 </div>
 
                 <!-- Таймер -->
-                <div class="timer" th:attr="data-until=${#temporals.format(o.reservedUntil, 'yyyy-MM-dd''T''HH:mm:ss')}">
+                <div class="timer" th:attr="data-until=${#temporals.format(o.reservedUntil, 'yyyy-MM-dd''T''HH:mm:ss') + 'Z'}">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                     </svg>

@@ -9,7 +9,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -21,9 +21,9 @@ public class Order extends CommonModel {
     private OrderStatusEnum status;
     private BigDecimal price;
 
-    private LocalDateTime reservedUntil;
-    private LocalDateTime paidAt;
-    private LocalDateTime canceledAt;
-    private LocalDateTime refundedAt;
+    private OffsetDateTime reservedUntil;
+    private OffsetDateTime paidAt;
+    private OffsetDateTime canceledAt;
+    private OffsetDateTime refundedAt;
 
 }

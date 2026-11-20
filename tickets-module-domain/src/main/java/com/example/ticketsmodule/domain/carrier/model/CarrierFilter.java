@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -17,6 +17,6 @@ public class CarrierFilter {
     private String query;
     private String name;
     private String phone;
-    private LocalDateTime createDateFrom;
-    private LocalDateTime createDateTo;
+    private OffsetDateTime createDateFrom;
+    private OffsetDateTime createDateTo;
 }

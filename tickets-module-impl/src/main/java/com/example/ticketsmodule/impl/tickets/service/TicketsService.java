@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -49,8 +49,8 @@ public class TicketsService {
         final Ticket ticket = ticketMapper.toDomain(createTicketRequest);
         ticket.setRoute(route);
         ticket.setTicketStatus(TicketStatusEnum.AVAILABLE);
-        ticket.setCreatedAt(LocalDateTime.now());
-        ticket.setUpdatedAt(LocalDateTime.now());
+        ticket.setCreatedAt(OffsetDateTime.now());
+        ticket.setUpdatedAt(OffsetDateTime.now());
         return ticketMapper.toResponse(ticketRepository.save(ticket));
     }
 
@@ -89,7 +89,7 @@ public class TicketsService {
         if (req.getSeatNumber() != null) ticket.setSeatNumber(req.getSeatNumber());
         if (req.getPrice() != null) ticket.setPrice(req.getPrice());
 
-        ticket.setUpdatedAt(LocalDateTime.now());
+        ticket.setUpdatedAt(OffsetDateTime.now());
         return ticketMapper.toResponse(ticketRepository.save(ticket));
     }
 
@@ -97,7 +97,7 @@ public class TicketsService {
     public ReleaseTicketsBatchResponse releaseTicketsBatch(@Valid ReleaseTicketsBatchRequest request) {
         final Route route = routesService.findOneById(request.getRouteId());
 
-        if (route.getDepartureAt().isBefore(LocalDateTime.now())) {
+        if (route.getDepartureAt().isBefore(OffsetDateTime.now())) {
             throw new IllegalStateException(String.format("Невозможно выпустить билеты для маршрута id %s с датой отправки в прошлом", route.getId()));
         }
 
@@ -143,8 +143,10 @@ public class TicketsService {
                 .priceTo(req.getPriceTo())
                 .ticketStatus(ticketStatusMapper.toDomain(req.getTicketStatus()))
                 .purchasedById(req.getPurchasedById())
-                .createdDateFrom(req.getCreatedDateFrom())
-                .createdDateTo(req.getCreatedDateTo())
+                .purchasedDateFrom(req.getPurchasedDateFrom() != null ? req.getPurchasedDateFrom().atStartOfDay().atOffset(java.time.ZoneOffset.UTC) : null)
+                .purchasedDateTo(req.getPurchasedDateTo() != null ? req.getPurchasedDateTo().atTime(java.time.LocalTime.MAX).atOffset(java.time.ZoneOffset.UTC) : null)
+                .createdDateFrom(req.getCreatedDateFrom() != null ? req.getCreatedDateFrom().atStartOfDay().atOffset(java.time.ZoneOffset.UTC) : null)
+                .createdDateTo(req.getCreatedDateTo() != null ? req.getCreatedDateTo().atTime(java.time.LocalTime.MAX).atOffset(java.time.ZoneOffset.UTC) : null)
                 .build();
     }
 
@@ -156,8 +158,8 @@ public class TicketsService {
                 .ticketStatus(TicketStatusEnum.AVAILABLE)
                 .user(null)
                 .purchasedAt(null)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build();
     }
 }

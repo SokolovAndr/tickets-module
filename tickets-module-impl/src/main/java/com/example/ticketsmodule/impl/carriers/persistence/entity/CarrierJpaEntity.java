@@ -15,7 +15,7 @@ import lombok.ToString;
 import org.hibernate.annotations.Comment;
 import org.jspecify.annotations.NonNull;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
@@ -63,12 +63,12 @@ public class CarrierJpaEntity {
      */
     @Comment("Дата создания")
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     /**
      * Дата обновления
      */
     @Comment("Дата обновления")
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 }

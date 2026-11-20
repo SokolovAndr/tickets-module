@@ -22,7 +22,7 @@ import com.example.ticketsmodule.api.model.CreateRouteResponse;
 import com.example.ticketsmodule.api.model.RoutePatchRequest;
 import com.example.ticketsmodule.api.model.RoutesSearchRequest;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.LocalTime;
 import java.util.Collection;
 import java.util.List;
@@ -49,8 +49,8 @@ public class RoutesService {
 
         Route route = routeMapper.toDomain(createRouteRequest);
         route.setCarrier(carrier);
-        route.setCreatedAt(LocalDateTime.now());
-        route.setUpdatedAt(LocalDateTime.now());
+        route.setCreatedAt(OffsetDateTime.now());
+        route.setUpdatedAt(OffsetDateTime.now());
         return routeMapper.toResponse(routesRepositoryPort.save(route));
     }
 
@@ -99,12 +99,23 @@ public class RoutesService {
             route.setCarrier(carrier);
         }
 
-        route.setUpdatedAt(LocalDateTime.now());
+        route.setUpdatedAt(OffsetDateTime.now());
         return routeMapper.toResponse(routesRepositoryPort.save(route));
     }
 
     private RouteFilter toFilter(RoutesSearchRequest req) {
         if (req == null) return RouteFilter.builder().build();
-        return RouteFilter.builder().query(req.getQuery()).departurePoint(req.getDeparturePoint()).destinationPoint(req.getDestinationPoint()).departureFrom(req.getDepartureFrom() != null ? req.getDepartureFrom().atStartOfDay() : null).departureTo(req.getDepartureTo() != null ? req.getDepartureTo().atTime(LocalTime.MAX) : null).destinationFrom(req.getDestinationFrom() != null ? req.getDestinationFrom().atStartOfDay() : null).destinationTo(req.getDestinationTo() != null ? req.getDestinationTo().atTime(LocalTime.MAX) : null).createDateFrom(req.getCreateDateFrom() != null ? req.getCreateDateFrom().atStartOfDay() : null).createDateTo(req.getCreateDateTo() != null ? req.getCreateDateTo().atTime(LocalTime.MAX) : null).emptySits(req.getEmptySits()).build();
+        return RouteFilter.builder()
+                .query(req.getQuery())
+                .departurePoint(req.getDeparturePoint())
+                .destinationPoint(req.getDestinationPoint())
+                .departureFrom(req.getDepartureFrom() != null ? req.getDepartureFrom().atStartOfDay().atOffset(java.time.ZoneOffset.UTC) : null)
+                .departureTo(req.getDepartureTo() != null ? req.getDepartureTo().atTime(LocalTime.MAX).atOffset(java.time.ZoneOffset.UTC) : null)
+                .destinationFrom(req.getDestinationFrom() != null ? req.getDestinationFrom().atStartOfDay().atOffset(java.time.ZoneOffset.UTC) : null)
+                .destinationTo(req.getDestinationTo() != null ? req.getDestinationTo().atTime(LocalTime.MAX).atOffset(java.time.ZoneOffset.UTC) : null)
+                .createDateFrom(req.getCreateDateFrom() != null ? req.getCreateDateFrom().atStartOfDay().atOffset(java.time.ZoneOffset.UTC) : null)
+                .createDateTo(req.getCreateDateTo() != null ? req.getCreateDateTo().atTime(LocalTime.MAX).atOffset(java.time.ZoneOffset.UTC) : null)
+                .emptySits(req.getEmptySits())
+                .build();
     }
 }

@@ -22,7 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -63,8 +63,8 @@ class RoutesServiceTest {
                 .carrier(carrier)
                 .departurePoint("Moscow")
                 .destinationPoint("SPb")
-                .departureAt(LocalDateTime.now().plusDays(1))
-                .destinationAt(LocalDateTime.now().plusDays(1).plusHours(2))
+                .departureAt(OffsetDateTime.now().plusDays(1))
+                .destinationAt(OffsetDateTime.now().plusDays(1).plusHours(2))
                 .durationMinutes(120)
                 .build();
 

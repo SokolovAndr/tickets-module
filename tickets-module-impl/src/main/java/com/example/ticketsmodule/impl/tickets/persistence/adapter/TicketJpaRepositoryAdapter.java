@@ -99,8 +99,10 @@ public class TicketJpaRepositoryAdapter implements TicketsRepositoryPort {
                 if (f.getPriceTo() != null) predicates.add(cb.lessThanOrEqualTo(root.get("price"), f.getPriceTo()));
                 if (f.getTicketStatus() != null) predicates.add(cb.equal(root.get("ticketStatus"), f.getTicketStatus()));
                 if (f.getSeatNumber() != null) predicates.add(cb.equal(root.get("seatNumber"), f.getSeatNumber()));
-                if (f.getCreatedDateFrom() != null) predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), f.getCreatedDateFrom().atStartOfDay()));
-                if (f.getCreatedDateTo() != null) predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), f.getCreatedDateTo().atTime(LocalTime.MAX)));
+                if (f.getPurchasedDateFrom() != null) predicates.add(cb.greaterThanOrEqualTo(root.get("purchasedAt"), f.getPurchasedDateFrom()));
+                if (f.getPurchasedDateTo() != null) predicates.add(cb.lessThanOrEqualTo(root.get("purchasedAt"), f.getPurchasedDateTo()));
+                if (f.getCreatedDateFrom() != null) predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), f.getCreatedDateFrom()));
+                if (f.getCreatedDateTo() != null) predicates.add(cb.lessThanOrEqualTo(root.get("createdAt"), f.getCreatedDateTo()));
                 if (f.getPurchasedById() != null) { predicates.add(cb.equal(root.get("user").get("id"), f.getPurchasedById()));
                 }
             }

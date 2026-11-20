@@ -25,11 +25,10 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -63,7 +62,7 @@ public class OrdersService {
             throw new TicketNotAvailableException(ticket.getId(), ticket.getTicketStatus());
         }
 
-        final LocalDateTime now = LocalDateTime.now();
+        final OffsetDateTime now = OffsetDateTime.now();
 
         ticket.setTicketStatus(TicketStatusEnum.RESERVED);
         ticket.setUpdatedAt(now);
@@ -92,7 +91,7 @@ public class OrdersService {
             throw new OrderInvalidStatusException(id, order.getStatus(), "PAID");
         }
 
-        final LocalDateTime now = LocalDateTime.now();
+        final OffsetDateTime now = OffsetDateTime.now();
         if (!now.isBefore(order.getReservedUntil())) {
             throw new OrderExpiredException(id);
         }
@@ -120,7 +119,7 @@ public class OrdersService {
         if (order.getStatus() != OrderStatusEnum.WAITING) {
             throw new OrderInvalidStatusException(id, order.getStatus(), OrderStatusEnum.CANCELED.getDescription());
         }
-        final LocalDateTime now = LocalDateTime.now();
+        final OffsetDateTime now = OffsetDateTime.now();
 
         final Ticket ticket = order.getTicket();
         ticket.setTicketStatus(AVAILABLE);
@@ -147,7 +146,7 @@ public class OrdersService {
             throw new OrderInvalidStatusException(id, order.getStatus(), OrderStatusEnum.REFUNDED.getDescription());
         }
 
-        if (order.getTicket().getRoute().getDepartureAt().isBefore(LocalDateTime.now())) {
+        if (order.getTicket().getRoute().getDepartureAt().isBefore(OffsetDateTime.now())) {
             throw new OrderInvalidStatusException(id, order.getStatus(), "REFUNDED_AFTER_DEPARTURE");
         }
 
@@ -155,10 +154,10 @@ public class OrdersService {
         ticket.setTicketStatus(AVAILABLE);
         ticket.setUser(null);
         ticket.setPurchasedAt(null);
-        ticket.setUpdatedAt(LocalDateTime.now());
+        ticket.setUpdatedAt(OffsetDateTime.now());
         ticketsRepositoryPort.save(ticket);
 
-        final LocalDateTime now = LocalDateTime.now();
+        final OffsetDateTime now = OffsetDateTime.now();
 
         order.setTicket(ticket);
         order.setStatus(OrderStatusEnum.REFUNDED);
@@ -200,7 +199,7 @@ public class OrdersService {
 
     @Transactional
     public void timeOutExpired() {
-        final LocalDateTime now = LocalDateTime.now();
+        final OffsetDateTime now = OffsetDateTime.now();
         final List<Order> expired = ordersRepositoryPort.findExpiredWaiting(now);
         for (Order order : expired) {
             order.setStatus(OrderStatusEnum.TIME_OUT);
@@ -209,7 +208,7 @@ public class OrdersService {
             ticket.setTicketStatus(AVAILABLE);
             ticket.setUser(null);
             ticket.setPurchasedAt(null);
-            ticket.setUpdatedAt(LocalDateTime.now());
+            ticket.setUpdatedAt(OffsetDateTime.now());
             ticketsRepositoryPort.save(ticket);
             ordersRepositoryPort.save(order);
         }
@@ -231,18 +230,17 @@ public class OrdersService {
         return OrdersFilter.builder()
                 .ticketId(req.getTicketId())
                 .userId(req.getUserId())
-                .status(req.getStatus() == null ? null
-                        : OrderStatusEnum.valueOf(req.getStatus().getValue()))
-                .createdDateFrom(req.getCreatedDateFrom())
-                .createdDateTo(req.getCreatedDateTo())
-                .reservedUntilFrom(req.getReservedUntilFrom())
-                .reservedUntilTo(req.getReservedUntilTo())
-                .paidDateFrom(req.getPaidDateFrom())
-                .paidDateTo(req.getPaidDateTo())
-                .canceledDateFrom(req.getCanceledDateFrom())
-                .canceledDateTo(req.getCanceledDateTo())
-                .refundedDateFrom(req.getRefundedDateFrom())
-                .refundedDateTo(req.getRefundedDateTo())
+                .status(req.getStatus() == null ? null : OrderStatusEnum.valueOf(req.getStatus().getValue()))
+                .createdDateFrom(req.getCreatedDateFrom() != null ? req.getCreatedDateFrom().atStartOfDay().atOffset(java.time.ZoneOffset.UTC) : null)
+                .createdDateTo(req.getCreatedDateTo() != null ? req.getCreatedDateTo().atTime(java.time.LocalTime.MAX).atOffset(java.time.ZoneOffset.UTC) : null)
+                .reservedUntilFrom(req.getReservedUntilFrom() != null ? req.getReservedUntilFrom().atStartOfDay().atOffset(java.time.ZoneOffset.UTC) : null)
+                .reservedUntilTo(req.getReservedUntilTo() != null ? req.getReservedUntilTo().atTime(java.time.LocalTime.MAX).atOffset(java.time.ZoneOffset.UTC) : null)
+                .paidDateFrom(req.getPaidDateFrom() != null ? req.getPaidDateFrom().atStartOfDay().atOffset(java.time.ZoneOffset.UTC) : null)
+                .paidDateTo(req.getPaidDateTo() != null ? req.getPaidDateTo().atTime(java.time.LocalTime.MAX).atOffset(java.time.ZoneOffset.UTC) : null)
+                .canceledDateFrom(req.getCanceledDateFrom() != null ? req.getCanceledDateFrom().atStartOfDay().atOffset(java.time.ZoneOffset.UTC) : null)
+                .canceledDateTo(req.getCanceledDateTo() != null ? req.getCanceledDateTo().atTime(java.time.LocalTime.MAX).atOffset(java.time.ZoneOffset.UTC) : null)
+                .refundedDateFrom(req.getRefundedDateFrom() != null ? req.getRefundedDateFrom().atStartOfDay().atOffset(java.time.ZoneOffset.UTC) : null)
+                .refundedDateTo(req.getRefundedDateTo() != null ? req.getRefundedDateTo().atTime(java.time.LocalTime.MAX).atOffset(java.time.ZoneOffset.UTC) : null)
                 .build();
     }
 }

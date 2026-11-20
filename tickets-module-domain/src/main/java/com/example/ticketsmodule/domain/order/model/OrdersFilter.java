@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Getter
@@ -20,14 +20,14 @@ public class OrdersFilter {
     private UUID userId;
     private BigDecimal price;
     private OrderStatusEnum status;
-    private LocalDate createdDateFrom;
-    private LocalDate createdDateTo;
-    private LocalDate reservedUntilFrom;
-    private LocalDate reservedUntilTo;
-    private LocalDate paidDateFrom;
-    private LocalDate paidDateTo;
-    private LocalDate canceledDateFrom;
-    private LocalDate canceledDateTo;
-    private LocalDate refundedDateFrom;
-    private LocalDate refundedDateTo;
+    private OffsetDateTime createdDateFrom;
+    private OffsetDateTime createdDateTo;
+    private OffsetDateTime reservedUntilFrom;
+    private OffsetDateTime reservedUntilTo;
+    private OffsetDateTime paidDateFrom;
+    private OffsetDateTime paidDateTo;
+    private OffsetDateTime canceledDateFrom;
+    private OffsetDateTime canceledDateTo;
+    private OffsetDateTime refundedDateFrom;
+    private OffsetDateTime refundedDateTo;
 }

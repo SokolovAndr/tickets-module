@@ -9,7 +9,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -20,6 +20,6 @@ public class Ticket extends CommonModel {
     private int seatNumber;
     private BigDecimal price;
     private User user;
-    private LocalDateTime purchasedAt;
+    private OffsetDateTime purchasedAt;
     private TicketStatusEnum ticketStatus;
 }

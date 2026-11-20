@@ -30,7 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -438,7 +438,7 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
         @DisplayName("should reject release for past departure")
         void shouldRejectReleaseForPastDeparture() throws Exception {
             Route route = routesRepositoryPort.findById(routeId).orElseThrow();
-            route.setDepartureAt(LocalDateTime.now().minusDays(1));
+            route.setDepartureAt(OffsetDateTime.now().minusDays(1));
             routesRepositoryPort.save(route);
 
             ReleaseTicketsBatchRequest request = new ReleaseTicketsBatchRequest();
@@ -537,8 +537,8 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                         .destinationPoint("SPb")
                         .carrier(carrier)
                         .durationMinutes(120)
-                        .departureAt(LocalDateTime.now().plusDays(1))
-                        .destinationAt(LocalDateTime.now().plusDays(1).plusHours(2))
+                        .departureAt(OffsetDateTime.now().plusDays(1))
+                        .destinationAt(OffsetDateTime.now().plusDays(1).plusHours(2))
                         .build());
 
         return route.getId();
@@ -550,8 +550,8 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                 .password(passwordEncoder.encode("secret123"))
                 .fullName("Test User")
                 .role(UserRoleEnum.USER)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build());
     }
 
@@ -564,9 +564,9 @@ class TicketsControllerApiImplIT extends AbstractIntegrationTest {
                 .price(new BigDecimal("150.00"))
                 .ticketStatus(status)
                 .user(user)
-                .purchasedAt(status == TicketStatusEnum.PURCHASED ? LocalDateTime.now() : null)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .purchasedAt(status == TicketStatusEnum.PURCHASED ? OffsetDateTime.now() : null)
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build());
     }
 
