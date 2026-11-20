@@ -18,7 +18,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -77,8 +77,8 @@ class ProfileViewControllerTest {
                 .password("encodedPassword")
                 .fullName("Иванов Иван Иванович")
                 .role(UserRoleEnum.USER)
-                .createdAt(LocalDateTime.now().minusDays(1))
-                .updatedAt(LocalDateTime.now())
+                .createdAt(OffsetDateTime.now().minusDays(1))
+                .updatedAt(OffsetDateTime.now())
                 .build();
 
         userResponse = new UserResponse();

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,8 +47,8 @@ class RouteMapperTest {
         @Test
         @DisplayName("should map all fields from request")
         void shouldMapAllFields() {
-            LocalDateTime departureAt = LocalDateTime.now().plusDays(1);
-            LocalDateTime destinationAt = departureAt.plusHours(2);
+            OffsetDateTime departureAt = OffsetDateTime.now().plusDays(1);
+            OffsetDateTime destinationAt = departureAt.plusHours(2);
 
             CreateRouteRequest request = new CreateRouteRequest();
             request.setDeparturePoint("Moscow");
@@ -106,10 +106,10 @@ class RouteMapperTest {
         @Test
         @DisplayName("should map all fields from domain")
         void shouldMapAllFields() {
-            LocalDateTime departureAt = LocalDateTime.now().plusDays(1);
-            LocalDateTime destinationAt = departureAt.plusHours(2);
-            LocalDateTime created = LocalDateTime.now().minusDays(1);
-            LocalDateTime updated = LocalDateTime.now();
+            OffsetDateTime departureAt = OffsetDateTime.now().plusDays(1);
+            OffsetDateTime destinationAt = departureAt.plusHours(2);
+            OffsetDateTime created = OffsetDateTime.now().minusDays(1);
+            OffsetDateTime updated = OffsetDateTime.now();
 
             Route route = Route.builder()
                     .id(routeId)
@@ -165,8 +165,8 @@ class RouteMapperTest {
         request.setDeparturePoint("A");
         request.setDestinationPoint("B");
         request.setDurationMinutes(60);
-        request.setDepartureAt(LocalDateTime.now());
-        request.setDestinationAt(LocalDateTime.now());
+        request.setDepartureAt(OffsetDateTime.now());
+        request.setDestinationAt(OffsetDateTime.now());
         return request;
     }
 }

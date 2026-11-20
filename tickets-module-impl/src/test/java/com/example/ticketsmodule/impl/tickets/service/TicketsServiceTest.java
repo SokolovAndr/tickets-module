@@ -26,7 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -64,7 +64,7 @@ class TicketsServiceTest {
 
         route = Route.builder()
                 .id(routeId)
-                .departureAt(LocalDateTime.now().plusDays(1))
+                .departureAt(OffsetDateTime.now().plusDays(1))
                 .build();
 
         ticket = Ticket.builder()
@@ -271,7 +271,7 @@ class TicketsServiceTest {
         @Test
         @DisplayName("should throw when departure is in the past")
         void shouldThrowWhenDepartureInPast() {
-            route.setDepartureAt(LocalDateTime.now().minusDays(1));
+            route.setDepartureAt(OffsetDateTime.now().minusDays(1));
 
             ReleaseTicketsBatchRequest request = new ReleaseTicketsBatchRequest();
             request.setRouteId(routeId);

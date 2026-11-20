@@ -27,7 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -201,7 +201,7 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
         void shouldPayOrder() throws Exception {
             Ticket ticket = createTicket(TicketStatusEnum.RESERVED, null);
             Order order = createOrder(testUser, ticket, OrderStatusEnum.WAITING,
-                    LocalDateTime.now().plusMinutes(15));
+                    OffsetDateTime.now().plusMinutes(15));
 
             mockMvc.perform(post("/api/orders/{id}/pay", order.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -225,7 +225,7 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
         void shouldReturn422WhenWrongStatus() throws Exception {
             Ticket ticket = createTicket(TicketStatusEnum.PURCHASED, testUser);
             Order order = createOrder(testUser, ticket, OrderStatusEnum.PAID,
-                    LocalDateTime.now().plusMinutes(15));
+                    OffsetDateTime.now().plusMinutes(15));
 
             mockMvc.perform(post("/api/orders/{id}/pay", order.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -240,7 +240,7 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
         void shouldReturn422WhenExpired() throws Exception {
             Ticket ticket = createTicket(TicketStatusEnum.RESERVED, null);
             Order order = createOrder(testUser, ticket, OrderStatusEnum.WAITING,
-                    LocalDateTime.now().minusMinutes(5));
+                    OffsetDateTime.now().minusMinutes(5));
 
             mockMvc.perform(post("/api/orders/{id}/pay", order.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -255,7 +255,7 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
         void shouldReturn403ForAnotherUser() throws Exception {
             Ticket ticket = createTicket(TicketStatusEnum.RESERVED, null);
             Order order = createOrder(otherUser, ticket, OrderStatusEnum.WAITING,
-                    LocalDateTime.now().plusMinutes(15));
+                    OffsetDateTime.now().plusMinutes(15));
 
             mockMvc.perform(post("/api/orders/{id}/pay", order.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -285,7 +285,7 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
         void shouldCancelOrder() throws Exception {
             Ticket ticket = createTicket(TicketStatusEnum.RESERVED, null);
             Order order = createOrder(testUser, ticket, OrderStatusEnum.WAITING,
-                    LocalDateTime.now().plusMinutes(15));
+                    OffsetDateTime.now().plusMinutes(15));
 
             mockMvc.perform(post("/api/orders/{id}/cancel", order.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -308,7 +308,7 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
         void shouldReturn422WhenPaid() throws Exception {
             Ticket ticket = createTicket(TicketStatusEnum.PURCHASED, testUser);
             Order order = createOrder(testUser, ticket, OrderStatusEnum.PAID,
-                    LocalDateTime.now().plusMinutes(15));
+                    OffsetDateTime.now().plusMinutes(15));
 
             mockMvc.perform(post("/api/orders/{id}/cancel", order.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -320,7 +320,7 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
         void shouldReturn403ForAnotherUser() throws Exception {
             Ticket ticket = createTicket(TicketStatusEnum.RESERVED, null);
             Order order = createOrder(otherUser, ticket, OrderStatusEnum.WAITING,
-                    LocalDateTime.now().plusMinutes(15));
+                    OffsetDateTime.now().plusMinutes(15));
 
             mockMvc.perform(post("/api/orders/{id}/cancel", order.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -350,8 +350,8 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
         void shouldRefundOrder() throws Exception {
             Ticket ticket = createTicket(TicketStatusEnum.PURCHASED, testUser);
             Order order = createOrder(testUser, ticket, OrderStatusEnum.PAID,
-                    LocalDateTime.now().plusMinutes(15));
-            order.setPaidAt(LocalDateTime.now().minusHours(1));
+                    OffsetDateTime.now().plusMinutes(15));
+            order.setPaidAt(OffsetDateTime.now().minusHours(1));
             ordersRepositoryPort.save(order);
 
             mockMvc.perform(post("/api/orders/{id}/refund", order.getId())
@@ -374,7 +374,7 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
         void shouldReturn422WhenWrongStatus() throws Exception {
             Ticket ticket = createTicket(TicketStatusEnum.RESERVED, null);
             Order order = createOrder(testUser, ticket, OrderStatusEnum.WAITING,
-                    LocalDateTime.now().plusMinutes(15));
+                    OffsetDateTime.now().plusMinutes(15));
 
             mockMvc.perform(post("/api/orders/{id}/refund", order.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -385,13 +385,13 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
         @DisplayName("should return 422 when route departure is in the past")
         void shouldReturn422AfterDeparture() throws Exception {
             Route route = routesRepositoryPort.findById(routeId).orElseThrow();
-            route.setDepartureAt(LocalDateTime.now().minusDays(1));
+            route.setDepartureAt(OffsetDateTime.now().minusDays(1));
             routesRepositoryPort.save(route);
 
             Ticket ticket = createTicket(TicketStatusEnum.PURCHASED, testUser);
             Order order = createOrder(testUser, ticket, OrderStatusEnum.PAID,
-                    LocalDateTime.now().plusMinutes(15));
-            order.setPaidAt(LocalDateTime.now().minusHours(1));
+                    OffsetDateTime.now().plusMinutes(15));
+            order.setPaidAt(OffsetDateTime.now().minusHours(1));
             ordersRepositoryPort.save(order);
 
             mockMvc.perform(post("/api/orders/{id}/refund", order.getId())
@@ -407,7 +407,7 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
         void shouldReturn403ForAnotherUser() throws Exception {
             Ticket ticket = createTicket(TicketStatusEnum.PURCHASED, otherUser);
             Order order = createOrder(otherUser, ticket, OrderStatusEnum.PAID,
-                    LocalDateTime.now().plusMinutes(15));
+                    OffsetDateTime.now().plusMinutes(15));
 
             mockMvc.perform(post("/api/orders/{id}/refund", order.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -427,8 +427,8 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
             Ticket t1 = createTicket(TicketStatusEnum.RESERVED, null);
             Ticket t2 = createTicket(TicketStatusEnum.RESERVED, null);
 
-            createOrder(testUser, t1, OrderStatusEnum.WAITING, LocalDateTime.now().plusMinutes(15));
-            createOrder(otherUser, t2, OrderStatusEnum.WAITING, LocalDateTime.now().plusMinutes(15));
+            createOrder(testUser, t1, OrderStatusEnum.WAITING, OffsetDateTime.now().plusMinutes(15));
+            createOrder(otherUser, t2, OrderStatusEnum.WAITING, OffsetDateTime.now().plusMinutes(15));
 
             mockMvc.perform(get("/api/orders/my")
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -458,7 +458,7 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
         void shouldReturnForOwner() throws Exception {
             Ticket ticket = createTicket(TicketStatusEnum.RESERVED, null);
             Order order = createOrder(testUser, ticket, OrderStatusEnum.WAITING,
-                    LocalDateTime.now().plusMinutes(15));
+                    OffsetDateTime.now().plusMinutes(15));
 
             mockMvc.perform(get("/api/orders/{id}", order.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -472,7 +472,7 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
         void shouldReturn403ForAnotherUser() throws Exception {
             Ticket ticket = createTicket(TicketStatusEnum.RESERVED, null);
             Order order = createOrder(otherUser, ticket, OrderStatusEnum.WAITING,
-                    LocalDateTime.now().plusMinutes(15));
+                    OffsetDateTime.now().plusMinutes(15));
 
             mockMvc.perform(get("/api/orders/{id}", order.getId())
                             .with(JwtTestHelper.withUser(testUser.getId(), "USER")))
@@ -500,8 +500,8 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
             Ticket t1 = createTicket(TicketStatusEnum.RESERVED, null);
             Ticket t2 = createTicket(TicketStatusEnum.RESERVED, null);
 
-            createOrder(testUser, t1, OrderStatusEnum.WAITING, LocalDateTime.now().plusMinutes(15));
-            createOrder(otherUser, t2, OrderStatusEnum.WAITING, LocalDateTime.now().plusMinutes(15));
+            createOrder(testUser, t1, OrderStatusEnum.WAITING, OffsetDateTime.now().plusMinutes(15));
+            createOrder(otherUser, t2, OrderStatusEnum.WAITING, OffsetDateTime.now().plusMinutes(15));
 
             mockMvc.perform(get("/api/orders")
                             .with(JwtTestHelper.withRole("ADMIN")))
@@ -536,8 +536,8 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
                         .destinationPoint("SPb")
                         .carrier(carrier)
                         .durationMinutes(120)
-                        .departureAt(LocalDateTime.now().plusDays(1))
-                        .destinationAt(LocalDateTime.now().plusDays(1).plusHours(2))
+                        .departureAt(OffsetDateTime.now().plusDays(1))
+                        .destinationAt(OffsetDateTime.now().plusDays(1).plusHours(2))
                         .build());
 
         return route.getId();
@@ -549,8 +549,8 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
                 .password(passwordEncoder.encode("secret123"))
                 .fullName("Test User")
                 .role(UserRoleEnum.USER)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build());
     }
 
@@ -562,22 +562,22 @@ class OrdersControllerApiImplIT extends AbstractIntegrationTest {
                 .price(new BigDecimal("150.00"))
                 .ticketStatus(status)
                 .user(user)
-                .purchasedAt(status == TicketStatusEnum.PURCHASED ? LocalDateTime.now() : null)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .purchasedAt(status == TicketStatusEnum.PURCHASED ? OffsetDateTime.now() : null)
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build());
     }
 
     private Order createOrder(User user, Ticket ticket, OrderStatusEnum status,
-                              LocalDateTime reservedUntil) {
+                              OffsetDateTime reservedUntil) {
         return ordersRepositoryPort.save(Order.builder()
                 .user(user)
                 .ticket(ticket)
                 .price(ticket.getPrice())
                 .status(status)
                 .reservedUntil(reservedUntil)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .createdAt(OffsetDateTime.now())
+                .updatedAt(OffsetDateTime.now())
                 .build());
     }
 }

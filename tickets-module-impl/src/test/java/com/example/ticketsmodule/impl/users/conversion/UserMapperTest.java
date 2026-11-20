@@ -8,7 +8,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,8 +20,9 @@ class UserMapperTest {
     private UserMapper mapper;
 
     private static final UUID USER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
-    private static final LocalDateTime CREATED = LocalDateTime.of(2026, 1, 1, 10, 0);
-    private static final LocalDateTime UPDATED = LocalDateTime.of(2026, 6, 1, 15, 30);
+    private static final ZoneOffset offset = ZoneOffset.ofHoursMinutes(0, 0);
+    private static final OffsetDateTime CREATED = OffsetDateTime.of(2026, 1, 1, 10, 0, 0, 0, offset);
+    private static final OffsetDateTime UPDATED = OffsetDateTime.of(2026, 1, 1, 10, 0, 0, 0, offset);
 
     @BeforeEach
     void setUp() {

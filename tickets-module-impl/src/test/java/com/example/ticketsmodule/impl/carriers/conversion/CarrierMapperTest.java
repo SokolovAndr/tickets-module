@@ -8,7 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -75,8 +75,8 @@ class CarrierMapperTest {
         @DisplayName("should map all fields from domain")
         void shouldMapAllFields() {
             UUID id = UUID.randomUUID();
-            LocalDateTime created = LocalDateTime.now().minusDays(1);
-            LocalDateTime updated = LocalDateTime.now();
+            OffsetDateTime created = OffsetDateTime.now().minusDays(1);
+            OffsetDateTime updated = OffsetDateTime.now();
 
             Carrier carrier = Carrier.builder()
                     .id(id)
