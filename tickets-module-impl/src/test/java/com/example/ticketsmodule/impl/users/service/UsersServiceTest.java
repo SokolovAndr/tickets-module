@@ -19,7 +19,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -56,8 +57,8 @@ class UsersServiceTest {
                 .password("hash-old")
                 .fullName("Admin Adminov")
                 .role(UserRoleEnum.USER)
-                .createdAt(LocalDateTime.now().minusDays(1))
-                .updatedAt(LocalDateTime.now().minusDays(1))
+                .createdAt(OffsetDateTime.now().minusDays(1))
+                .updatedAt(OffsetDateTime.now().minusDays(1))
                 .build();
     }
 
@@ -142,7 +143,7 @@ class UsersServiceTest {
             usersService.changeCurrentUserPassword(user, request);
 
             assertThat(user.getPassword()).isEqualTo("hash-new");
-            assertThat(user.getUpdatedAt()).isAfter(LocalDateTime.now().minusMinutes(1));
+            assertThat(user.getUpdatedAt()).isAfter(OffsetDateTime.now().minusMinutes(1));
             verify(usersRepositoryPort).save(user);
             verify(passwordEncoder).encode("newPass");
         }
@@ -168,7 +169,7 @@ class UsersServiceTest {
             UserResponse actual = usersService.patchCurrentUser(user, request);
 
             assertThat(user.getFullName()).isEqualTo("New FullName");
-            assertThat(user.getUpdatedAt()).isAfter(LocalDateTime.now().minusMinutes(1));
+            assertThat(user.getUpdatedAt()).isAfter(OffsetDateTime.now().minusMinutes(1));
             assertThat(actual).isSameAs(expected);
             verify(usersRepositoryPort).save(user);
         }

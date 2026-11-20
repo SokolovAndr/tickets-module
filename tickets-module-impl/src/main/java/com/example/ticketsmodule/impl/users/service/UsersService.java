@@ -14,7 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -40,7 +40,7 @@ public class UsersService {
             throw new ApiException("New password equals current", "Новый пароль должен отличаться от текущего");
         }
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedAt(OffsetDateTime.now());
         usersRepositoryPort.save(user);
     }
 
@@ -54,7 +54,7 @@ public class UsersService {
         if (request.getFullName() != null) {
             user.setFullName(request.getFullName());
         }
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setUpdatedAt(OffsetDateTime.now());
         return userMapper.toResponse(usersRepositoryPort.save(user));
     }
 }

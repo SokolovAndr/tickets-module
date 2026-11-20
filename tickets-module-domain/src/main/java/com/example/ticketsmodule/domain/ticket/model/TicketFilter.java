@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Getter
@@ -21,10 +21,10 @@ public class TicketFilter {
     private Integer seatNumber;
     private BigDecimal priceFrom;
     private BigDecimal priceTo;
-    private Boolean isPurchased;
+    private TicketStatusEnum ticketStatus;
     private UUID purchasedById;
-    private LocalDate purchasedDateFrom;
-    private LocalDate purchasedDateTo;
-    private LocalDate createdDateFrom;
-    private LocalDate createdDateTo;
+    private OffsetDateTime purchasedDateFrom;
+    private OffsetDateTime purchasedDateTo;
+    private OffsetDateTime createdDateFrom;
+    private OffsetDateTime createdDateTo;
 }

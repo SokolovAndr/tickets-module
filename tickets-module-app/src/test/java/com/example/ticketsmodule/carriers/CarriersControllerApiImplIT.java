@@ -18,7 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -300,13 +300,13 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
         void shouldFilterByCreateDateFrom() throws Exception {
             Carrier old = Carrier.builder()
                     .name("Old").phone("+7-111")
-                    .createdAt(LocalDateTime.now().minusDays(10))
-                    .updatedAt(LocalDateTime.now().minusDays(10))
+                    .createdAt(OffsetDateTime.now().minusDays(10))
+                    .updatedAt(OffsetDateTime.now().minusDays(10))
                     .build();
             Carrier fresh = Carrier.builder()
                     .name("Fresh").phone("+7-222")
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
+                    .createdAt(OffsetDateTime.now())
+                    .updatedAt(OffsetDateTime.now())
                     .build();
             carriersRepositoryPort.save(old);
             carriersRepositoryPort.save(fresh);
@@ -326,13 +326,13 @@ class CarriersControllerApiImplIT extends AbstractIntegrationTest {
         void shouldFilterByCreateDateTo() throws Exception {
             Carrier old = Carrier.builder()
                     .name("Old").phone("+7-111")
-                    .createdAt(LocalDateTime.now().minusDays(10))
-                    .updatedAt(LocalDateTime.now().minusDays(10))
+                    .createdAt(OffsetDateTime.now().minusDays(10))
+                    .updatedAt(OffsetDateTime.now().minusDays(10))
                     .build();
             Carrier fresh = Carrier.builder()
                     .name("Fresh").phone("+7-222")
-                    .createdAt(LocalDateTime.now())
-                    .updatedAt(LocalDateTime.now())
+                    .createdAt(OffsetDateTime.now())
+                    .updatedAt(OffsetDateTime.now())
                     .build();
             carriersRepositoryPort.save(old);
             carriersRepositoryPort.save(fresh);

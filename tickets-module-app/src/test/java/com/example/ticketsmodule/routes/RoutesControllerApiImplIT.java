@@ -20,7 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -316,13 +316,13 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
                         .phone("+7-999")
                         .build());
 
-        Route route = Route.builder() // <-- Доменный Route
+        Route route = Route.builder()
                 .departurePoint("Moscow")
                 .destinationPoint("SPb")
                 .carrier(carrier)
                 .durationMinutes(120)
-                .departureAt(LocalDateTime.now().plusDays(1))
-                .destinationAt(LocalDateTime.now().plusDays(1).plusHours(2))
+                .departureAt(OffsetDateTime.now().plusDays(1))
+                .destinationAt(OffsetDateTime.now().plusDays(1).plusHours(2))
                 .build();
         return routesRepositoryPort.save(route);
     }
@@ -333,8 +333,8 @@ class RoutesControllerApiImplIT extends AbstractIntegrationTest {
         request.setDestinationPoint("SPb");
         request.setCarrierId(carrierId);
         request.setDurationMinutes(120);
-        request.setDepartureAt(LocalDateTime.now().plusDays(1));
-        request.setDestinationAt(LocalDateTime.now().plusDays(1).plusHours(2));
+        request.setDepartureAt(OffsetDateTime.now().plusDays(1));
+        request.setDestinationAt(OffsetDateTime.now().plusDays(1).plusHours(2));
         return request;
     }
 }

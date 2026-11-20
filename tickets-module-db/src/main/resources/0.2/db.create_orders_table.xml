@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="create-orders_table" author="andrei.sokolov">
+        <preConditions onError="MARK_RAN">
+            <not>
+                <tableExists tableName="orders"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="orders">
+            <column name="id" type="UUID" remarks="Идентификатор"
+                    defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="ticket_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_order_ticket" references="tickets(id)"/>
+            </column>
+
+            <column name="user_id" type="UUID">
+                <constraints nullable="false" foreignKeyName="fk_order_user" references="users(id)"/>
+            </column>
+
+            <column name="status" type="VARCHAR(50)" remarks="Статус (WAITING/TIME_OUT/PAID/CANCELED/REFUNDED)"
+                    defaultValue="WAITING">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP" remarks="Дата и время создания"
+                    defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="reserved_until" type="TIMESTAMP" remarks="Забронировано до">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="price" type="DECIMAL(10,2)" remarks="Цена заказа (снимок на момент создания)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="paid_at" type="TIMESTAMP" remarks="Дата и время оплаты"/>
+
+            <column name="canceled_at" type="TIMESTAMP" remarks="Дата и время отмены"/>
+
+            <column name="refunded_at" type="TIMESTAMP" remarks="Дата и время возврата"/>
+
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <createIndex tableName="orders" indexName="idx_orders_status_reserved_until">
+            <column name="status"/>
+            <column name="reserved_until"/>
+        </createIndex>
+
+        <createIndex tableName="orders" indexName="idx_orders_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex tableName="orders" indexName="idx_orders_ticket_id">
+            <column name="ticket_id"/>
+        </createIndex>
+
+        <sql>
+            CREATE UNIQUE INDEX uq_orders_active_ticket
+                ON orders (ticket_id) WHERE status IN ('WAITING', 'PAID')
+        </sql>
+
+    </changeSet>
+
+</databaseChangeLog>
+

@@ -4,14 +4,16 @@ import com.example.ticketsmodule.api.model.CreateTicketRequest;
 import com.example.ticketsmodule.api.model.CreateTicketResponse;
 import com.example.ticketsmodule.domain.route.model.Route;
 import com.example.ticketsmodule.domain.ticket.model.Ticket;
+import com.example.ticketsmodule.domain.ticket.model.TicketStatusEnum;
 import com.example.ticketsmodule.domain.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,7 +31,9 @@ class TicketMapperTest {
 
     @BeforeEach
     void setUp() {
-        mapper = new TicketMapperImpl();
+        TicketMapperImpl impl = new TicketMapperImpl();
+        ReflectionTestUtils.setField(impl, "ticketStatusMapper", new TicketStatusMapperImpl());
+        mapper = impl;
 
         ticketId = UUID.randomUUID();
         routeId = UUID.randomUUID();
@@ -60,7 +64,7 @@ class TicketMapperTest {
         }
 
         @Test
-        @DisplayName("should ignore id, route, user, purchased, purchasedAt, timestamps")
+        @DisplayName("should ignore id, route, user, purchasedAt, timestamps")
         void shouldIgnoreSystemFields() {
             CreateTicketRequest request = new CreateTicketRequest();
             request.setSeatNumber(1);
@@ -71,7 +75,6 @@ class TicketMapperTest {
             assertThat(ticket.getId()).isNull();
             assertThat(ticket.getRoute()).isNull();
             assertThat(ticket.getUser()).isNull();
-            assertThat(ticket.isPurchased()).isFalse();
             assertThat(ticket.getPurchasedAt()).isNull();
             assertThat(ticket.getCreatedAt()).isNull();
             assertThat(ticket.getUpdatedAt()).isNull();
@@ -94,18 +97,18 @@ class TicketMapperTest {
         @Test
         @DisplayName("should map all fields from domain")
         void shouldMapAllFields() {
-            LocalDateTime now = LocalDateTime.now();
-            LocalDateTime purchasedAt = now.minusHours(1);
-            LocalDateTime created = now.minusDays(1);
+            OffsetDateTime now = OffsetDateTime.now();
+            OffsetDateTime purchasedAt = now.minusHours(1);
+            OffsetDateTime created = now.minusDays(1);
 
             Ticket ticket = Ticket.builder()
                     .id(ticketId)
                     .route(route)
                     .seatNumber(15)
                     .price(BigDecimal.valueOf(250))
-                    .purchased(true)
                     .user(user)
                     .purchasedAt(purchasedAt)
+                    .ticketStatus(TicketStatusEnum.PURCHASED)
                     .createdAt(created)
                     .updatedAt(now)
                     .build();
@@ -117,7 +120,6 @@ class TicketMapperTest {
             assertThat(response.getRouteId()).isEqualTo(routeId);
             assertThat(response.getSeatNumber()).isEqualTo(15);
             assertThat(response.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(250));
-            assertThat(response.getIsPurchased()).isTrue();
             assertThat(response.getPurchasedById()).isEqualTo(userId);
             assertThat(response.getPurchasedAt()).isEqualTo(purchasedAt);
             assertThat(response.getCreatedAt()).isEqualTo(created);
@@ -135,7 +137,6 @@ class TicketMapperTest {
                     .route(customRoute)
                     .seatNumber(1)
                     .price(BigDecimal.ONE)
-                    .purchased(false)
                     .build();
 
             CreateTicketResponse response = mapper.toResponse(ticket);
@@ -154,7 +155,6 @@ class TicketMapperTest {
                     .route(route)
                     .seatNumber(1)
                     .price(BigDecimal.ONE)
-                    .purchased(true)
                     .user(customUser)
                     .build();
 
@@ -171,46 +171,12 @@ class TicketMapperTest {
                     .route(route)
                     .seatNumber(1)
                     .price(BigDecimal.ONE)
-                    .purchased(false)
                     .user(null)
                     .build();
 
             CreateTicketResponse response = mapper.toResponse(ticket);
 
             assertThat(response.getPurchasedById()).isNull();
-        }
-
-        @Test
-        @DisplayName("should map purchased=true to isPurchased=true")
-        void shouldMapIsPurchasedTrue() {
-            Ticket ticket = Ticket.builder()
-                    .id(ticketId)
-                    .route(route)
-                    .seatNumber(1)
-                    .price(BigDecimal.ONE)
-                    .purchased(true)
-                    .user(user)
-                    .build();
-
-            CreateTicketResponse response = mapper.toResponse(ticket);
-
-            assertThat(response.getIsPurchased()).isTrue();
-        }
-
-        @Test
-        @DisplayName("should map purchased=false to isPurchased=false")
-        void shouldMapIsPurchasedFalse() {
-            Ticket ticket = Ticket.builder()
-                    .id(ticketId)
-                    .route(route)
-                    .seatNumber(1)
-                    .price(BigDecimal.ONE)
-                    .purchased(false)
-                    .build();
-
-            CreateTicketResponse response = mapper.toResponse(ticket);
-
-            assertThat(response.getIsPurchased()).isFalse();
         }
 
         @Test
@@ -228,7 +194,6 @@ class TicketMapperTest {
                     .route(route)
                     .seatNumber(1)
                     .price(BigDecimal.ONE)
-                    .purchased(false)
                     .purchasedAt(null)
                     .createdAt(null)
                     .updatedAt(null)
@@ -248,7 +213,6 @@ class TicketMapperTest {
                     .route(route)
                     .seatNumber(1)
                     .price(BigDecimal.ONE)
-                    .purchased(false)
                     .build();
 
             CreateTicketResponse response = mapper.toResponse(ticket);
@@ -273,15 +237,14 @@ class TicketMapperTest {
             Ticket ticket = mapper.toDomain(request);
             ticket.setId(ticketId);
             ticket.setRoute(route);
-            ticket.setCreatedAt(LocalDateTime.now());
-            ticket.setUpdatedAt(LocalDateTime.now());
+            ticket.setCreatedAt(OffsetDateTime.now());
+            ticket.setUpdatedAt(OffsetDateTime.now());
 
             CreateTicketResponse response = mapper.toResponse(ticket);
 
             assertThat(response.getSeatNumber()).isEqualTo(15);
             assertThat(response.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(250));
             assertThat(response.getRouteId()).isEqualTo(routeId);
-            assertThat(response.getIsPurchased()).isFalse();
         }
     }
 }

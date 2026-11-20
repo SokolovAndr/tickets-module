@@ -9,14 +9,12 @@ import com.example.ticketsmodule.api.model.TicketsSearchRequest;
 import com.example.ticketsmodule.domain.common.PageRequest;
 import com.example.ticketsmodule.domain.common.PageResult;
 import com.example.ticketsmodule.domain.route.model.Route;
-import com.example.ticketsmodule.domain.ticket.exception.TicketAlreadyPurchasedException;
 import com.example.ticketsmodule.domain.ticket.exception.TicketNotFoundException;
 import com.example.ticketsmodule.domain.ticket.model.Ticket;
 import com.example.ticketsmodule.domain.ticket.repository.TicketsRepositoryPort;
-import com.example.ticketsmodule.domain.user.model.User;
 import com.example.ticketsmodule.impl.routes.service.RoutesService;
 import com.example.ticketsmodule.impl.tickets.conversion.TicketMapper;
-import com.example.ticketsmodule.impl.users.service.UsersService;
+import com.example.ticketsmodule.impl.tickets.conversion.TicketStatusMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -28,7 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -37,6 +35,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -46,34 +45,26 @@ class TicketsServiceTest {
 
     @Mock private TicketsRepositoryPort ticketRepository;
     @Mock private TicketMapper ticketMapper;
+    @Mock private TicketStatusMapper ticketStatusMapper;
     @Mock private RoutesService routesService;
-    @Mock private UsersService usersService;
 
     @InjectMocks
     private TicketsService ticketsService;
 
     private UUID ticketId;
     private UUID routeId;
-    private UUID userId;
     private Ticket ticket;
     private Route route;
-    private User user;
     private CreateTicketResponse expectedResponse;
 
     @BeforeEach
     void setUp() {
         ticketId = UUID.randomUUID();
         routeId = UUID.randomUUID();
-        userId = UUID.randomUUID();
 
         route = Route.builder()
                 .id(routeId)
-                .departureAt(LocalDateTime.now().plusDays(1))
-                .build();
-
-        user = User.builder()
-                .id(userId)
-                .login("admin")
+                .departureAt(OffsetDateTime.now().plusDays(1))
                 .build();
 
         ticket = Ticket.builder()
@@ -81,7 +72,6 @@ class TicketsServiceTest {
                 .route(route)
                 .seatNumber(1)
                 .price(BigDecimal.valueOf(100))
-                .purchased(false)
                 .build();
 
         expectedResponse = new CreateTicketResponse();
@@ -159,6 +149,8 @@ class TicketsServiceTest {
         @Test
         @DisplayName("should return mapped list")
         void shouldReturnMappedList() {
+            UUID userId = UUID.randomUUID();
+
             when(ticketRepository.findPurchasedByUserId(userId)).thenReturn(List.of(ticket));
             when(ticketMapper.toResponse(ticket)).thenReturn(expectedResponse);
 
@@ -218,7 +210,7 @@ class TicketsServiceTest {
             assertThat(ticket.getSeatNumber()).isEqualTo(42);
             assertThat(ticket.getPrice()).isEqualByComparingTo(BigDecimal.valueOf(250));
             assertThat(ticket.getUpdatedAt()).isNotNull();
-            verifyNoInteractions(routesService, usersService);
+            verifyNoInteractions(routesService);
         }
 
         @Test
@@ -239,139 +231,6 @@ class TicketsServiceTest {
 
             assertThat(ticket.getRoute()).isSameAs(newRoute);
             verify(routesService).findOneById(newRouteId);
-        }
-
-        @Test
-        @DisplayName("should mark as purchased when purchasedById provided")
-        void shouldMarkPurchasedWhenUserProvided() {
-            TicketPatchRequest patch = new TicketPatchRequest();
-            patch.setPurchasedById(userId);
-
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-            when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.save(any(Ticket.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(ticketMapper.toResponse(any(Ticket.class))).thenReturn(expectedResponse);
-
-            ticketsService.patch(ticketId, patch);
-
-            assertThat(ticket.getUser()).isSameAs(user);
-            assertThat(ticket.isPurchased()).isTrue();
-            assertThat(ticket.getPurchasedAt()).isNotNull();
-        }
-    }
-
-    @Nested
-    @DisplayName("buyTicket()")
-    class BuyTicketTests {
-
-        @Test
-        @DisplayName("should mark ticket as purchased for current user")
-        void shouldBuyTicketSuccessfully() {
-            when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-            when(ticketRepository.save(any(Ticket.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(ticketMapper.toResponse(any(Ticket.class))).thenReturn(expectedResponse);
-
-            CreateTicketResponse actual = ticketsService.buyTicket(ticketId, userId);
-
-            assertThat(actual).isSameAs(expectedResponse);
-            assertThat(ticket.isPurchased()).isTrue();
-            assertThat(ticket.getUser()).isSameAs(user);
-            assertThat(ticket.getPurchasedAt()).isNotNull();
-        }
-
-        @Test
-        @DisplayName("should throw when ticket already purchased")
-        void shouldThrowWhenAlreadyPurchased() {
-            ticket.setPurchased(true);
-
-            when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-
-            assertThatThrownBy(() -> ticketsService.buyTicket(ticketId, userId))
-                    .isInstanceOf(TicketAlreadyPurchasedException.class)
-                    .hasMessageContaining("already purchased");
-
-            verify(ticketRepository, never()).save(any());
-        }
-
-        @Test
-        @DisplayName("should throw when route departure is in the past")
-        void shouldThrowWhenDepartureInPast() {
-            route.setDepartureAt(LocalDateTime.now().minusDays(1));
-            when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-
-            assertThatThrownBy(() -> ticketsService.buyTicket(ticketId, userId))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("past departure");
-
-            verify(ticketRepository, never()).save(any());
-        }
-    }
-
-    @Nested
-    @DisplayName("returnTicket()")
-    class ReturnTicketTests {
-
-        @BeforeEach
-        void preparePurchasedTicket() {
-            ticket.setPurchased(true);
-            ticket.setUser(user);
-            ticket.setPurchasedAt(LocalDateTime.now().minusHours(1));
-        }
-
-        @Test
-        @DisplayName("should return ticket successfully")
-        void shouldReturnTicketSuccessfully() {
-            when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-            when(ticketRepository.save(any(Ticket.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(ticketMapper.toResponse(any(Ticket.class))).thenReturn(expectedResponse);
-
-            CreateTicketResponse actual = ticketsService.returnTicket(ticketId, userId);
-
-            assertThat(actual).isSameAs(expectedResponse);
-            assertThat(ticket.isPurchased()).isFalse();
-            assertThat(ticket.getUser()).isNull();
-            assertThat(ticket.getPurchasedAt()).isNull();
-        }
-
-        @Test
-        @DisplayName("should throw when ticket is not purchased")
-        void shouldThrowWhenNotPurchased() {
-            ticket.setPurchased(false);
-            when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-
-            assertThatThrownBy(() -> ticketsService.returnTicket(ticketId, userId))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("not purchased");
-        }
-
-        @Test
-        @DisplayName("should throw when departure is in the past")
-        void shouldThrowWhenDepartureInPast() {
-            route.setDepartureAt(LocalDateTime.now().minusDays(1));
-            when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-
-            assertThatThrownBy(() -> ticketsService.returnTicket(ticketId, userId))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("after departure");
-        }
-
-        @Test
-        @DisplayName("should throw when ticket belongs to another user")
-        void shouldThrowWhenDifferentUser() {
-            User otherUser = User.builder().id(UUID.randomUUID()).build();
-            ticket.setUser(otherUser);
-            when(usersService.findOneById(userId)).thenReturn(user);
-            when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
-
-            assertThatThrownBy(() -> ticketsService.returnTicket(ticketId, userId))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("Users are different");
         }
     }
 
@@ -412,7 +271,7 @@ class TicketsServiceTest {
         @Test
         @DisplayName("should throw when departure is in the past")
         void shouldThrowWhenDepartureInPast() {
-            route.setDepartureAt(LocalDateTime.now().minusDays(1));
+            route.setDepartureAt(OffsetDateTime.now().minusDays(1));
 
             ReleaseTicketsBatchRequest request = new ReleaseTicketsBatchRequest();
             request.setRouteId(routeId);

@@ -15,8 +15,8 @@
             <column name="id" type="UUID"/>
             <column name="name" type="STRING"/>
             <column name="phone" type="STRING"/>
-            <column name="created_at" type="DATETIME"/>
-            <column name="updated_at" type="DATETIME"/>
+            <column name="created_at" type="STRING"/>
+            <column name="updated_at" type="STRING"/>
         </loadData>
 
         <loadData tableName="routes" file="0.2/data/routes.csv" separator="," quotchar='"'>
@@ -25,10 +25,10 @@
             <column name="destination_point" type="STRING"/>
             <column name="carrier_id" type="UUID"/>
             <column name="duration_minutes" type="NUMERIC"/>
-            <column name="departure_at" type="DATETIME"/>
-            <column name="destination_at" type="DATETIME"/>
-            <column name="created_at" type="DATETIME"/>
-            <column name="updated_at" type="DATETIME"/>
+            <column name="departure_at" type="STRING"/>
+            <column name="destination_at" type="STRING"/>
+            <column name="created_at" type="STRING"/>
+            <column name="updated_at" type="STRING"/>
         </loadData>
 
         <loadData tableName="tickets" file="0.2/data/tickets.csv" separator="," quotchar='"'>
@@ -36,11 +36,11 @@
             <column name="route_id" type="UUID"/>
             <column name="seat_number" type="NUMERIC"/>
             <column name="price" type="NUMERIC"/>
-            <column name="is_purchased" type="BOOLEAN"/>
+            <column name="ticket_status" type="STRING"/>
             <column name="purchased_by" type="UUID"/>
-            <column name="purchased_at" type="DATETIME"/>
-            <column name="created_at" type="DATETIME"/>
-            <column name="updated_at" type="DATETIME"/>
+            <column name="purchased_at" type="STRING"/>
+            <column name="created_at" type="STRING"/>
+            <column name="updated_at" type="STRING"/>
         </loadData>
     </changeSet>
 </databaseChangeLog>

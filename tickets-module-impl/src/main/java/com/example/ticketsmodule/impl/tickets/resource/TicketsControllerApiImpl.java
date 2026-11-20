@@ -83,20 +83,6 @@ public class TicketsControllerApiImpl implements TicketsControllerApi {
     }
 
     @Override
-    public ResponseEntity<CreateTicketResponse> buyTicket(@NotNull UUID id) {
-        UUID userId = jwtCurrentUserService.getCurrentUserId();
-        CreateTicketResponse result = ticketsService.buyTicket(id, userId);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @Override
-    public ResponseEntity<CreateTicketResponse> returnTicket(@NotNull UUID id) {
-        UUID userId = jwtCurrentUserService.getCurrentUserId();
-        CreateTicketResponse result = ticketsService.returnTicket(id, userId);
-        return ResponseEntity.status(HttpStatus.OK).body(result);
-    }
-
-    @Override
     public ResponseEntity<ReleaseTicketsBatchResponse> releaseTicketsBatch(@RequestBody ReleaseTicketsBatchRequest request) {
         ReleaseTicketsBatchResponse result = ticketsService.releaseTicketsBatch(request);
         return ResponseEntity.status(HttpStatus.OK).body(result);

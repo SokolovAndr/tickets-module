@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -17,11 +17,11 @@ public class RouteFilter {
     private String query;
     private String departurePoint;
     private String destinationPoint;
-    private LocalDateTime departureFrom;
-    private LocalDateTime departureTo;
-    private LocalDateTime destinationFrom;
-    private LocalDateTime destinationTo;
-    private LocalDateTime createDateFrom;
-    private LocalDateTime createDateTo;
+    private OffsetDateTime departureFrom;
+    private OffsetDateTime departureTo;
+    private OffsetDateTime destinationFrom;
+    private OffsetDateTime destinationTo;
+    private OffsetDateTime createDateFrom;
+    private OffsetDateTime createDateTo;
     private Boolean emptySits;
 }

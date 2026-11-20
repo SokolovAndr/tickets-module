@@ -86,23 +86,6 @@ components:
           format: double
           minimum: 0
           nullable: true
-        isPurchased:
-          title: Признак занятости
-          description: Признак, куплен ли билет (оплачен)
-          type: boolean
-          nullable: true
-        purchasedById:
-          title: Идентификатор пользователя
-          description: Идентификатор пользователя, купившего билет
-          type: string
-          format: uuid
-          nullable: true
-        purchasedAt:
-          title: Дата покупки
-          description: Дата и время покупки билета
-          type: string
-          format: date-time
-          nullable: true
 
     UserPatchRequest:
       type: object

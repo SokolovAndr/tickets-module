@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="add_ticket_status_to_tickets_table_and_drop_is_purchased_column" author="andrei.sokolov">
+
+        <preConditions onError="MARK_RAN">
+            <and>
+                <tableExists tableName="tickets"/>
+                <not>
+                    <columnExists tableName="tickets" columnName="ticket_status"/>
+                </not>
+                <columnExists tableName="tickets" columnName="is_purchased"/>
+            </and>
+        </preConditions>
+
+        <addColumn tableName="tickets">
+            <column name="ticket_status" type="VARCHAR(50)" remarks="Статус (AVAILABLE/RESERVED/PURCHASED)"
+                    defaultValue="AVAILABLE">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <dropColumn tableName="tickets" columnName="is_purchased"/>
+
+    </changeSet>
+</databaseChangeLog>
+
